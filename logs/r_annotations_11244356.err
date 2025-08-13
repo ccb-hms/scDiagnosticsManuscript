@@ -1,5 +1,0 @@
-Error in library(SingleCellExperiment) : 
-  there is no package called ‘SingleCellExperiment’
-Execution halted
-ls: cannot access 'data/Azimuth/azimuth_covid_results.rds': No such file or directory
-ls: cannot access 'data/SingleR/singler_normal_output.rds': No such file or directory
