@@ -12,9 +12,9 @@ from datetime import datetime
 # ----------------------------------------------
 
 # Configuration
-ANNDATA_REF_FILE = "data/reference_data.h5ad"
-ANNDATA_QUERY_FILE = "data/query_data.h5ad" 
-ANNOTATED_QUERY_FILE = "data/annotated_query_data.h5ad"
+ANNDATA_REF_FILE = "data/covid/reference_data.h5ad"
+ANNDATA_QUERY_FILE = "data/covid/query_data.h5ad" 
+ANNOTATED_QUERY_FILE = "data/covid/annotated_query_data.h5ad"
 CELL_TYPE_KEY = "cell_type"
 
 # Set scanpy settings

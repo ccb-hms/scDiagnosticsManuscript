@@ -17,9 +17,9 @@ cat("Ensuring Python environment is available...\n")
 environmentSetupCellTypist()
 
 # Configuration
-ORIGINAL_COVID_FILE <- "data/covid_data.rds"
-ANNOTATED_QUERY_FILE <- "data/annotated_query_data.h5ad"
-FINAL_OUTPUT_FILE <- "data/covid_data_annotated.rds"
+ORIGINAL_COVID_FILE <- "data/covid/covid_data.rds"
+ANNOTATED_QUERY_FILE <- "data/covid/annotated_query_data.h5ad"
+FINAL_OUTPUT_FILE <- "data/covid/covid_data_annotated.rds"
 
 cat("Loading original COVID-19 SCE object...\n")
 covid_data_original <- readRDS(ORIGINAL_COVID_FILE)

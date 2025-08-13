@@ -9,8 +9,8 @@ library(scDiagnostics)
 # ----------------------------------
 
 # Load the processed SCE objects
-normal_data <- readRDS("data/normal_data.rds")
-covid_data <- readRDS("data/covid_data.rds")
+normal_data <- readRDS("data/covid/normal_data.rds")
+covid_data <- readRDS("data/covid/covid_data.rds")
 
 # PCA boxplot
 boxplot_pca <- boxplotPCA(query_data = covid_data,

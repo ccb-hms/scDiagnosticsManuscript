@@ -21,7 +21,7 @@ source("R/auxiliary/convertEnsemblToSymbols.R")
 # _____________________________
 
 # Load with HDF5 backend (data stays on disk)
-sce_full <- readH5AD("data/covid_data.h5ad", use_hdf5 = TRUE, reader = "R")
+sce_full <- readH5AD("data/covid/covid_data.h5ad", use_hdf5 = TRUE, reader = "R")
 message("Initial data loaded with ", ncol(sce_full), " cells and ", nrow(sce_full), " features.")
 
 # Apply basic QC filters
@@ -123,9 +123,9 @@ sce_normal_final <- formatSCE(sce_normal)
 sce_covid_final <- formatSCE(sce_covid)
 
 # Save the final objects
-saveRDS(sce_normal_final, "data/normal_data.rds")
-saveRDS(sce_covid_final, "data/covid_data.rds")
-message("Saved final objects to 'data/normal_data.rds' and 'data/covid_data.rds'")
+saveRDS(sce_normal_final, "data/covid/normal_data.rds")
+saveRDS(sce_covid_final, "data/covid/covid_data.rds")
+message("Saved final objects to 'data/covid/normal_data.rds' and 'data/covid/covid_data.rds'")
 
 
 # _______________

@@ -26,25 +26,25 @@ environmentSetupCellTypist()
 
 # Step 1: Data preparation (minimal colData approach)
 cat("\nStep 1: Preparing data for Python annotation...\n")
-source("COVID-19 - Python Annotation Data Preparation.R")
+source("R/covid/Python Annotation Data Preparation.R")
 
 # Step 2: Python annotation  
 cat("\nStep 2: Running CellTypist annotation...\n")
-system("COVID-19 - CellTypist Cell Type Annotation.py")
+system("python/covid/CellTypist Cell Type Annotation.py")
 
 # Step 3: Merge results with original data
 cat("\nStep 3: Integrating annotations with original COVID data...\n") 
-source("COVID-19 - CellTypist Results Integration.R")
+source("R/covid/CellTypist Results Integration.R")
 
 cat("\n=== Pipeline Complete! ===\n")
-cat("Your annotated data is saved as: data/covid_data_annotated.rds\n")
+cat("Your annotated data is saved as: data/covid/covid_data_annotated.rds\n")
 
 # Quick validation
 cat("\nQuick validation:\n")
 result <- readRDS("data/covid_data_annotated.rds")
 cat("Final dimensions:", dim(result), "\n")
 cat("Original colData preserved:", 
-    ncol(colData(result)) > 3, "\n")  # Assuming original had >3 columns
+    ncol(colData(result)) > 3, "\n")  
 cat("CellTypist annotations added:", 
     any(grepl("predicted|majority|conf", colnames(colData(result)))), "\n")
 

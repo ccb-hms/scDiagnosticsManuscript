@@ -14,8 +14,8 @@ source("R/auxiliary/performAzimuthAnnotation.R")
 # -----------------------------------------------------
 
 # Read all processed datasets
-normal_data <- readRDS("data/normal_data.rds")
-covid_data <- readRDS("data/covid_data.rds") 
+normal_data <- readRDS("data/covid/normal_data.rds")
+covid_data <- readRDS("data/covid/covid_data.rds") 
 
 # Setting the seed
 set.seed(0)
@@ -30,15 +30,15 @@ if(.Platform$OS.type == "windows") {
 }
 
 # Create output directories
-if(!dir.exists("data/Azimuth")) dir.create("data/Azimuth", recursive = TRUE)
-if(!dir.exists("data/SingleR")) dir.create("data/SingleR", recursive = TRUE)
+if(!dir.exists("data/covid/Azimuth")) dir.create("data/covid/Azimuth", recursive = TRUE)
+if(!dir.exists("data/covid/SingleR")) dir.create("data/covid/SingleR", recursive = TRUE)
 
 # ____________________
 # Azimuth Annotations
 # ____________________
 
 # Set path to your custom reference (created by the reference creation script)
-custom_reference_path <- "data/Azimuth/custom_azimuth_reference"
+custom_reference_path <- "data/covid/Azimuth/custom_azimuth_reference"
 
 # Verify the reference exists
 if(!dir.exists(custom_reference_path)) {
@@ -98,7 +98,7 @@ singler_normal_output <- performSingleRWithSubsampling(
     query_sce = covid_data,
     ref_name = "normal",
     annotation_col = "cell_type",
-    max_cells_ref = 30000,
+    max_cells_ref = NULL,
     bpparam = bpparam
 )
 covid_data$singler_annotations <- singler_normal_output$annotations
@@ -112,16 +112,16 @@ covid_data$singler_annotations <- as.character(covid_data$singler_annotations)
 # __________________
 
 # Save annotated SCE objects
-saveRDS(covid_data, "data/covid_data.rds") 
+saveRDS(covid_data, "data/covid/covid_data.rds") 
 
 # Save SingleR outputs
-saveRDS(singler_normal_output, "data/SingleR/singler_normal_output.rds")
+saveRDS(singler_normal_output, "data/covid/SingleR/singler_normal_output.rds")
 
 # Save Azimuth outputs
-saveRDS(azimuth_covid_output$azimuth_results, "data/Azimuth/azimuth_covid_results.rds")
+saveRDS(azimuth_covid_output$azimuth_results, "data/covid/Azimuth/azimuth_covid_results.rds")
 
 # Save Seurat objects with Azimuth annotations
-saveRDS(azimuth_covid_output$seurat_object, "data/Azimuth/azimuth_covid_seurat.rds")
+saveRDS(azimuth_covid_output$seurat_object, "data/covid/Azimuth/azimuth_covid_seurat.rds")
 
 # Save custom reference info
 reference_info <- list(
@@ -129,7 +129,7 @@ reference_info <- list(
     reference_type = if(reference_to_use == custom_reference_path) "custom_healthy" else "standard",
     creation_date = Sys.Date()
 )
-saveRDS(reference_info, "data/Azimuth/reference_info.rds")
+saveRDS(reference_info, "data/covid/Azimuth/reference_info.rds")
 
 # Clean up
 rm(normal_data, covid_data, 

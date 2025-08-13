@@ -13,8 +13,8 @@ source("R/auxiliary/addReferencePCA.R")
 # -----------------------------------------------------
 
 # Load the formatted SCE objects
-normal_data <- readRDS("data/normal_data.rds")
-covid_data <- readRDS("data/covid_data.rds")
+normal_data <- readRDS("data/covid/normal_data.rds")
+covid_data <- readRDS("data/covid/covid_data.rds")
 
 # Setting the seed
 set.seed(0)
@@ -36,8 +36,8 @@ normal_data$cell_type <- as.character(normal_data$cell_type)
 covid_data$cell_type <- as.character(covid_data$cell_type)
 
 # Save all processed datasets
-saveRDS(normal_data, "data/normal_data.rds")
-saveRDS(covid_data, "data/covid_data.rds") 
+saveRDS(normal_data, "data/covid/normal_data.rds")
+saveRDS(covid_data, "data/covid/covid_data.rds") 
 
 cat("Processing complete! Saved:\n")
 cat("- normal_data.rds:", ncol(normal_data), "cells\n")

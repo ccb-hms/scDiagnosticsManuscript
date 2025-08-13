@@ -15,13 +15,13 @@ library(Matrix)
 # _______________________________________
 
 # Read in reference data
-normal_data <- readRDS("data/normal_data.rds")
+normal_data <- readRDS("data/covid/normal_data.rds")
 
 # Input data 
 input_sce_name <- "normal_data"  
 
 # Output directory
-output_directory <- "data/Azimuth/custom_azimuth_reference"
+output_directory <- "data/covid/Azimuth/custom_azimuth_reference"
 
 # Cell type column to use
 celltype_column <- "cell_type"  
