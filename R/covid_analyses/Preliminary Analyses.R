@@ -1,5 +1,5 @@
 # ----------------------------------
-# Preliminary Analyses
+# COVID-19 - Preliminary Analyses
 # ----------------------------------
 
 # Load libraries

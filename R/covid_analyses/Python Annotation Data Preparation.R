@@ -7,11 +7,14 @@ library(SingleCellExperiment)
 library(zellkonverter)
 library(reticulate)
 
+# Source files 
+source("R/auxiliary/EnvironmentSetupCellTypist.R")
+
 # ----------------------------------------------
 
 # Setup Python environment
 cat("Setting up Python environment...\n")
-source("R/auxiliary/EnvironmentSetupCellTypist.R")
+environmentSetupCellTypist()
 
 # Configuration
 REFERENCE_FILE <- "data/normal_data.rds"

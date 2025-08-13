@@ -1,8 +1,8 @@
 # -----------------------------------------------
-# CREATE AZIMUTH REFERENCE
+# COVID-19 - Create Azimuth Reference
 # -----------------------------------------------
 
-# Clear environment and load libraries fresh
+# Load libraries
 library(SingleCellExperiment)
 library(Azimuth)
 library(Seurat)
