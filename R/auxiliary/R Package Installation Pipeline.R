@@ -26,7 +26,8 @@ cran_packages <- c(
     "Matrix",       # Handling sparse matrices (often base, but good to check)
     "reticulate",   # R interface to Python
     "remotes",      # Needed to install packages from GitHub
-    "Seurat"        # Required by Azimuth
+    "here"          # For robust file paths
+    # NOTE: Seurat moved to GitHub section for version 5.3.1.0
 )
 
 # Packages to be installed from Bioconductor
@@ -43,8 +44,10 @@ bioc_packages <- c(
 )
 
 # Packages to be installed from GitHub
-github_repo <- "satijalab/azimuth"
-github_pkg_name <- "Azimuth"
+github_packages <- list(
+    "Seurat" = "satijalab/seurat@v5.3.1.0",  # Specific version from GitHub
+    "Azimuth" = "satijalab/azimuth"           # Latest from GitHub
+)
 
 
 # __________________________________
@@ -90,13 +93,34 @@ for (pkg in bioc_packages) {
 
 message("\n--- Checking and installing GitHub packages ---")
 
-# Azimuth requires installation from GitHub via the 'remotes' package
-if (!requireNamespace(github_pkg_name, quietly = TRUE)) {
-    message("Installing '", github_pkg_name, "' from GitHub repository: ", github_repo)
-    # The 'remotes' package should have been installed in the CRAN step
-    remotes::install_github(github_repo)
-} else {
-    message("Package '", github_pkg_name, "' is already installed.")
+# Install packages from GitHub with specific versions
+for (pkg_name in names(github_packages)) {
+    github_repo <- github_packages[[pkg_name]]
+    
+    if (!requireNamespace(pkg_name, quietly = TRUE)) {
+        message("Installing '", pkg_name, "' from GitHub repository: ", github_repo)
+        tryCatch({
+            remotes::install_github(github_repo, force = TRUE)
+            message("✓ Successfully installed ", pkg_name)
+        }, error = function(e) {
+            message("✗ Failed to install ", pkg_name, ": ", e$message)
+        })
+    } else {
+        # Check if we need to update to the specific version
+        if (pkg_name == "Seurat") {
+            current_version <- packageVersion("Seurat")
+            target_version <- "5.3.1.0"
+            
+            if (as.character(current_version) != target_version) {
+                message("Updating Seurat from version ", current_version, " to ", target_version)
+                remotes::install_github(github_repo, force = TRUE)
+            } else {
+                message("Seurat version ", target_version, " is already installed.")
+            }
+        } else {
+            message("Package '", pkg_name, "' is already installed.")
+        }
+    }
 }
 
 
@@ -106,5 +130,20 @@ if (!requireNamespace(github_pkg_name, quietly = TRUE)) {
 
 message("\n-------------------------------------------------")
 message("All package checks are complete.")
+
+# Verify specific versions
+message("\nVersion verification:")
+tryCatch({
+    seurat_version <- packageVersion("Seurat")
+    message("✓ Seurat version: ", seurat_version)
+    
+    if (requireNamespace("Azimuth", quietly = TRUE)) {
+        azimuth_version <- packageVersion("Azimuth")
+        message("✓ Azimuth version: ", azimuth_version)
+    }
+}, error = function(e) {
+    message("Could not verify package versions: ", e$message)
+})
+
 message("The R environment should now be ready for the pipeline.")
 message("-------------------------------------------------")
