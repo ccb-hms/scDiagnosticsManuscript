@@ -1,0 +1,24 @@
+========================================================
+Job Name: covid_r_annotations
+Job ID: 11242986
+Execution Date: Tue Aug 12 08:31:15 PM EDT 2025
+Running on node: compute-b-16-189.o2.rc.hms.harvard.edu
+Working Directory: /home/anc7854/scDiagnosticsManuscript
+Allocated Cores: 8
+Allocated Memory: MB per CPU
+========================================================
+
+Log directory 'logs' ensured.
+
+Loading required modules...
+Modules loaded.
+
+Starting R script: R/covid_analyses/COVID-19 - Add R (Azimuth and SingleR) Annotations.R
+--------------------------------------------------------
+--------------------------------------------------------
+R script finished.
+
+Job completed at: Tue Aug 12 08:31:18 PM EDT 2025
+Final output files should include:
+-rw-r--r-- 1 anc7854 anc7854.group 1.2G Aug 12 17:31 data/covid_data.rds
+========================================================

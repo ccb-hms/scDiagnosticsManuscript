@@ -1,0 +1,3 @@
+# Ignore the batch and data directories
+batch/
+data/
