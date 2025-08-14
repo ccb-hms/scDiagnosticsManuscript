@@ -26,7 +26,7 @@ For each real-world dataset, we generate annotations using a suite of popular to
 
 The repository is structured to reflect a logical, multi-step analysis pipeline. The core workflow for each dataset is:
 1.  **Data Preparation:** Initial import, QC, filtering, and normalization.
-2.  **Annotation Generation:** Running SingleR, Azimuth, and CellTypist to produce query labels.
+2.  **Annotation Generation:** Running SingleR, Azimuth, CellTypist and scVI/scArches to produce query labels.
 3.  **Diagnostic Analysis:** Applying `scDiagnostics` to compare the tool-generated labels against the author's ground-truth annotations.
 
 The main directories are organized as follows:
