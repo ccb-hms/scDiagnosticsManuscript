@@ -32,9 +32,7 @@ The main directories are organized as follows:
 
 *   `/R`: Contains all R scripts, organized by dataset (`covid`, `merfish`) and function (`auxiliary`, `simulations`). This is the primary location for data processing, annotation generation (for R-based tools), and analysis code.
 *   `/python`: Contains Python scripts for generating annotations with `CellTypist`.
-*   `/batch`: Provides shell scripts for executing the R and Python annotation pipelines, useful for running jobs on a high-performance computing (HPC) cluster.
 *   `/data`: Stores key input files (e.g., `.h5ad`), intermediate objects, and the final annotation results from each tool.
-*   `/figures`: Contains figures generated from the analysis, particularly the simulations.
 *   `_quarto.yml`, `index.qmd`, etc.: Quarto files that generate the companion [project website](https://your-github-username.github.io/your-repo-name/). <!-- TODO: Update link -->
 
 ### Reproducing the Analysis
@@ -43,7 +41,7 @@ To reproduce the analysis, follow these general steps:
 
 1.  **Clone the Repository:**
     ```bash
-    git clone https://github.com/your-github-username/your-repo-name.git
+    git clone https://github.com/ccb-hms/scDiagnosticsManuscript.git
     cd your-repo-name
     ```
 
