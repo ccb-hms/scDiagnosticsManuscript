@@ -97,7 +97,7 @@ singler_healthy_output <- performSingleRWithSubsampling(
     ref_sce = healthy_data,
     query_sce = dss9_data,
     ref_name = "healthy",
-    annotation_col = "cell_type",
+    annotation_col = "tier2",
     max_cells_ref = NULL,
     bpparam = bpparam
 )
