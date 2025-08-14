@@ -1,19 +1,18 @@
-# This is the workflow for building and deploying the Quarto website.
 name: Publish Website
 
 on:
   push:
-    branches: [main] # Trigger the build on pushes to the main branch
+    branches: [main]
   pull_request:
-    branches: [main] # Also build on pull requests to check for errors
+    branches: [main]
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      pages: write      # Allow the job to write to GitHub Pages
-      id-token: write   # Allow the job to authenticate
+      pages: write
+      id-token: write
 
     steps:
       - name: Check out repository
@@ -23,17 +22,11 @@ jobs:
       - name: Set up R
         uses: r-lib/actions/setup-r@v2
         with:
-          r-version: '4.4.1' # Or your desired R version
+          r-version: '4.3'
 
-      - name: Set up R package cache
-        uses: r-lib/actions/setup-r-dependencies@v2
-        with:
-          packages:
-            any::biocmanager
-            any::remotes
-
-      - name: Install R (Bioconductor) Dependencies
+      - name: Install R Dependencies
         run: |
+          R -e "install.packages('BiocManager')"
           R -e "BiocManager::install(c('scDiagnostics', 'SpatialExperiment', 'SingleCellExperiment', 'scran', 'scater', 'MerfishData', 'BiocParallel', 'Matrix'))"
         shell: bash
 
@@ -41,35 +34,25 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.13.3' 
-
-      - name: Set up Python package cache
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
+          python-version: '3.11'
 
       - name: Install Python Dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-      
-      # --------------------- Quarto Render and Deploy ---------------------
+
+      # --------------------- Quarto Setup and Render ---------------------
       - name: Set up Quarto
-        uses: quarto-dev/quarto-cli-setup@v2
+        uses: quarto-dev/quarto-actions/setup@v2
 
       - name: Render Website
-        uses: quarto-dev/quarto-cli-action-render@v2
+        uses: quarto-dev/quarto-actions/render@v2
         with:
-          # Tell Quarto where your website source files are
-          path: website 
+          path: website
 
       - name: Upload Artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          # This should match the output-dir in _quarto.yml
           path: docs
 
       - name: Deploy to GitHub Pages
