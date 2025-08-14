@@ -1,6 +1,6 @@
 # scDiagnostics: Manuscript Code and Analysis
 
-This repository contains the full computational workflow for the manuscript "[*Your Manuscript Title*]", which introduces and demonstrates the `scDiagnostics` R/Bioconductor package.
+This repository contains the full computational workflow for the manuscript "[*scDiagnostics: diagnostic tools for assessing cell type annotation quality in scRNA-seq data*]", which introduces and demonstrates the `scDiagnostics` R/Bioconductor package.
 
 The primary goal of this repository is to provide a transparent and reproducible demonstration of how `scDiagnostics` can be used to evaluate and diagnose automated cell type annotations from a variety of popular tools across different single-cell technologies and biological contexts.
 
@@ -20,6 +20,7 @@ For each real-world dataset, we generate annotations using a suite of popular to
 *   **SingleR** (R)
 *   **Azimuth** (R)
 *   **CellTypist** (Python)
+*   **scVI/scArches** (Python)
 
 ### Workflow and Repository Structure
 
@@ -31,9 +32,9 @@ The repository is structured to reflect a logical, multi-step analysis pipeline.
 The main directories are organized as follows:
 
 *   `/R`: Contains all R scripts, organized by dataset (`covid`, `merfish`) and function (`auxiliary`, `simulations`). This is the primary location for data processing, annotation generation (for R-based tools), and analysis code.
-*   `/python`: Contains Python scripts for generating annotations with `CellTypist`.
+*   `/python`: Contains Python scripts for generating annotations with `CellTypist` and `scVI/scArches`.
 *   `/data`: Stores key input files (e.g., `.h5ad`), intermediate objects, and the final annotation results from each tool.
-*   `_quarto.yml`, `index.qmd`, etc.: Quarto files that generate the companion [project website](https://your-github-username.github.io/your-repo-name/). <!-- TODO: Update link -->
+*   `/website`: Contains `_quarto.yml`, `index.qmd`, etc.: Quarto files that generate the companion [project website](https://your-github-username.github.io/your-repo-name/). <!-- TODO: Update link -->
 
 ### Reproducing the Analysis
 
@@ -42,15 +43,14 @@ To reproduce the analysis, follow these general steps:
 1.  **Clone the Repository:**
     ```bash
     git clone https://github.com/ccb-hms/scDiagnosticsManuscript.git
-    cd your-repo-name
+    cd scDiagnosticsManuscript
     ```
 
 2.  **Set up Environments:**
     The analysis requires both R and Python environments. Key R packages include `scDiagnostics`, `SpatialExperiment`, `SingleR`, and the `tidyverse`. The Python environment requires `celltypist`.
 
 3.  **Execute the Workflow:**
-    -   Run the data processing and annotation scripts found in `/R`, `/python`, and `/batch`.
-    -   The final diagnostic analyses and figure generation are performed by rendering the Quarto (`.qmd`) documents for the project website.
+    Run the data processing and annotation scripts found in `/R` and `/python`.
 
 ### Citation
 
