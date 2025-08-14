@@ -32,15 +32,17 @@ cran_packages <- c(
 
 # Packages to be installed from Bioconductor
 bioc_packages <- c(
-    "zellkonverter",      # Reading h5ad files
-    "SingleCellExperiment", # Core object for scRNA-seq data
-    "HDF5Array",          # On-disk data representation
-    "DelayedArray",       # Handling large, on-disk arrays
-    "scran",              # Single-cell analysis tools (HVGs, etc.)
-    "scater",             # Single-cell analysis tools (PCA, UMAP, etc.)
-    "BiocParallel",       # For parallel processing in Bioconductor
-    "SingleR",            # A reference-based annotation tool
-    "biomaRt"             # For converting gene IDs
+    "zellkonverter",          # Reading h5ad files
+    "SingleCellExperiment",   # Core object for scRNA-seq data
+    "HDF5Array",              # On-disk data representation
+    "DelayedArray",           # Handling large, on-disk arrays
+    "scran",                  # Single-cell analysis tools (HVGs, etc.)
+    "scater",                 # Single-cell analysis tools (PCA, UMAP, etc.)
+    "BiocParallel",           # For parallel processing in Bioconductor
+    "SingleR",                # A reference-based annotation tool
+    "biomaRt",                # For converting gene IDs
+    "SpatialExperiment",      # For single-cell spatial analysis tools
+    "MerfishData"             # For MERFISH data loading
 )
 
 # Packages to be installed from GitHub
