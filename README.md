@@ -1,10 +1,10 @@
 # scDiagnostics: Manuscript Code and Analysis
 
-This repository contains the full computational workflow for the manuscript "[*scDiagnostics: diagnostic tools for assessing cell type annotation quality in scRNA-seq data*]", which introduces and demonstrates the `scDiagnostics` R/Bioconductor package.
+This repository contains the full computational workflow for the manuscript "*scDiagnostics: diagnostic tools for assessing cell type annotation quality in scRNA-seq data*", which introduces and demonstrates the `scDiagnostics` R/Bioconductor package.
 
 The primary goal of this repository is to provide a transparent and reproducible demonstration of how `scDiagnostics` can be used to evaluate and diagnose automated cell type annotations from a variety of popular tools across different single-cell technologies and biological contexts.
 
-[**Visit the project website for a full walkthrough of the analysis and results.**](https://your-github-username.github.io/your-repo-name/)  <!-- ### TODO: Update this link once the site is live! ### -->
+[**Visit the project website for a full walkthrough of the analysis and results.**](https://ccb-hms.github.io/scDiagnosticsManuscript/)  
 
 ---
 
@@ -34,7 +34,7 @@ The main directories are organized as follows:
 *   `/R`: Contains all R scripts, organized by dataset (`covid`, `merfish`) and function (`auxiliary`, `simulations`). This is the primary location for data processing, annotation generation (for R-based tools), and analysis code.
 *   `/python`: Contains Python scripts for generating annotations with `CellTypist` and `scVI/scArches`.
 *   `/data`: Stores key input files (e.g., `.h5ad`), intermediate objects, and the final annotation results from each tool.
-*   `/website`: Contains `_quarto.yml`, `index.qmd`, etc.: Quarto files that generate the companion [project website](https://your-github-username.github.io/your-repo-name/). <!-- TODO: Update link -->
+*   `/website`: Contains `_quarto.yml`, `index.qmd`, etc.: Quarto files that generate the companion [project website](https://ccb-hms.github.io/scDiagnosticsManuscript/). 
 
 ### Reproducing the Analysis
 
