@@ -1,42 +1,41 @@
-# ----------------------------------
-# COVID-19 - Preliminary Analyses
-# ----------------------------------
+# -----------------------------------------------
+# MERFISH Mouse Colon IBD - Preliminary Analyses
+# -----------------------------------------------
 
 # Load libraries
 library(SingleCellExperiment)
 library(scDiagnostics)
  
-# ----------------------------------
+# -----------------------------------------------
 
 # Load the processed SCE objects
-normal_data <- readRDS("data/covid/normal_data.rds")
-covid_data <- readRDS("data/covid/covid_data.rds")
+healthy_data <- readRDS("data/merfish/healthy_data.rds")
+dss9_data <- readRDS("data/merfish/dss9_data.rds")
 
 # PCA boxplot
-boxplot_pca <- boxplotPCA(query_data = covid_data,
-                          reference_data = normal_data, 
-                          query_cell_type_col = "singler_annotations", 
-                          ref_cell_type_col = "cell_type", 
-                          cell_types = c("CD14-positive monocyte", "myeloid dendritic cell", 
-                                         "erythrocyte", "CD4-positive, alpha-beta T cell"), 
+boxplot_pca <- boxplotPCA(query_data = dss9_data,
+                          reference_data = healthy_data, 
+                          query_cell_type_col = "predicted_labels", 
+                          ref_cell_type_col = "tier2", 
+                          cell_types = c("IASMC 1", "IAE 2", "IAF 3"), 
                           pc_subset = 1:5, 
                           max_cells = 10000)
 boxplot_pca
 
 # PCA scatterplot
-scatter_pca <- plotCellTypePCA(query_data  = covid_data,
-                               reference_data = normal_data, 
-                               query_cell_type_col = "singler_annotations", 
-                               ref_cell_type_col =  "cell_type", 
-                               cell_types = c("CD14-positive monocyte"), 
+scatter_pca <- plotCellTypePCA(query_data  = dss9_data,
+                               reference_data = healthy_data, 
+                               query_cell_type_col = "predicted_labels", 
+                               ref_cell_type_col = "tier2", 
+                               cell_types = c("IASMC 1", "IAE 2", "IAF 3"), 
                                pc_subset = 1:5, 
                                diagonal_facet = "ridge",
                                max_cells = 10000)
 scatter_pca
 
 # Anomaly Detection
-anomaly_output <- detectAnomaly(query_data = covid_data,
-                                reference_data = normal_data, 
+anomaly_output <- detectAnomaly(query_data = dss9_data,
+                                reference_data = healthy_data, 
                                 query_cell_type_col = "singler_annotations", 
                                 ref_cell_type_col = "cell_type", 
                                 cell_types = c("CD14-positive monocyte", "myeloid dendritic cell", 
@@ -54,8 +53,8 @@ plot(anomaly_output,
      upper_facet = "blank")
 
 # Compute distributional shifts for genes with top loadings
-gene_shifts <- calculateTopLoadingGeneShifts(reference_data = normal_data,
-                                             query_data = covid_data,
+gene_shifts <- calculateTopLoadingGeneShifts(reference_data = healthy_data,
+                                             query_data = dss9_data,
                                              query_cell_type_col = "singler_annotations",
                                              ref_cell_type_col = "cell_type",
                                              cell_types = c("CD14-positive monocyte", "myeloid dendritic cell", 
@@ -74,8 +73,8 @@ plot(gene_shifts,
      significance_threshold = 0.05)
 
 # Plot the marker expression
-plotMarkerExpression(reference_data = normal_data,
-                     query_data = covid_data,
+plotMarkerExpression(reference_data = healthy_data,
+                     query_data = dss9_data,
                      query_cell_type_col = "singler_annotations",
                      ref_cell_type_col = "cell_type",
                      gene_name = "S100A8",
@@ -83,8 +82,8 @@ plotMarkerExpression(reference_data = normal_data,
                      normalization = "none")
 
 # Regress the PC data (with reference data)
-regress_res2 <- regressPC(query_data = covid_data,
-                          reference_data = normal_data, 
+regress_res2 <- regressPC(query_data = dss9_data,
+                          reference_data = healthy_data, 
                           query_cell_type_col = "singler_annotations", 
                           ref_cell_type_col = "cell_type", 
                           query_batch_col = "Site",
