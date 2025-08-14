@@ -1,6 +1,6 @@
 # scDiagnostics: Manuscript Code and Analysis
 
-This repository contains the full computational workflow for the manuscript "*scDiagnostics: diagnostic tools for assessing cell type annotation quality in scRNA-seq data*", which introduces and demonstrates the `scDiagnostics` R/Bioconductor package.
+This repository contains the full computational workflow for the manuscript "*scDiagnostics: diagnostic tools for assessing cell type annotation quality in scRNA-seq data*" (Christidis et al.), which introduces and demonstrates the `scDiagnostics` R/Bioconductor package.
 
 The primary goal of this repository is to provide a transparent and reproducible demonstration of how `scDiagnostics` can be used to evaluate and diagnose automated cell type annotations from a variety of popular tools across different single-cell technologies and biological contexts.
 
