@@ -1,0 +1,12 @@
+---
+title: "Demonstration of the scDiagnostics Package"
+---
+
+This website provides a transparent and reproducible walkthrough of the data processing and diagnostic analysis workflows for the `scDiagnostics` manuscript.
+
+The two primary datasets used for demonstration are:
+
+1.  **COVID-19 PBMC scRNA-seq Data:** A large-scale dataset used to diagnose annotations in a disease vs. healthy context.
+2.  **MERFISH Mouse Colitis Spatial Data:** A complex spatial dataset used to evaluate annotations in an inflammatory disease model.
+
+Use the **Processing** and **Analysis** menus in the navigation bar to explore the different stages for each dataset.

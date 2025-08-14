@@ -1,0 +1,33 @@
+# This file configures the website.
+project:
+  type: website
+  output-dir: ../docs  # Tells Quarto to render the site to a 'docs' folder in the root
+
+website:
+  title: "scDiagnostics Manuscript Analysis"
+  navbar:
+    left:
+      - href: index.qmd
+        text: Home
+      - text: "Processing"
+        menu:
+          - href: processing-covid.qmd
+            text: "COVID-19 Data"
+          - href: processing-merfish.qmd
+            text: "MERFISH Data"
+      - text: "Analysis"
+        menu:
+          - href: analysis-covid.qmd
+            text: "COVID-19 Data"
+          - href: analysis-merfish.qmd
+            text: "MERFISH Data"
+  
+  # Optional: Add a link to your repo in the top right
+  repo-url: https://github.com/ccb-hms/scDiagnosticsManuscript
+  repo-actions: [edit, issue]
+
+format:
+  html:
+    theme: cosmo
+    css: styles.css
+    toc: true

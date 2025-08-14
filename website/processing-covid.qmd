@@ -1,0 +1,5 @@
+---
+title: "Processing: COVID-19 Data"
+---
+
+This page details the preprocessing steps for the COVID-19 PBMC dataset, from raw data import to a finalized `SingleCellExperiment` object ready for annotation.
