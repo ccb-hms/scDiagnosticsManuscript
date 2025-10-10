@@ -15,7 +15,24 @@ library(Matrix)
 # _______________________________________
 
 # Read in reference data
-healthy_data <- readRDS("data/merfish/healthy_data.rds")
+healthy_data_original <- readRDS("data/merfish/healthy_data.rds")
+
+healthy_data_original$tier2 <- as.character(healthy_data_original$tier2)
+
+# Define the cell types to remove (Tier 1 + Fibro 4)
+types_to_remove <- c(
+    "IAF 1", "IAF 2", "IAF 3", "IAF 5",
+    "IAE 1", "IAE 2", "IAE 3",
+    "IASMC 1", "IASMC 2", "IASMC 3",
+    "Fibro 4"
+)
+
+# Filter the SCE object to create the naive reference
+indices_to_keep <- !(healthy_data_original$tier2 %in% types_to_remove)
+healthy_data <- healthy_data_original[, indices_to_keep]
+
+cat("Original healthy cells:", ncol(healthy_data_original), "\n")
+cat("Naive reference now contains:", ncol(healthy_data), "cells.\n\n")
 
 # Input data 
 input_sce_name <- "healthy_data"  

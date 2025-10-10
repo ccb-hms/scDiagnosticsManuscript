@@ -15,7 +15,7 @@ library(Matrix)
 # _______________________________________
 
 # Read in reference data
-normal_data <- readRDS("data/covid/normal_data.rds")
+normal_data <- readRDS("data/covid/normal_data_sce.rds")
 
 # Input data 
 input_sce_name <- "normal_data"  
@@ -24,7 +24,7 @@ input_sce_name <- "normal_data"
 output_directory <- "data/covid/Azimuth/custom_azimuth_reference"
 
 # Cell type column to use
-celltype_column <- "cell_type"  
+celltype_column <- "author_cell_type"  
 
 # ________________________________________________________
 # Computational Optimization Parameters (Justified)

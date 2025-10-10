@@ -14,8 +14,8 @@ source("R/auxiliary/performAzimuthAnnotation.R")
 # -----------------------------------------------------
 
 # Read all processed datasets
-normal_data <- readRDS("data/covid/normal_data.rds")
-covid_data <- readRDS("data/covid/covid_data.rds") 
+normal_data <- readRDS("data/covid/normal_data_sce.rds")
+covid_data <- readRDS("data/covid/covid_data_sce.rds") 
 
 # Setting the seed
 set.seed(0)
@@ -112,7 +112,7 @@ covid_data$singler_annotations <- as.character(covid_data$singler_annotations)
 # __________________
 
 # Save annotated SCE objects
-saveRDS(covid_data, "data/covid/covid_data.rds") 
+saveRDS(covid_data, "data/covid/covid_data_sce.rds") 
 
 # Save SingleR outputs
 saveRDS(singler_normal_output, "data/covid/SingleR/singler_normal_output.rds")
