@@ -1,6 +1,6 @@
-# -----------------------------------------------
-# COVID-19 - Data Cleaning and Metadata Removal
-# -----------------------------------------------
+# ----------------------------------------------------------------------------
+# COVID-19 PBMC - Data Cleaning and Subsetting
+# ----------------------------------------------------------------------------
 
 # Load libraries
 library(zellkonverter)
@@ -9,188 +9,141 @@ library(HDF5Array)
 library(Matrix)
 library(dplyr)
 
-# -----------------------------------------------
-
-cat(paste(rep("=", 45), collapse = ""), "\n")
-cat("COVID-19 DATA CLEANING - REMOVING METADATA\n")
-cat(paste(rep("=", 45), collapse = ""), "\n")
+# ----------------------------------------------------------------------------
 
 # _____________________________
-# File Information and Loading
+# File Paths and Initial Load
 # _____________________________
 
 input_path <- "data/covid/covid_data.h5ad"
 output_path <- "data/covid/covid_data_clean.rds"
 
-cat("\nLoading original file:", input_path, "\n")
-original_size <- file.info(input_path)$size / (1024^3)
-cat(sprintf("Original file size: %.2f GB\n", original_size))
+message("Loading raw h5ad file: ", input_path)
+original_size_gb <- file.info(input_path)$size / (1024^3)
+message(sprintf("Original file size: %.2f GB", original_size_gb))
 
-# Load the original file
+# Load using HDF5-backed mode for memory efficiency
 sce_full <- readH5AD(input_path, use_hdf5 = TRUE, reader = "R")
-cat(sprintf("Data dimensions: %d cells × %d genes\n", ncol(sce_full), nrow(sce_full)))
-
-cat(sprintf("Memory usage before cleaning: %.2f GB\n", 
-    as.numeric(object.size(sce_full)) / (1024^3)))
+message(sprintf("Initial dimensions: %d genes x %d cells", nrow(sce_full), ncol(sce_full)))
 
 # ______________
-# Data Cleaning
+# Metadata Removal
 # ______________
 
-cat("\nCleaning metadata but keeping DelayedMatrix format...\n")
+message("Creating a clean SCE object by removing pre-existing metadata...")
 
-# Create SCE object without heavy metadata but keep DelayedMatrix
+# Re-instantiate the SCE object to remove all metadata, reducedDims, altExps
+# The assay is kept as a DelayedMatrix for now.
 sce_cleaned <- SingleCellExperiment(
-    assays = list(X = assay(sce_full, "X")),  # Keep as DelayedMatrix for now
-    colData = colData(sce_full),  # Keep all colData
-    rowData = rowData(sce_full)   # Keep all rowData
+    assays = list(X = assay(sce_full, "X")),
+    colData = colData(sce_full),
+    rowData = rowData(sce_full)
 )
 
-# Clear the heavy metadata components
-metadata(sce_cleaned) <- list()
-reducedDims(sce_cleaned) <- list()
-altExps(sce_cleaned) <- list()
+message("Removed metadata, neighbors, PCA, and other pre-computed slots.")
 
-cat("✓ Removed all metadata (neighbors, antibody data, PCA, etc.)\n")
-cat("✓ Kept DelayedMatrix format for efficient sampling\n")
+# __________________________________
+# Filtering for Relevant Conditions
+# __________________________________
 
-# ________________________
-# Cell Sampling by Sample
-# ________________________
+message("Filtering cells to retain only healthy and COVID-19 samples.")
 
-cat("\nFiltering and sampling cells by condition...\n")
+# Filter out "respiratory system disorder" cases
+keep_disease <- sce_cleaned$disease %in% c("normal", "COVID-19")
+sce_filtered <- sce_cleaned[, keep_disease]
 
-# First, filter out respiratory system disorder cases
-cat("Filtering out respiratory system disorder cases...\n")
-keep_indices <- sce_cleaned$disease %in% c("normal", "COVID-19")
-sce_filtered <- sce_cleaned[, keep_indices]
+# Filter out LPS-treated samples from the healthy controls
+is_healthy_control <- sce_filtered$disease == "normal" & sce_filtered$Status_on_day_collection_summary == "Healthy"
+is_covid_patient <- sce_filtered$disease == "COVID-19"
+keep_final <- is_healthy_control | is_covid_patient
 
-# Second, filter out LPS-treated samples from healthy controls
-cat("Filtering out LPS-treated samples from healthy controls...\n")
-healthy_samples <- (sce_filtered$disease == "normal" & 
-                   sce_filtered$Status_on_day_collection_summary == "Healthy")
-covid_samples <- sce_filtered$disease == "COVID-19"
-keep_clean <- healthy_samples | covid_samples
+sce_filtered <- sce_filtered[, keep_final]
 
-sce_filtered <- sce_filtered[, keep_clean]
-
-cat(sprintf("Filtered data: %d cells retained\n", ncol(sce_filtered)))
-cat("Disease distribution after filtering:\n")
+message(sprintf("Retained %d cells after filtering for condition.", ncol(sce_filtered)))
+message("Disease distribution after filtering:")
 print(table(sce_filtered$disease))
-cat("Status distribution for normal samples:\n")
-normal_status <- table(sce_filtered$Status_on_day_collection_summary[sce_filtered$disease == "normal"])
-print(normal_status)
 
-# Check sample distribution after filtering
+# ________________________________
+# Stratified Cell Sampling
+# ________________________________
+
+message("Performing stratified sampling by sample and condition...")
+
+# Identify samples with a sufficient number of cells (>= 500)
 sample_counts <- table(sce_filtered$sample_id)
-cat(sprintf("Total samples after filtering: %d\n", length(sample_counts)))
-cat(sprintf("Cells per sample (range): %d - %d\n", min(sample_counts), max(sample_counts)))
+samples_to_keep <- names(sample_counts)[sample_counts >= 500]
+message(sprintf("Identified %d samples with >= 500 cells.", length(samples_to_keep)))
 
-# Filter samples with at least 500 cells
-samples_with_500plus <- names(sample_counts)[sample_counts >= 500]
-cat(sprintf("Samples with ≥500 cells: %d\n", length(samples_with_500plus)))
+# Stratify samples by disease status
+disease_status <- sce_filtered$disease[match(samples_to_keep, sce_filtered$sample_id)]
+normal_samples <- samples_to_keep[disease_status == "normal"]
+covid_samples <- samples_to_keep[disease_status == "COVID-19"]
 
-# Check disease status for each qualifying sample
-disease_status <- sce_filtered$disease[match(samples_with_500plus, sce_filtered$sample_id)]
-normal_samples <- samples_with_500plus[disease_status == "normal"]
-covid_samples <- samples_with_500plus[disease_status == "COVID-19"]
+message(sprintf("Found %d healthy control samples and %d COVID-19 samples.", length(normal_samples), length(covid_samples)))
 
-cat(sprintf("  - Normal samples: %d\n", length(normal_samples)))
-cat(sprintf("  - COVID samples: %d\n", length(covid_samples)))
+# Set seed for reproducible sampling
+set.seed(123)
 
-# Sample cells with different strategies by condition
-set.seed(0)  # For reproducibility
-sampled_indices <- c()
+# Sample up to 1000 cells from each normal (reference) sample
+normal_indices <- unlist(sapply(normal_samples, function(id) {
+    sample_indices <- which(sce_filtered$sample_id == id)
+    n_to_sample <- min(length(sample_indices), 1000)
+    sample(sample_indices, n_to_sample)
+}))
 
-# Sample from normal samples (1000 cells or all if <1000)
-for(sample in normal_samples) {
-    sample_indices <- which(sce_filtered$sample_id == sample)
-    n_cells <- length(sample_indices)
-    n_sample <- ifelse(n_cells >= 1000, 1000, n_cells)  # Take all if <1000, otherwise 1000
-    sampled_indices <- c(sampled_indices, sample(sample_indices, n_sample))
-}
+# Sample exactly 500 cells from each COVID (query) sample
+covid_indices <- unlist(sapply(covid_samples, function(id) {
+    sample_indices <- which(sce_filtered$sample_id == id)
+    sample(sample_indices, 500)
+}))
 
-# Sample from COVID samples (500 cells each)
-for(sample in covid_samples) {
-    sample_indices <- which(sce_filtered$sample_id == sample)
-    sampled_indices <- c(sampled_indices, sample(sample_indices, 500))
-}
+# Combine and subset the SCE object
+sce_sampled <- sce_filtered[, c(normal_indices, covid_indices)]
 
-# Subset the SCE object
-sce_sampled <- sce_filtered[, sampled_indices]
-
-# Report sampling results
-normal_cells <- sum(sce_sampled$disease == "normal")
-covid_cells <- sum(sce_sampled$disease == "COVID-19")
-
-cat(sprintf("✓ Sampled from %d normal samples (up to 1000 cells each)\n", length(normal_samples)))
-cat(sprintf("✓ Sampled from %d COVID samples (500 cells each)\n", length(covid_samples)))
-cat(sprintf("✓ Total normal cells: %d\n", normal_cells))
-cat(sprintf("✓ Total COVID cells: %d\n", covid_cells))
-cat(sprintf("✓ Total sampled cells: %d\n", ncol(sce_sampled)))
-cat(sprintf("New dimensions: %d cells × %d genes\n", ncol(sce_sampled), nrow(sce_sampled)))
+message(sprintf("Total cells after sampling: %d", ncol(sce_sampled)))
+message(sprintf("  - Healthy cells: %d", sum(sce_sampled$disease == "normal")))
+message(sprintf("  - COVID-19 cells: %d", sum(sce_sampled$disease == "COVID-19")))
+message(sprintf("Sampled dimensions: %d genes x %d cells", nrow(sce_sampled), ncol(sce_sampled)))
 
 # _________________________
 # Sparse Matrix Conversion
 # _________________________
 
-cat("\nConverting to sparse matrix...\n")
-cat("Step 1: Realizing matrix (this may take a moment)...\n")
+message("Converting assay from DelayedMatrix to in-memory CsparseMatrix...")
+
+# Realize the sampled data into memory
 realized_matrix <- realize(assay(sce_sampled, "X"))
-cat(sprintf("Realized matrix class: %s\n", class(realized_matrix)))
 
-cat("Step 2: Converting to CsparseMatrix...\n")
+# Convert to the final sparse matrix format
 expr_matrix <- as(realized_matrix, "CsparseMatrix")
-cat(sprintf("Final matrix class: %s\n", class(expr_matrix)))
-cat(sprintf("Sparse matrix size: %.2f GB\n", as.numeric(object.size(expr_matrix)) / (1024^3)))
 
-# Create final SCE object with sparse matrix
+# Create the final clean SCE object
 sce_clean <- SingleCellExperiment(
-    assays = list(X = expr_matrix),
+    assays = list(counts = expr_matrix), # Name assay 'counts'
     colData = colData(sce_sampled),
     rowData = rowData(sce_sampled)
 )
 
-cat("✓ Converted to memory-efficient sparse matrix format\n")
-cat(sprintf("Final memory usage: %.2f GB\n", as.numeric(object.size(sce_clean)) / (1024^3)))
+message(sprintf("Final matrix class: %s", class(assay(sce_clean, "counts"))))
+message(sprintf("Final object memory size: %.2f GB", as.numeric(object.size(sce_clean)) / (1024^3)))
 
 # ____________
 # File Saving
 # ____________
 
-cat("\nSaving cleaned SCE object as RDS...\n")
-
-# Save as RDS file
+message("Saving cleaned and sampled SCE object to: ", output_path)
 saveRDS(sce_clean, output_path, compress = TRUE)
 
-# Check the saved file size
-saved_size <- file.info(output_path)$size / (1024^3)
-
-cat("✓ File saved successfully\n")
-cat(sprintf("✓ Saved file size: %.2f GB\n", saved_size))
-cat(sprintf("✓ Space reduction: %.2f GB (%.1f%% of original)\n", 
-    original_size - saved_size, 
-    (saved_size/original_size)*100))
-
-cat(sprintf("\nCleaned data saved to: %s\n", output_path))
-cat("Original h5ad file preserved unchanged.\n")
-
-cat("\n", paste(rep("=", 45), collapse = ""), "\n")
-cat("DATA CLEANING COMPLETED SUCCESSFULLY\n")
-cat(paste(rep("=", 45), collapse = ""), "\n")
+saved_size_gb <- file.info(output_path)$size / (1024^3)
+message(sprintf("Saved file size: %.2f GB", saved_size_gb))
+message(sprintf("Total size reduction of %.1f%%.", (1 - saved_size_gb / original_size_gb) * 100))
 
 # _______________
 # Memory Cleanup
 # _______________
 
-cat("\nCleaning up memory...\n")
-
-# Remove all objects from environment
+message("Cleaning up memory...")
 rm(list = ls())
-
-# Force garbage collection
 gc()
 
-cat("✓ Memory cleared\n")
-
-# -----------------------------------------------
+message("Script finished.")

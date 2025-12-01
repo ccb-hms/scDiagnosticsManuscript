@@ -10,8 +10,8 @@ library(circlize)
 # --------------------------------------
 
 # Load the processed SCE objects
-normal_data <- readRDS("data/covid/normal_data.rds")
-covid_data <- readRDS("data/covid/covid_data.rds")
+normal_data <- readRDS("data/covid/normal_data_sce.rds")
+covid_data <- readRDS("data/covid/covid_data_sce.rds")
 
 # _________________
 # Data Preparation

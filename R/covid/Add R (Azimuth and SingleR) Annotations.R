@@ -1,5 +1,5 @@
 # -----------------------------------------------------
-# COVID-19 - Add R (Azimuth & SingleR) Annotations
+# COVID-19 PBMC - Add R (Azimuth & SingleR) Annotations
 # -----------------------------------------------------
 
 # Load libraries
@@ -10,6 +10,7 @@ library(parallel)
 # Source files
 source("R/auxiliary/performSingleRWithSubsampling.R")
 source("R/auxiliary/performAzimuthAnnotation.R")
+source("R/auxiliary/addMergedCellTypes.R")
 
 # -----------------------------------------------------
 
@@ -71,12 +72,6 @@ if(file.exists(ref_info_path)) {
 # Choose reference to use
 reference_to_use <- custom_reference_path
 
-# Option 2: Use standard PBMC reference instead
-# reference_to_use <- "pbmcref"
-
-# Option 3: Use path to downloaded reference
-# reference_to_use <- "/path/to/downloaded/reference"
-
 # Apply Azimuth annotations
 cat("Running Azimuth annotation with custom reference...\n")
 azimuth_covid_output <- performAzimuthAnnotation(
@@ -97,7 +92,7 @@ singler_normal_output <- performSingleRWithSubsampling(
     ref_sce = normal_data,
     query_sce = covid_data,
     ref_name = "normal",
-    annotation_col = "cell_type",
+    annotation_col = "author_cell_type",
     max_cells_ref = NULL,
     bpparam = bpparam
 )
@@ -107,8 +102,23 @@ covid_data$singler_scores <- singler_normal_output$scores
 # Set annotations as character data
 covid_data$singler_annotations <- as.character(covid_data$singler_annotations)
 
+# __________________________________
+# Create Merged Annotation Columns
+# __________________________________
+
+message("--- Creating Merged Versions of Annotations ---")
+
+# Use the flexible function to add merged columns directly to the SCE object
+covid_data <- addMergedCellTypes(sce_object = covid_data, input_col_name = "singler_annotations")
+covid_data <- addMergedCellTypes(sce_object = covid_data, input_col_name = "azimuth_celltype_l1")
+covid_data <- addMergedCellTypes(sce_object = covid_data, input_col_name = "azimuth_celltype_l2")
+
+message("Merged annotation columns created successfully.")
+message("Example of merged SingleR annotations:")
+print(head(table(covid_data$singler_annotations_merged)))
+
 # __________________
-# SAVE ALL RESULTS
+# Save All Results
 # __________________
 
 # Save annotated SCE objects

@@ -1,6 +1,6 @@
-# ----------------------------------
-# COVID-19 - Preliminary Analyses
-# ----------------------------------
+# --------------------------------------
+# COVID-19 PBMC - Preliminary Analyses
+# --------------------------------------
 
 # Load libraries
 library(SingleCellExperiment)
@@ -56,12 +56,17 @@ ggsave("cell_type_pca.png", dpi = 600)
 # Anomaly Detection
 # __________________
 
+covid_data_ifn <- covid_data[yoshida_ifn_signature,]
+normal_data_ifn <- normal_data[yoshida_ifn_signature,]
+
+normal_data_ifn <- scater::runPCA(normal_data_ifn, ncomponents = 50)
+
 # Anomaly Detection
 anomaly_output <- detectAnomaly(query_data = covid_data,
                                 reference_data = normal_data, 
                                 query_cell_type_col = "azimuth_celltype_l1", 
                                 ref_cell_type_col = "author_cell_type", 
-                                cell_types = c("CD14_mono", "CD83_CD14_mono"), 
+                                cell_types = c("CD14_mono"), 
                                 pc_subset = 1:10,
                                 n_tree = 500,
                                 anomaly_threshold = 0.5, 
@@ -69,7 +74,7 @@ anomaly_output <- detectAnomaly(query_data = covid_data,
                                 max_cells_ref = NULL)
 
 anomaly_plot <- plot(anomaly_output,
-                     cell_type = "CD83_CD14_mono",
+                     cell_type = "CD14_mono",
                      pc_subset = 1:3,
                      data_type = "query",
                      n_tree = 500,
@@ -79,7 +84,7 @@ anomaly_plot <- plot(anomaly_output,
 
 anomaly_plot
 
-ggsave("figures/covid/anomaly_plot.png")
+ggsave("figures/covid/anomaly_plot.png", width = 12, height = 8, dpi = 600)
 
 # _______________________________
 # Top Genes Distributional Shift
@@ -196,8 +201,8 @@ wasserstein_data <- calculateWassersteinDistance(
     query_data = covid_data,
     reference_data = normal_data,
     query_cell_type_col = "singler_annotations",
-    ref_cell_type_col = "cell_type",
-    cell_types = c("CD14-positive monocyte"), 
+    ref_cell_type_col = "author_cell_type",
+    cell_types = c("CD4.CM", "CD4.IL22", "CD8.TE", "Platelets"), 
     pc_subset = 1:5,
     n_resamples = 500)
 plot(wasserstein_data)
@@ -209,16 +214,16 @@ plot(wasserstein_data)
 # Compute SIR projections
 sir_output <- calculateSIRSpace(reference_data = normal_data,
                                 query_data = covid_data,
-                                query_cell_type_col = "singler_annotations",
-                                ref_cell_type_col = "cell_type",
-                                cell_types = c("CD14-positive monocyte"), 
+                                query_cell_type_col = "azimuth_celltype_l1",
+                                ref_cell_type_col = "author_cell_type",
+                                cell_types = c("CD14_mono", "CD83_CD14_mono"), 
                                 multiple_cond_means = TRUE,
                                 cumulative_variance_threshold = 0.9,
                                 n_neighbor = 1)
 
 plot(sir_output,
-     sir_subset = 1:5,
-     cell_types = c("CD14-positive monocyte"),
+     sir_subset = 1:10,
+     cell_types = c("CD14_mono"),
      lower_facet = "scatter",
      diagonal_facet = "ridge",
      upper_facet = "blank")

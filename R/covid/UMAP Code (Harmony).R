@@ -1,6 +1,6 @@
-# -------------------------------------------------------
-# COVID-19 - Dataset Combination and UMAP Visualization
-# -------------------------------------------------------
+# ----------------------------------------------------------------
+# COVID-19 - Dataset Combination and UMAP Visualization (Harmony)
+# ----------------------------------------------------------------
 
 # Load libraries
 library(SingleCellExperiment)
@@ -10,8 +10,9 @@ library(ggplot2)
 library(dplyr)
 library(RColorBrewer)
 library(viridis)
+library(harmony)
 
-# -------------------------------------------------------
+# ----------------------------------------------------------------
 
 cat(paste(rep("=", 45), collapse = ""), "\n")
 cat("COVID-19 DATASET COMBINATION AND UMAP VISUALIZATION\n")
@@ -27,11 +28,15 @@ cat("\nLoading processed datasets...\n")
 normal_data <- readRDS("data/covid/normal_data_sce.rds")
 covid_data <- readRDS("data/covid/covid_data_sce.rds")
 
-cat(sprintf("Normal dataset: %d genes × %d cells\n", nrow(normal_data_sce), ncol(normal_data_sce)))
-cat(sprintf("COVID dataset: %d genes × %d cells\n", nrow(covid_data_sce), ncol(covid_data_sce)))
+cat(sprintf("Normal dataset: %d genes × %d cells\n", nrow(normal_data), ncol(normal_data)))
+cat(sprintf("COVID dataset: %d genes × %d cells\n", nrow(covid_data), ncol(covid_data)))
 
 # Verify required columns exist
-required_cols <- c("author_cell_type", "author_cell_type_merged", "Status_on_day_collection_summary")
+required_cols <- c("author_cell_type", 
+                   "author_cell_type_merged", 
+                   "Status_on_day_collection_summary",
+                   "Site", 
+                   "sample_id")
 for(col in required_cols) {
     if(!col %in% colnames(colData(normal_data))) {
         stop(sprintf("Column '%s' not found in normal dataset", col))
@@ -68,8 +73,16 @@ combined_assay <- cbind(normal_assay, covid_assay)
 cat(sprintf("Combined assay dimensions: %d genes × %d cells\n", nrow(combined_assay), ncol(combined_assay)))
 
 # Extract relevant colData columns
-normal_coldata <- colData(normal_data)[, c("author_cell_type", "author_cell_type_merged", "Status_on_day_collection_summary")]
-covid_coldata <- colData(covid_data)[, c("author_cell_type", "author_cell_type_merged", "Status_on_day_collection_summary")]
+normal_coldata <- colData(normal_data)[, c("author_cell_type", 
+                                           "author_cell_type_merged", 
+                                           "Status_on_day_collection_summary",
+                                           "Site", 
+                                           "sample_id")]
+covid_coldata <- colData(covid_data)[, c("author_cell_type", 
+                                         "author_cell_type_merged", 
+                                         "Status_on_day_collection_summary",
+                                         "Site", 
+                                         "sample_id")]
 
 # Add disease status column
 normal_coldata$disease_status <- "Healthy"
@@ -92,7 +105,7 @@ cat("✓ Combined SCE object created\n")
 # PCA and UMAP Computation
 # _________________________
 
-cat("\nComputing PCA and UMAP for visualization...\n")
+cat("\nComputing PCA and UMAP with batch correction...\n")
 
 # Use the diagnostic HVGs from the reference dataset
 diagnostic_hvgs <- metadata(normal_data)$diagnostic_hvgs
@@ -105,9 +118,33 @@ cat(sprintf("Using %d/%d diagnostic HVGs for PCA\n", length(available_hvgs), len
 combined_sce <- runPCA(combined_sce, subset_row = available_hvgs, ncomponents = 50)
 cat("✓ PCA computed\n")
 
-# Compute UMAP
-combined_sce <- runUMAP(combined_sce, dimred = "PCA", n_dimred = 30)
-cat("✓ UMAP computed\n")
+# Apply Harmony batch correction on Site
+cat("Applying Harmony batch correction on Site...\n")
+pca_embeddings <- reducedDim(combined_sce, "PCA")
+
+# Run Harmony batch correction
+harmony_embeddings <- HarmonyMatrix(
+    data_mat = pca_embeddings,
+    meta_data = colData(combined_sce),
+    vars_use = "Site",
+    do_pca = FALSE,
+    nclust = 50,
+    max.iter.harmony = 10,
+    verbose = TRUE
+)
+
+# Add Harmony embeddings to SCE object  
+reducedDim(combined_sce, "HARMONY") <- harmony_embeddings
+cat("✓ Harmony batch correction completed\n")
+
+# Compute UMAP on Harmony-corrected embeddings
+combined_sce <- runUMAP(
+    combined_sce, 
+    dimred = "HARMONY", 
+    n_dimred = 30,
+    min_dist = 0.4
+)
+cat("✓ UMAP computed on batch-corrected data\n")
 
 # Store metadata
 metadata(combined_sce)$diagnostic_hvgs <- available_hvgs
@@ -179,9 +216,9 @@ if(length(available_ifn_genes) > 0) {
 
 cat("✓ IFN signature computation completed\n")
 
-# _____________________________
+# ___________________
 # UMAP Visualization
-# _____________________________
+# ___________________
 
 cat("\nCreating UMAP visualizations...\n")
 
@@ -218,7 +255,7 @@ p1 <- plotReducedDim(combined_sce, "UMAP", colour_by = "author_cell_type_merged"
 # Plot 2: UMAP colored by disease status
 cat("Creating UMAP plot colored by disease status...\n")  
 p2 <- plotReducedDim(combined_sce, "UMAP", colour_by = "disease_status", 
-                     scattermore = True, rasterise = TRUE) +
+                     scattermore = TRUE, rasterise = TRUE) +
     scale_color_manual(values = metadata(combined_sce)$colors_disease) + 
     labs(color = "Disease Status", 
          title = "UMAP: COVID-19 vs Healthy PBMCs",
@@ -243,9 +280,9 @@ p3 <- plotReducedDim(combined_sce, "UMAP", colour_by = "IFN_signature",
 
 cat("✓ UMAP plots created\n")
 
-# _____________________________
+# _______________________
 # Display and Save Plots
-# _____________________________
+# _______________________
 
 cat("\nDisplaying plots...\n")
 
@@ -256,11 +293,11 @@ print(p3)
 
 # Save plots
 cat("Saving plots...\n")
-ggsave("plots/covid_umap_by_celltype.png", p1, width = 12, height = 8, dpi = 300)
-ggsave("plots/covid_umap_by_disease.png", p2, width = 10, height = 8, dpi = 300)
-ggsave("plots/covid_umap_by_ifn_signature.png", p3, width = 10, height = 8, dpi = 300)
+ggsave("figures/covid/covid_umap_by_celltype.png", p1, width = 12, height = 8, dpi = 600)
+ggsave("figures/covid/covid_umap_by_disease.png", p2, width = 12, height = 8, dpi = 600)
+ggsave("figures/covid/covid_umap_by_ifn_signature.png", p3, width = 12, height = 8, dpi = 600)
 
-cat("✓ Plots saved to plots/ directory\n")
+cat("✓ Plots saved to figures/covid/ directory\n")
 
 # Print summary statistics
 cat("\nDataset summary:\n")
@@ -275,6 +312,6 @@ cat(sprintf("Number of cell types: %d\n", length(unique(combined_sce$author_cell
 cat(sprintf("IFN signature range: %.3f - %.3f\n", 
     min(combined_sce$IFN_signature), max(combined_sce$IFN_signature)))
 
-cat("\n" + paste(rep("=", 60), collapse = ""), "\n")
+cat("\n", paste(rep("=", 45), collapse = ""), "\n")
 cat("UMAP VISUALIZATION COMPLETED\n")
-cat(paste(rep("=", 60), collapse = ""), "\n")
+cat(paste(rep("=", 45), collapse = ""), "\n")

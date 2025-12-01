@@ -1,13 +1,13 @@
-# ------------------------------------------------------
-# Perform Azimuth Annotation With 
-# ------------------------------------------------------
+# -------------------------------
+# Perform Azimuth Annotation  
+# -------------------------------
 
 # Load libraries
 library(Azimuth)
 library(SingleCellExperiment)
 library(Seurat)
 
-# ------------------------------------------------------
+# -------------------------------
  
 # Function to perform Azimuth annotation with custom reference
 performAzimuthAnnotation <- function(

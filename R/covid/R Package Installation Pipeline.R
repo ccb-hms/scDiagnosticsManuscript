@@ -1,6 +1,6 @@
-# ---------------------------------
-# R Package Installation Pipeline
-# ---------------------------------
+# ------------------------------------------------
+# COVID-19 PBMC - R Package Installation Pipeline
+# ------------------------------------------------
 
 # This script checks for and installs all necessary R packages 
 # for the analysis pipeline on an HPC cluster like O2. It avoids 

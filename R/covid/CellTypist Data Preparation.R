@@ -1,6 +1,6 @@
-# ---------------------------------------------------
-# COVID-19 - Python Annotation Data Preparation
-# ---------------------------------------------------
+# ----------------------------------------------------
+# COVID-19 PBMC - Python Annotation Data Preparation
+# ----------------------------------------------------
 
 # Load libraries
 library(SingleCellExperiment)
@@ -10,16 +10,16 @@ library(reticulate)
 # Source files 
 source("R/auxiliary/environmentSetupCellTypist.R")
 
-# ---------------------------------------------------
+# ----------------------------------------------------
 
 # Setup Python environment
 cat("Setting up Python environment...\n")
 environmentSetupCellTypist()
 
 # Configuration
-REFERENCE_FILE <- "data/covid/normal_data.rds"
-QUERY_FILE <- "data/covid/covid_data.rds"
-CELL_TYPE_COLUMN <- "cell_type"  
+REFERENCE_FILE <- "data/covid/normal_data_sce.rds"
+QUERY_FILE <- "data/covid/covid_data_sce.rds"
+CELL_TYPE_COLUMN <- "author_cell_type"  
 
 # Output files
 ANNDATA_REF_FILE <- "data/covid/reference_data.h5ad"

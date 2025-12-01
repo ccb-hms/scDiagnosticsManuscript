@@ -15,7 +15,7 @@ from datetime import datetime
 ANNDATA_REF_FILE = "data/covid/reference_data.h5ad"
 ANNDATA_QUERY_FILE = "data/covid/query_data.h5ad" 
 ANNOTATED_QUERY_FILE = "data/covid/annotated_query_data.h5ad"
-CELL_TYPE_KEY = "cell_type"
+CELL_TYPE_KEY = "author_cell_type"
 
 # Set scanpy settings
 sc.settings.verbosity = 2  # verbosity level

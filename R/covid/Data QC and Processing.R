@@ -1,6 +1,6 @@
-# ----------------------------------------------------
-# COVID-19 - Data QC, Processing & Dataset Splitting
-# ----------------------------------------------------
+# ----------------------------------------------------------------------------
+# COVID-19 PBMC - Data QC, Processing, and Splitting
+# ----------------------------------------------------------------------------
 
 # Load libraries
 library(SingleCellExperiment)
@@ -9,234 +9,159 @@ library(scran)
 library(biomaRt)
 library(Matrix)
 
-# Source files
+# Source auxiliary functions
 source("R/auxiliary/convertEnsemblToSymbols.R")
 source("R/auxiliary/addReferencePCA.R")
-source("R/auxiliary/mergeCellTypes.R")
+source("R/auxiliary/addMergedCellTypes.R")
 
-# ----------------------------------------------------
+# ----------------------------------------------------------------------------
 
-cat(paste(rep("=", 50), collapse = ""), "\n")
-cat("COVID-19 DATA QC, PROCESSING & DATASET SPLITTING\n")
-cat(paste(rep("=", 50), collapse = ""), "\n")
-
-# _____________
+# _____________________________
 # Data Loading
-# _____________
+# _____________________________
 
-cat("\nLoading cleaned COVID data...\n")
-sce_clean <- readRDS("data/covid/covid_data_clean.rds")
+message("Loading cleaned SCE object from 'data/covid/covid_data_clean.rds'...")
+sce <- readRDS("data/covid/covid_data_clean.rds")
 
-cat(sprintf("Initial data dimensions: %d genes × %d cells\n", nrow(sce_clean), ncol(sce_clean)))
-cat("Disease distribution:\n")
-print(table(sce_clean$disease))
+message(sprintf("Loaded data with %d genes x %d cells.", nrow(sce), ncol(sce)))
+
+# ____________________________________________
+# Assay Renaming and Pseudo-Count Generation
+# ____________________________________________
+
+message("Original data is log-normalized. Renaming primary assay to 'logcounts'.")
+
+# This block makes the script robust, correctly identifying the log-transformed
+# data whether it's named 'X' or was mislabeled 'counts' in the prior step.
+if ("X" %in% assayNames(sce)) {
+    assayNames(sce)[assayNames(sce) == "X"] <- "logcounts"
+} else if ("counts" %in% assayNames(sce) && !"logcounts" %in% assayNames(sce) && max(assay(sce, "counts")) < 50) {
+    message("Found assay misnamed 'counts'; renaming to 'logcounts'.")
+    assayNames(sce)[assayNames(sce) == "counts"] <- "logcounts"
+}
+
+message("Generating a pseudo-counts assay by reversing the log-transformation...")
+# Reverse the log-normalization (assumed to be log2(counts + 1))
+logcounts_matrix <- assay(sce, "logcounts")
+pseudo_counts_matrix <- as(2^logcounts_matrix - 1, "CsparseMatrix")
+
+# Ensure no negative values from floating point inaccuracies
+pseudo_counts_matrix[pseudo_counts_matrix < 0] <- 0
+
+# Add the new 'counts' assay to the object
+assay(sce, "counts") <- pseudo_counts_matrix
+
+# Reorder assays for convention (counts first)
+assay_order <- intersect(c("counts", "logcounts"), assayNames(sce))
+assays(sce) <- assays(sce)[assay_order]
+
+message("Successfully generated 'counts' assay. Available assays:")
+print(assayNames(sce))
 
 # __________________________
 # Quality Control Filtering
 # __________________________
 
-cat("\nApplying quality control filters...\n")
+message("Applying QC filters to cells and genes...")
 
-# 1. Remove cells with <1000 mRNA molecules
-cat("Filtering cells with <1000 total counts...\n")
-keep_cells_counts <- sce_clean$total_counts >= 1000
-cat(sprintf("Keeping %d/%d cells (%.1f%%)\n", 
-    sum(keep_cells_counts), length(keep_cells_counts), 
-    100*sum(keep_cells_counts)/length(keep_cells_counts)))
+# 1. Filter cells with low total UMI counts (from original colData)
+keep_cells <- sce$total_counts >= 1000
+message(sprintf("Filtering cells: Keeping %d of %d cells with >= 1000 total counts.", sum(keep_cells), ncol(sce)))
 
-# 2. Remove genes expressed in <10 cells (optional but typical)
-cat("Filtering lowly expressed genes...\n")
-keep_genes <- rowSums(assay(sce_clean, "X") > 0) >= 10
-cat(sprintf("Keeping %d/%d genes (%.1f%%)\n", 
-    sum(keep_genes), length(keep_genes), 
-    100*sum(keep_genes)/length(keep_genes)))
+# 2. Filter lowly expressed genes using the newly generated 'counts' matrix
+keep_genes <- rowSums(assay(sce, "counts")[, keep_cells] > 0) >= 10
+message(sprintf("Filtering genes: Keeping %d of %d genes expressed in >= 10 cells.", sum(keep_genes), nrow(sce)))
 
 # Apply filters
-sce_filtered <- sce_clean[keep_genes, keep_cells_counts]
+sce_filtered <- sce[keep_genes, keep_cells]
+message(sprintf("Dimensions after QC: %d genes x %d cells.", nrow(sce_filtered), ncol(sce_filtered)))
 
-cat(sprintf("After QC filtering: %d genes × %d cells\n", nrow(sce_filtered), ncol(sce_filtered)))
+# __________________________________
+# Ensembl to Gene Symbol Conversion
+# __________________________________
 
-# ______________________
-# Additional QC Metrics
-# ______________________
-
-cat("\nCalculating additional QC metrics...\n")
-
-# Calculate mitochondrial gene percentage (if not already present)
-if(!"pct_counts_mt" %in% colnames(colData(sce_filtered))) {
-    mito_genes <- grep("^MT-|^mt-", rownames(sce_filtered), value = TRUE)
-    if(length(mito_genes) > 0) {
-        sce_filtered <- addPerCellQC(sce_filtered, subsets = list(Mito = mito_genes))
-        cat(sprintf("Found %d mitochondrial genes\n", length(mito_genes)))
-    } else {
-        cat("No mitochondrial genes found with MT- prefix\n")
-    }
-} else {
-    cat("Mitochondrial percentages already calculated\n")
-}
-
-# ________________________________
-# Convert Ensembl to Gene Symbols
-# ________________________________
-
-cat("\nConverting Ensembl IDs to gene symbols...\n")
+message("Converting Ensembl gene IDs to HGNC symbols...")
+# This function uses biomaRt and handles duplicates/missing symbols.
 sce_symbols <- convertEnsemblToSymbols(sce_filtered)
+message("Gene ID conversion complete.")
 
 # __________________
 # Dataset Splitting
 # __________________
 
-cat("\nSplitting into normal and COVID datasets...\n")
+message("Splitting data into reference (normal) and query (COVID-19) sets.")
 
-# Split datasets
-normal_indices <- sce_symbols$disease == "normal"
-covid_indices <- sce_symbols$disease == "COVID-19"
+ref_sce <- sce_symbols[, sce_symbols$disease == "normal"]
+query_sce <- sce_symbols[, sce_symbols$disease == "COVID-19"]
 
-normal_data_sce <- sce_symbols[, normal_indices]
-covid_data_sce <- sce_symbols[, covid_indices]
+ref_sce$dataset_type <- "reference"
+query_sce$dataset_type <- "query"
 
-cat(sprintf("Normal dataset: %d genes × %d cells\n", nrow(normal_data_sce), ncol(normal_data_sce)))
-cat(sprintf("COVID dataset: %d genes × %d cells\n", nrow(covid_data_sce), ncol(covid_data_sce)))
+message(sprintf("Reference (normal) dataset: %d genes x %d cells", nrow(ref_sce), ncol(ref_sce)))
+message(sprintf("Query (COVID-19) dataset: %d genes x %d cells", nrow(query_sce), ncol(query_sce)))
 
-# _____________________________
-# Assay Naming and Verification
-# _____________________________
+# Verify that both final objects have the required assays
+message("Assays in reference object: ", paste(assayNames(ref_sce), collapse=", "))
+message("Assays in query object: ", paste(assayNames(query_sce), collapse=", "))
 
-cat("\nChecking and updating assay names...\n")
+# ___________________________________________
+# Diagnostic-Aware HVG Selection and PCA
+# ___________________________________________
 
-# Check data ranges to determine data type
-normal_range <- range(assay(normal_data_sce, "X"))
-covid_range <- range(assay(covid_data_sce, "X"))
+message("Computing PCA using a diagnostic-aware union of HVGs...")
 
-cat(sprintf("Normal data range: %.3f to %.3f\n", normal_range[1], normal_range[2]))
-cat(sprintf("COVID data range: %.3f to %.3f\n", covid_range[1], covid_range[2]))
+# This function finds HVGs in both reference and query, takes their union,
+# and runs PCA on the reference using this combined feature set.
+# This captures both stable and disease-specific biological signals.
+ref_sce <- addReferencePCA(ref_sce, query_sce, ref_name = "Healthy Reference")
 
-# Based on ranges (0-8.7, 0-9.1), this appears to be log-normalized data
-cat("Data appears to be log-normalized based on ranges\n")
+# Extract the union HVGs computed in the function
+diagnostic_hvgs <- metadata(ref_sce)$diagnostic_hvgs
+message(sprintf("Using %d diagnostic HVGs for PCA on both datasets.", length(diagnostic_hvgs)))
 
-# Rename assay to logcounts
-assayNames(normal_data_sce) <- "logcounts"
-assayNames(covid_data_sce) <- "logcounts"
+# Run PCA on the query data using the *same* set of HVGs
+# modelGeneVar and runPCA both default to using 'logcounts' if available.
+query_sce <- runPCA(query_sce, subset_row = diagnostic_hvgs, ncomponents = 50)
 
-cat("✓ Renamed 'X' assay to 'logcounts'\n")
+# Store HVG metadata in the query object for consistency
+metadata(query_sce)$diagnostic_hvgs <- diagnostic_hvgs
+metadata(query_sce)$ref_hvgs <- metadata(ref_sce)$ref_hvgs
+metadata(query_sce)$query_hvgs <- metadata(ref_sce)$query_hvgs
 
-# _____________________________
-# HVG and PCA on Both Datasets
-# _____________________________
-
-cat("\nComputing HVGs and PCA using diagnostic-optimized approach...\n")
-
-# Data is already log-normalized, so skip logNormCounts step
-cat("Using existing log-normalized data for HVG detection\n")
-
-# Use union HVG approach for diagnostic-optimized PCA
-normal_data_sce <- addReferencePCA(normal_data_sce, covid_data_sce, "Normal Reference")
-
-# Extract diagnostic HVGs for COVID data PCA
-diagnostic_hvgs <- metadata(normal_data_sce)$diagnostic_hvgs
-cat(sprintf("Using %d diagnostic HVGs for COVID data PCA\n", length(diagnostic_hvgs)))
-
-# Run PCA on COVID data using same diagnostic HVGs
-covid_data_sce <- runPCA(covid_data_sce, subset_row = diagnostic_hvgs, ncomponents = 50)
-
-cat("✓ PCA computed on both normal and COVID data\n")
-
-# Store diagnostic HVG information in COVID data as well
-metadata(covid_data_sce)$diagnostic_hvgs <- diagnostic_hvgs
-metadata(covid_data_sce)$ref_hvgs <- metadata(normal_data_sce)$ref_hvgs
-metadata(covid_data_sce)$query_hvgs <- metadata(normal_data_sce)$query_hvgs
-
-cat("✓ Diagnostic HVG information stored in both datasets\n")
-
-# Summary of HVG selection
-cat("\nHVG Selection Summary:\n")
-cat(sprintf("  Reference HVGs: %d\n", length(metadata(normal_data_sce)$ref_hvgs)))
-cat(sprintf("  Query HVGs: %d\n", length(metadata(normal_data_sce)$query_hvgs))) 
-cat(sprintf("  Diagnostic HVGs (union): %d\n", length(diagnostic_hvgs)))
-cat(sprintf("  PCA components: %d\n", ncol(reducedDim(normal_data_sce, "PCA"))))
+message("PCA computed on both datasets using a shared, diagnostic-aware feature space.")
 
 # _____________________________
-# Cell Type Merging
+# Cell Type Annotation Merging
 # _____________________________
 
-cat("\nMerging cell types for both datasets...\n")
+message("Merging fine-grained cell type annotations into broader categories...")
 
-# Apply cell type merging to both datasets
-normal_data_sce$author_cell_type_merged <- mergeCellTypes(normal_data_sce)
-covid_data_sce$author_cell_type_merged <- mergeCellTypes(covid_data_sce)
+# Use function to add the merged column
+ref_sce <- addMergedCellTypes(sce_object = ref_sce, input_col_name = "author_cell_type")
+query_sce <- addMergedCellTypes(sce_object = query_sce, input_col_name = "author_cell_type")
 
-# Show results for normal dataset
-cat("\nOriginal vs merged cell types (Normal dataset):\n")
-original_normal_types <- table(normal_data_sce$author_cell_type)
-merged_normal_types <- table(normal_data_sce$author_cell_type_merged)
-
-cat("Original cell type count:", length(unique(normal_data_sce$author_cell_type)), "\n")
-cat("Merged cell type count:", length(unique(normal_data_sce$author_cell_type_merged)), "\n")
-
-cat("\nMerged cell type distribution (Normal):\n")
-print(sort(merged_normal_types, decreasing = TRUE))
-
-# Show results for COVID dataset
-cat("\nMerged cell type distribution (COVID):\n")
-merged_covid_types <- table(covid_data_sce$author_cell_type_merged)
-print(sort(merged_covid_types, decreasing = TRUE))
-
-cat("\nCell type merging summary:\n")
-cat(sprintf("  Normal dataset: %d -> %d cell types\n", 
-    length(unique(normal_data_sce$author_cell_type)), 
-    length(unique(normal_data_sce$author_cell_type_merged))))
-cat(sprintf("  COVID dataset: %d -> %d cell types\n", 
-    length(unique(covid_data_sce$author_cell_type)), 
-    length(unique(covid_data_sce$author_cell_type_merged))))
-
-cat("✓ Cell type merging completed for both datasets\n")
-
-# _________________
-# Final Processing
-# _________________
-
-# Add dataset information
-normal_data_sce$dataset_type <- "reference"
-covid_data_sce$dataset_type <- "query"
-
-cat("✓ Datasets processed and ready\n")
+message("Cell type merging complete for both datasets.")
+message("Merged cell type distribution in reference (normal):")
+print(sort(table(ref_sce$author_cell_type_merged), decreasing = TRUE))
 
 # ________________________
 # Save Processed Datasets
 # ________________________
 
-cat("\nSaving processed datasets...\n")
+message("Saving final processed reference and query datasets.")
 
-saveRDS(normal_data_sce, "data/covid/normal_data_sce.rds")
-saveRDS(covid_data_sce, "data/covid/covid_data_sce.rds")
+saveRDS(ref_sce, "data/covid/normal_data_sce.rds")
+saveRDS(query_sce, "data/covid/covid_data_sce.rds")
 
-cat("✓ Normal data saved to: data/covid/normal_data_sce.rds\n")
-cat("✓ COVID data saved to: data/covid/covid_data_sce.rds\n")
-
-# ___________________
-# Summary Statistics
-# ___________________
-
-cat(paste(rep("=", 50), collapse = ""), "\n")
-cat("PROCESSING SUMMARY\n")
-cat(paste(rep("=", 50), collapse = ""), "\n")
-
-cat(sprintf("Reference (Normal) Dataset: %d cells × %d genes\n", 
-    ncol(normal_data_sce), nrow(normal_data_sce)))
-cat(sprintf("Query (COVID) Dataset: %d cells × %d genes\n", 
-    ncol(covid_data_sce), nrow(covid_data_sce)))
-cat(sprintf("Highly Variable Genes: %d\n", length(diagnostic_hvgs)))
-cat(sprintf("PCA Components: %d\n", ncol(reducedDim(normal_data_sce, "PCA"))))
-
-cat("\n✓ Data processing completed successfully!\n")
+message("Saved reference SCE to: data/covid/normal_data_sce.rds")
+message("Saved query SCE to: data/covid/covid_data_sce.rds")
 
 # _______________
 # Memory Cleanup
 # _______________
 
-cat("\nCleaning up memory...\n")
+message("Cleaning up memory...")
 rm(list = ls())
 gc()
-cat("✓ Memory cleared\n")
 
-# -----------------------------------------------
+message("Script finished.")

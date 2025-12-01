@@ -1,5 +1,5 @@
 # --------------------------------------
-# COVID-19 - Heatmaps Code (Figure 2 - Final Composite)
+# COVID-19 - Heatmaps Code (Figure 3E)
 # --------------------------------------
 
 # Load libraries
@@ -11,8 +11,8 @@ library(scDiagnostics)
 # --------------------------------------
 
 # Load Data
-normal_data <- readRDS("data/covid/normal_data.rds")
-covid_data <- readRDS("data/covid/covid_data.rds")
+normal_data <- readRDS("data/covid/normal_data_sce.rds")
+covid_data <- readRDS("data/covid/covid_data_sce.rds")
 
 # ____________________________
 # 1. Detect Anomalies

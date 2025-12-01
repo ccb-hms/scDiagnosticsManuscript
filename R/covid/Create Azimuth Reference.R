@@ -1,5 +1,5 @@
 # -----------------------------------------------
-# COVID-19 - Create Azimuth Reference
+# COVID-19 PBMC - Create Azimuth Reference
 # -----------------------------------------------
 
 # Load libraries
