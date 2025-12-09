@@ -1,6 +1,6 @@
 # --------------------------------------------------------------------
 # MERFISH - Figure 5: Functional Validation of scDiagnostics
-# Network with Controlled Layout (Neutrophil Top -> Stem Bottom)
+# Network with Controlled Layout + FULL SCORE PRINTING
 # --------------------------------------------------------------------
 
 library(SingleCellExperiment)
@@ -68,46 +68,91 @@ interactions_db <- data.frame(
     Pair_Name = c("Il11-Il11ra", "Il1b-Il1r1", "Cxcl1-Cxcr2", "Cxcl5-Cxcr2", "Cxcl10-Cxcr3", "Rspo1-Lgr5", "Bmp2-Bmpr1a", "Wnt5a-Fzd5", "Wnt2b-Fzd4")
 )
 
-# --- 5. Logic & Reporting ---
+# --- 5. Logic, Reporting, AND PRINTING ---
 edges_list <- list()
+all_scores_list <- list() # New list to track every calculation
 receivers <- c("Neutrophil", "Repair Epithelium", "Stem/Crypt Base")
 
 cat("\n--- CALCULATING SCORES ---\n")
 
 for (rcv in receivers) {
     cells_rcv <- sce_subset[, sce_subset$node_group == rcv]
+    
     for (i in 1:nrow(interactions_db)) {
         lig <- interactions_db$Ligand[i]
         rec <- interactions_db$Receptor[i]
         pair <- interactions_db$Pair_Name[i]
         
+        # Check if genes exist in dataset
         if(!lig %in% rownames(sce_subset) | !rec %in% rownames(sce_subset)) next
         
+        # Check receptor expression
         rec_expr <- mean(logcounts(cells_rcv)[rec, ])
         if(rec_expr < 0.0001) next 
         
+        # Calculate Scores
         cells_anom <- sce_subset[, sce_subset$node_group == "Anomalous Fibro"]
         cells_typ  <- sce_subset[, sce_subset$node_group == "Typical Fibro"]
         
         score_anom <- mean(logcounts(cells_anom)[lig, ]) * rec_expr * 100
         score_typ  <- mean(logcounts(cells_typ)[lig, ])  * rec_expr * 100
         
+        # Determine Winner
         winner <- "None"
         if (score_anom > 1.5 * score_typ & score_anom > 0.005) {
             winner <- "Anomalous"
+            # Add to Edge List for Plotting
             edges_list[[length(edges_list)+1]] <- data.frame(from="Anomalous Fibro", to=pair, color="Anomalous Fibro", weight=score_anom, type="Sender")
             edges_list[[length(edges_list)+1]] <- data.frame(from=pair, to=rcv, color="Anomalous Fibro", weight=score_anom, type="Receiver")
+            
         } else if (score_typ > 1.5 * score_anom & score_typ > 0.005) {
             winner <- "Typical"
+            # Add to Edge List for Plotting
             edges_list[[length(edges_list)+1]] <- data.frame(from="Typical Fibro", to=pair, color="Typical Fibro", weight=score_typ, type="Sender")
             edges_list[[length(edges_list)+1]] <- data.frame(from=pair, to=rcv, color="Typical Fibro", weight=score_typ, type="Receiver")
         }
+        
+        # --- SAVE SCORES FOR PRINTING ---
+        all_scores_list[[length(all_scores_list)+1]] <- data.frame(
+            Receiver = rcv,
+            Pair = pair,
+            Anom_Score = round(score_anom, 4),
+            Typ_Score = round(score_typ, 4),
+            Winner = winner
+        )
     }
 }
-edges_df <- do.call(rbind, edges_list)
+
+# --- PRINT THE SCORES ---
+all_scores_df <- do.call(rbind, all_scores_list)
+
+cat("\n=======================================================\n")
+cat("          FULL INTERACTION SCORE REPORT                \n")
+cat("=======================================================\n")
+cat(sprintf("%-20s %-15s %-12s %-12s %-10s\n", "Receiver", "Pair", "Anom_Score", "Typ_Score", "Winner"))
+cat("-------------------------------------------------------\n")
+if (!is.null(all_scores_df) && nrow(all_scores_df) > 0) {
+    # Sort by Receiver then by Winner to make it readable
+    all_scores_df <- all_scores_df[order(all_scores_df$Receiver, all_scores_df$Winner), ]
+    
+    for(i in 1:nrow(all_scores_df)) {
+        cat(sprintf("%-20s %-15s %-12.4f %-12.4f %-10s\n", 
+                    all_scores_df$Receiver[i], 
+                    all_scores_df$Pair[i], 
+                    all_scores_df$Anom_Score[i], 
+                    all_scores_df$Typ_Score[i], 
+                    all_scores_df$Winner[i]))
+    }
+} else {
+    cat("No valid interactions found (Receptor expression too low everywhere).\n")
+}
+cat("=======================================================\n\n")
+
 
 # --- 6. Graphing with Manual Sorting ---
-if (is.null(edges_df) || nrow(edges_df) == 0) stop("No interactions found.")
+edges_df <- do.call(rbind, edges_list)
+
+if (is.null(edges_df) || nrow(edges_df) == 0) stop("No significant interactions found to plot.")
 
 all_nodes <- unique(c(edges_df$from, edges_df$to))
 nodes_df <- data.frame(name = all_nodes)
@@ -122,10 +167,6 @@ nodes_df$col_type <- case_when(
 nodes_df$x <- case_when(nodes_df$col_type=="Sender"~1, nodes_df$col_type=="Pair"~2, nodes_df$col_type=="Receiver"~3)
 
 # B. Y-Axis (Manual Ordering)
-# In ggraph, Y increases upwards. 
-# Rank 1 = Bottom (Stem), Rank 3 = Top (Neutrophil)
-
-# Define groupings for sorting
 top_group <- c("Neutrophil", "Anomalous Fibro", "Cxcl1-Cxcr2", "Cxcl5-Cxcr2", "Cxcl10-Cxcr3", "Il11-Il11ra", "Il1b-Il1r1")
 mid_group <- c("Repair Epithelium")
 bot_group <- c("Stem/Crypt Base", "Typical Fibro", "Rspo1-Lgr5", "Bmp2-Bmpr1a", "Wnt5a-Fzd5", "Wnt2b-Fzd4")
@@ -137,10 +178,10 @@ nodes_df <- nodes_df %>%
         name %in% bot_group ~ 1,
         TRUE ~ 1.5
     )) %>%
-    arrange(sort_val) %>% # Sort DataFrame first
+    arrange(sort_val) %>% 
     group_by(col_type) %>% 
-    mutate(y = row_number()) %>% # Assign Y based on sort order (1=Bottom, N=Top)
-    mutate(y = y - mean(y)) %>% # Center vertically
+    mutate(y = row_number()) %>% 
+    mutate(y = y - mean(y)) %>% 
     ungroup()
 
 col_pal <- c(
