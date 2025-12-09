@@ -196,5 +196,5 @@ p <- ggplot(smooth_curves, aes(x = distance, y = cdf, color = prediction)) +
 print(p)
 
 # CHANGED: Height/Width swapped to accommodate vertical stack
-ggsave("figures/merfish/co-localization_analysis.png", plot = p, width = 5, height = 10, dpi = 600)
+ggsave("figures/merfish/co-localization_analysis.png", plot = p, width = 8, height = 10, dpi = 600)
 cat("✓ Final Vertical Spatial Plot saved.\n")
