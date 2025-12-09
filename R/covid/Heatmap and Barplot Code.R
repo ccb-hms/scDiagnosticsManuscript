@@ -1,5 +1,5 @@
 # ----------------------------------
-# COVID-19 - Heatmap Code
+# COVID-19 PBMC - Heatmap Code
 # ----------------------------------
 
 # Load libraries
@@ -33,9 +33,9 @@ yoshida_ifn_signature <- c(
 gene_shifts <- calculateTopLoadingGeneShifts(
      query_data = covid_data[yoshida_ifn_signature,],
      reference_data = normal_data[yoshida_ifn_signature,],
-     query_cell_type_col = "author_cell_type_merged",
-     ref_cell_type_col = "author_cell_type_merged",
-     cell_types = c("CD14 mono"), 
+     query_cell_type_col = "azimuth_celltype_l1",
+     ref_cell_type_col = "author_cell_type",
+     cell_types = c("CD14_mono"), 
      pc_subset = 1:5,
      n_top_loadings = 30,
      assay_name = "logcounts",
@@ -47,9 +47,9 @@ gene_shifts <- calculateTopLoadingGeneShifts(
      max_cells_query = 5000, 
      max_cells_ref = 5000)
 
-
+# Heatmap of IFN genes
 heatmap_object <- plot(gene_shifts,
-     cell_type = "CD14 mono",
+     cell_type = "CD14_mono",
      pc_subset = 1:5,
      plot_type = c("heatmap", "barplot", "boxplot")[1],
      plot_by = c("p_adjusted", "top_loading")[1],
@@ -62,15 +62,14 @@ heatmap_object <- plot(gene_shifts,
      max_cells_query = 5000,
     draw_plot = FALSE)
 
-png("covid_ifn_heatmap.png")
-    
+# Save the heatmap plot
+png("figures/covid/covid_ifn_heatmap.png")
 draw(heatmap_object)
-      
 dev.off()
 
-
+# Barplot of IFN genes
 plot(gene_shifts,
-     cell_type = "CD14 mono",
+     cell_type = "CD14_mono",
      pc_subset = 1:5,
      plot_type = c("heatmap", "barplot", "boxplot")[2],
      plot_by = c("p_adjusted", "top_loading")[1],
@@ -82,5 +81,6 @@ plot(gene_shifts,
      max_cells_ref = 5000,
      max_cells_query = 5000)
 
+# Save the barplot
 ggsave("figures/covid/gene_shifts_barplot.png")
 

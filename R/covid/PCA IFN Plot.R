@@ -30,7 +30,7 @@ yoshida_ifn_signature <- c(
   "UBE2L6", "XAF1", "IRF7"
 )
 
-# --- Define plot parameters ---
+# Define plot parameters
 CELL_TYPES_TO_PLOT <- c("CD14_mono")
 PC_SUBSET <- 1:3
 REF_CELL_TYPE_COL <- "author_cell_type"
@@ -144,7 +144,7 @@ pc_plot_names <- paste0(
 )
 
 # Create the pairs plot, now explicitly passing the legend object
-p <- GGally::ggpairs(
+pca_ifn_plot <- GGally::ggpairs(
     pca_output,
     columns = paste0("PC", PC_SUBSET),
     columnLabels = pc_plot_names,
@@ -158,13 +158,13 @@ p <- GGally::ggpairs(
 )
 
 # Apply final theme for publication quality
-p <- p + theme(
+pca_ifn_plot <- pca_ifn_plot + theme(
     strip.background = element_rect(fill = "white", color = "black", linewidth = 0.5),
     strip.text = element_text(color = "black")
 )
 
 # Print the final plot
-print(p)
+print(pca_ifn_plot)
 
 # Save the final plot
-ggsave("figures/covid/pca_ifn.png", width = 12, height = 8)
+ggsave("figures/covid/pca_ifn.png", width = 12, height = 8, dpi = 600)
