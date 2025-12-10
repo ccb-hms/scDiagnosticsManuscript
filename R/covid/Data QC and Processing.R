@@ -16,14 +16,17 @@ source("R/auxiliary/addMergedCellTypes.R")
 
 # ----------------------------------------------------------------------------
 
-# _____________________________
+# _____________
 # Data Loading
-# _____________________________
+# _____________
 
 message("Loading cleaned SCE object from 'data/covid/covid_data_clean.rds'...")
 sce <- readRDS("data/covid/covid_data_clean.rds")
 
 message(sprintf("Loaded data with %d genes x %d cells.", nrow(sce), ncol(sce)))
+
+# Setting the seed
+set.seed(0)
 
 # ____________________________________________
 # Assay Renaming and Pseudo-Count Generation

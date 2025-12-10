@@ -26,9 +26,12 @@ output_directory <- "data/covid/Azimuth/custom_azimuth_reference"
 # Cell type column to use
 celltype_column <- "author_cell_type"  
 
-# ________________________________________________________
-# Computational Optimization Parameters (Justified)
-# ________________________________________________________
+# Setting the seed
+set.seed(0)
+
+# ______________________________________
+# Computational Optimization Parameters 
+# ______________________________________
 
 # SCTransform: Use standard parameters for reproducibility
 n_variable_features <- 3000  # Keep default for full gene coverage
@@ -182,9 +185,9 @@ normal_seurat <- RunUMAP(
 )
 cat("UMAP completed in", round(difftime(Sys.time(), start_time, units = "mins"), 1), "minutes\n")
 
-# ______________________________
+# ____________________________
 # Azimuth Reference Creation
-# ______________________________
+# ____________________________
 
 cat("=== Creating Azimuth Reference ===\n")
 

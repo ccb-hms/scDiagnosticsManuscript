@@ -26,9 +26,12 @@ message(sprintf("Original file size: %.2f GB", original_size_gb))
 sce_full <- readH5AD(input_path, use_hdf5 = TRUE, reader = "R")
 message(sprintf("Initial dimensions: %d genes x %d cells", nrow(sce_full), ncol(sce_full)))
 
-# ______________
+# Setting the seed
+set.seed(0)
+
+# _________________
 # Metadata Removal
-# ______________
+# _________________
 
 message("Creating a clean SCE object by removing pre-existing metadata...")
 
@@ -80,9 +83,6 @@ normal_samples <- samples_to_keep[disease_status == "normal"]
 covid_samples <- samples_to_keep[disease_status == "COVID-19"]
 
 message(sprintf("Found %d healthy control samples and %d COVID-19 samples.", length(normal_samples), length(covid_samples)))
-
-# Set seed for reproducible sampling
-set.seed(123)
 
 # Sample up to 1000 cells from each normal (reference) sample
 normal_indices <- unlist(sapply(normal_samples, function(id) {

@@ -20,8 +20,7 @@ cat("\n--- Loading MERFISH Datasets ---\n")
 healthy_data <- readRDS("data/merfish/healthy_data.rds")
 dss9_data <- readRDS("data/merfish/dss9_data.rds")
 
-healthy_data$tier2 <- as.character(healthy_data$tier2)
-dss9_data$tier2 <- as.character(dss9_data$tier2)
+# Setting the seed
 set.seed(0)
 
 cat("\n--- Grouping Fibroblast Lineage ---\n")

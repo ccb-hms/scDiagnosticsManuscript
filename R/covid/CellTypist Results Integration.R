@@ -13,9 +13,9 @@ source("R/auxiliary/addMergedCellTypes.R")
 
 # ----------------------------------------------
 
-# _____________________________
+# ________________________
 # Setup and Data Loading
-# _____________________________
+# ________________________
 
 message("--- Initializing CellTypist Integration ---")
 

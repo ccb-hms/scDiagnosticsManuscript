@@ -14,9 +14,16 @@ library(viridis)
 
 # -------------------------------
 
+# __________
+# Load Data
+# __________
+
 # Load the processed SCE objects
 normal_data <- readRDS("data/covid/normal_data_sce.rds")
 covid_data <- readRDS("data/covid/covid_data_sce.rds")
+
+# Setting the seed
+set.seed(0)
 
 # ______________________
 # Setup and Parameters
@@ -122,7 +129,7 @@ blank_fn <- function(data, mapping, ...) {
 # Create a simple "bogus" plot with the desired aesthetics to generate the legend
 legend_plot <- ggplot(pca_output, aes(x = PC1, y = PC2, color = ifn_score, shape = dataset)) +
     geom_point() +
-    scale_shape_manual(name = "Dataset", values = c("Reference" = 16, "Query" = 1)) +
+    scale_shape_manual(name = "Dataset", values = c("Reference" = 1, "Query" = 16)) +
     viridis::scale_color_viridis(option = "B", name = "IFN Signature\nScore") +
     theme(
         legend.position = "right", 

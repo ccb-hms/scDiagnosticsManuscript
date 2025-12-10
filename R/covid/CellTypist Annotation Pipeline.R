@@ -24,6 +24,9 @@ if (!dir.exists("data/covid")) {
   cat("✓ Created output directory: data/covid\n")
 }
 
+# Setting the seed
+set.seed(0)
+
 # __________________________________
 # Step 1: Python Environment Setup
 # __________________________________

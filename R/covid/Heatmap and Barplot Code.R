@@ -13,9 +13,16 @@ library(circlize)
 
 # ----------------------------------
 
+# __________
+# Load Data
+# __________
+
 # Load the processed SCE objects
 normal_data <- readRDS("data/covid/normal_data_sce.rds")
 covid_data <- readRDS("data/covid/covid_data_sce.rds")
+
+# Setting the seed
+set.seed(0)
 
 # _______________________________
 # Top Genes Distributional Shift

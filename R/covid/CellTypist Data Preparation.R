@@ -12,6 +12,9 @@ source("R/auxiliary/environmentSetupCellTypist.R")
 
 # ----------------------------------------------------
 
+# Setting the seed
+set.seed(0)
+
 # Setup Python environment
 cat("Setting up Python environment...\n")
 environmentSetupCellTypist()

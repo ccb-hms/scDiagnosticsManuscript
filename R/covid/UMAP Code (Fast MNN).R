@@ -30,6 +30,9 @@ covid_data <- readRDS("data/covid/covid_data_sce.rds")
 cat(sprintf("Normal dataset: %d genes × %d cells\n", nrow(normal_data), ncol(normal_data)))
 cat(sprintf("COVID dataset: %d genes × %d cells\n", nrow(covid_data), ncol(covid_data)))
 
+# Setting the seed
+set.seed(0)
+
 # __________________________________________________
 # Combine Datasets & Create Hybrid Cell Type Column
 # __________________________________________________

@@ -100,7 +100,7 @@ if (nrow(significant_inflamed_markers) > 0) {
     
     top_gene_list <- rownames(top_genes_df)
 
-    cat("You can copy this vector into your main spatial plotting script:\n\n")
+    cat("\n\n")
     cat('fibro_inflammation_genes <- c(\n    "', paste(top_gene_list, collapse = '",\n    "'), '"\n)\n', sep = "")
 
     cat("\n\n--- Detailed stats for top genes ---\n")

@@ -28,7 +28,7 @@ message("Filtered for slice 2, containing ", ncol(spe_s2), " cells.")
 
 # Split into two separate objects
 spe_healthy_full <- spe_s2[, spe_s2$sample_type == "Healthy"]
-spe_dss9_full    <- spe_s2[, spe_s2$sample_type == "DSS9"]
+spe_dss9_full <- spe_s2[, spe_s2$sample_type == "DSS9"]
 
 # Select a single mouse ID for each dataset to avoid batch effects
 sce_healthy <- spe_healthy_full[, spe_healthy_full$mouse_id == "082421_D0_m6"]
