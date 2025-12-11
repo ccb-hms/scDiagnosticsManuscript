@@ -117,7 +117,7 @@ p1 <- ggplot(stats_df, aes(x = reorder(Azimuth_Label, Percent_Flagged), y = Perc
     ylim(0, 115)
 
 print(p1)
-ggsave("figures/merfish/qc_audit_azimuth_unified_bars.png", plot=p1, width=9, height=8)
+# ggsave("figures/merfish/qc_audit_azimuth_unified_bars.png", plot=p1, width=9, height=8)
 
 # --- 8. SPATIAL VISUALIZATION (Confusion Matrix Map) ---
 cat("\n--- Generating Spatial Map of Sensitivity/Specificity ---\n")
@@ -199,7 +199,7 @@ p2 <- ggplot(spatial_df, aes(x = plot_x, y = plot_y, color = Map_Status)) +
     )
 
 print(p2)
-ggsave("figures/merfish/qc_audit_spatial_sensitivity.png", plot=p2, width=10, height=8, dpi=600)
+# ggsave("figures/merfish/qc_audit_spatial_sensitivity.png", plot=p2, width=10, height=8, dpi=600)
 
 # --- 9. SENSITIVITY & SPECIFICITY METRICS ---
 cat("\n================================================================================\n")
