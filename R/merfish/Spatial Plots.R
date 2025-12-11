@@ -79,7 +79,9 @@ anomaly_output <- detectAnomaly(
     ref_cell_type_col = "analysis_class", 
     cell_types = "Fibroblast_Lineage",
     pc_subset = 1:3, 
-    anomaly_threshold = 0.5
+    anomaly_threshold = 0.5,
+    max_cells_query = NULL,
+    max_cells_ref = NULL
 )
 
 anomalous_barcodes <- unlist(lapply(anomaly_output, function(res) {

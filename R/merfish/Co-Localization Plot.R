@@ -1,5 +1,5 @@
 # --------------------------------------------------
-# MERFISH Mouse Colon IBD - Co-Localization Figure
+# MERFISH Mouse Colon IBD - Spatial Enrichment Figure
 # --------------------------------------------------
 
 library(SingleCellExperiment)
@@ -15,7 +15,7 @@ library(FNN)
 # Load Data
 # __________
 
-cat("\n--- Loading data ---\n")
+cat("--- Loading data ---\n")
 healthy_data <- readRDS("data/merfish/healthy_data.rds")
 dss9_data <- readRDS("data/merfish/dss9_data.rds")
 
@@ -26,7 +26,7 @@ set.seed(0)
 # Anomaly Detection
 # __________________
 
-cat("\n--- Running Anomaly Detection ---\n")
+cat("--- Running Anomaly Detection ---\n")
 is_fibro_lineage <- function(x) { grepl("^Fibro|^IAF", x) }
 healthy_data$analysis_class <- ifelse(is_fibro_lineage(healthy_data$tier2), "Fibroblast_Lineage", "Other")
 dss9_data$analysis_class <- ifelse(is_fibro_lineage(dss9_data$tier2), "Fibroblast_Lineage", "Other")
@@ -38,7 +38,9 @@ anomaly_output <- detectAnomaly(
     ref_cell_type_col = "analysis_class", 
     cell_types = "Fibroblast_Lineage",
     pc_subset = 1:4, 
-    anomaly_threshold = 0.5
+    anomaly_threshold = 0.5,
+    max_cells_query = NULL,
+    max_cells_ref = NULL
 )
 
 anomalous_barcodes <- unlist(lapply(anomaly_output, function(res) {
@@ -47,9 +49,9 @@ anomalous_barcodes <- unlist(lapply(anomaly_output, function(res) {
 }))
 anomalous_barcodes <- gsub("Query_", "", anomalous_barcodes)
 
-# ________________________________________
-# Spatial Calculations: The 3 Key Niches
-# ________________________________________
+# ______________________
+# Spatial Calculations
+# ______________________
 
 spatial_df <- data.frame(
     barcode = colnames(dss9_data),
@@ -59,155 +61,130 @@ spatial_df <- data.frame(
     broad_class = dss9_data$analysis_class
 )
 
-# 1. Neutrophils (The Immune Trigger)
-pattern_neutro <- "Neutrophil"
-coords_neutro <- spatial_df |> filter(grepl(pattern_neutro, ground_truth_type, ignore.case = TRUE)) |> select(x, y)
+# Define Targets
+coords_neutro   <- spatial_df |> filter(grepl("Neutrophil", ground_truth_type, ignore.case=TRUE)) |> select(x,y)
+coords_inflamed <- spatial_df |> filter(grepl("IAE|Epithelial \\(Clu\\+\\)", ground_truth_type, ignore.case=TRUE)) |> select(x,y)
+coords_stem     <- spatial_df |> filter(grepl("Stem|TA", ground_truth_type, ignore.case=TRUE)) |> select(x,y)
 
-# 2. Inflamed Epithelium (The Damage Target)
-pattern_inflamed <- "IAE|Epithelial \\(Clu\\+\\)"
-coords_inflamed <- spatial_df |> filter(grepl(pattern_inflamed, ground_truth_type, ignore.case = TRUE)) |> select(x, y)
-
-# 3. Stem Cell Niche (The Homeostatic Source - Negative Control)
-pattern_stem <- "Stem|TA"
-coords_stem <- spatial_df |> filter(grepl(pattern_stem, ground_truth_type, ignore.case = TRUE)) |> select(x, y)
-
-# Calculate Distances
+# Calculate Distances for Fibroblasts Only
 fibro_df <- spatial_df |> filter(broad_class == "Fibroblast_Lineage")
+fibro_df$prediction <- ifelse(fibro_df$barcode %in% anomalous_barcodes, "Anomalous", "Typical")
 
 get_dists <- function(coords) {
     if(nrow(coords) == 0) return(rep(NA, nrow(fibro_df)))
     FNN::get.knnx(data = as.matrix(coords), query = as.matrix(fibro_df[, c("x", "y")]), k = 1)$nn.dist
 }
 
-fibro_df$dist_neutro <- get_dists(coords_neutro)
+fibro_df$dist_neutro   <- get_dists(coords_neutro)
 fibro_df$dist_inflamed <- get_dists(coords_inflamed)
-fibro_df$dist_stem   <- get_dists(coords_stem)
+fibro_df$dist_stem     <- get_dists(coords_stem)
 
-fibro_df$prediction <- ifelse(fibro_df$barcode %in% anomalous_barcodes, "Anomalous", "Typical")
+# _________________________________
+# Enrichment Calculation (Binning)
+# _________________________________
 
-# _______________________
-# Prepare Data Structure 
-# _______________________
+# 1. Calculate Statistics for Title (Wilcoxon)
+calc_pval_str <- function(col_name) {
+    p <- wilcox.test(fibro_df[[col_name]] ~ fibro_df$prediction)$p.value
+    if(p < 2.2e-16) return("p < 2.2e-16")
+    return(paste0("p = ", format.pval(p, digits=2)))
+}
 
-df_split <- fibro_df |>
-    select(barcode, prediction, dist_neutro, dist_inflamed, dist_stem)
+# Define Panel Titles
+lbl_neutro   <- paste0("Neutrophils (Acute)\n", calc_pval_str("dist_neutro"))
+lbl_inflamed <- paste0("Inflamed Epithelium (Damage)\n", calc_pval_str("dist_inflamed"))
+lbl_stem     <- paste0("Stem/Crypt (Homeostasis)\n", calc_pval_str("dist_stem"))
 
-df_all <- df_split
-df_all$prediction <- "All Fibroblasts"
-
-combined_df <- rbind(df_split, df_all) |>
+# 2. Reshape to Long Format
+long_df <- fibro_df |>
+    select(barcode, prediction, dist_neutro, dist_inflamed, dist_stem) |>
     tidyr::pivot_longer(
-        cols = c(dist_neutro, dist_inflamed, dist_stem), 
-        names_to = "target_type", 
+        cols = c(dist_neutro, dist_inflamed, dist_stem),
+        names_to = "target_type",
         values_to = "distance"
     ) |>
     mutate(panel_label = case_when(
-        target_type == "dist_neutro" ~ "Dist. to Neutrophils\n(Acute Inflammation)",
-        target_type == "dist_inflamed" ~ "Dist. to Inflamed Epithelium\n(Damage)",
-        target_type == "dist_stem"   ~ "Dist. to Stem/Crypt\n(Homeostasis)"
-    )) |>
-    mutate(panel_label = factor(panel_label, levels = c(
-        "Dist. to Neutrophils\n(Acute Inflammation)", 
-        "Dist. to Inflamed Epithelium\n(Damage)", 
-        "Dist. to Stem/Crypt\n(Homeostasis)"
-    )))
+        target_type == "dist_neutro"   ~ lbl_neutro,
+        target_type == "dist_inflamed" ~ lbl_inflamed,
+        target_type == "dist_stem"     ~ lbl_stem
+    ))
 
-# ______________________________
-# Manual Smooth CDF Calculation 
-# ______________________________
+# 3. Create Distance Bins (Focus on 0-100um)
+long_df$dist_bin <- cut(long_df$distance, 
+                        breaks = c(0, 25, 50, 75, 100, 150, Inf),
+                        labels = c("0-25", "25-50", "50-75", "75-100", "100-150", ">150"))
 
-smooth_curves <- combined_df |>
-    group_by(panel_label, prediction) |>
-    reframe({
-        d <- density(distance, from = 0, n = 512)
-        cdf <- cumsum(d$y) / sum(d$y)
-        data.frame(distance = d$x, cdf = cdf)
-    })
+# 4. Calculate Enrichment Ratios
+enrichment_df <- long_df |>
+    # Count cells per bin per type
+    group_by(panel_label, dist_bin, prediction) |>
+    summarise(count = n(), .groups = "drop") |>
+    
+    # Normalize by total library size (Typical vs Anomalous)
+    group_by(prediction) |>
+    mutate(total_cells = sum(count)) |>
+    ungroup() |>
+    mutate(prop = count / total_cells) |>
+    
+    # Pivot to get Anomalous vs Typical side-by-side
+    select(-count, -total_cells) |>
+    tidyr::pivot_wider(names_from = prediction, values_from = prop) |>
+    
+    # Calculate Log2 Fold Change
+    mutate(log2fc = log2(Anomalous / Typical)) |>
+    
+    # Filter out the ">150" bin as it's just background noise
+    filter(dist_bin != ">150")
 
-smooth_curves$prediction <- factor(smooth_curves$prediction, 
-                                   levels = c("Anomalous", "Typical", "All Fibroblasts"))
+# _________________________________________
+# *** FORCE PANEL ORDER HERE ***
+# _________________________________________
 
-# ___________________________
-# Smart Limits & Statistics 
-# ___________________________
+enrichment_df$panel_label <- factor(enrichment_df$panel_label, 
+                                    levels = c(lbl_neutro, lbl_inflamed, lbl_stem))
 
-calc_limit <- function(type_name) {
-    clean_name <- type_name 
-    vals <- combined_df$distance[combined_df$panel_label == clean_name]
-    ceiling(quantile(vals, 0.90, na.rm=TRUE) / 50) * 50
-}
-
-limit_df <- data.frame(
-    panel_label = unique(combined_df$panel_label),
-    prediction = "Anomalous",
-    cdf = 0.5
-)
-limit_df$distance <- sapply(limit_df$panel_label, calc_limit)
-
-calc_pval <- function(col_name) {
-    p <- wilcox.test(fibro_df[[col_name]] ~ fibro_df$prediction, alternative = "two.sided")$p.value
-    format.pval(p, digits=2)
-}
-
-col_map <- list(
-    "Dist. to Neutrophils\n(Acute Inflammation)" = "dist_neutro",
-    "Dist. to Inflamed Epithelium\n(Damage)" = "dist_inflamed",
-    "Dist. to Stem/Crypt\n(Homeostasis)" = "dist_stem"
-)
-
-ann_text <- limit_df |>
-    mutate(
-        distance = distance * 0.65,
-        cdf = 0.15,
-        label = sapply(panel_label, function(x) {
-            col <- col_map[[as.character(x)]]
-            paste0("Wilcoxon\np < ", calc_pval(col))
-        })
-    )
-
-# ______________
+# __________________
 # Generate Plot
-# ______________
+# __________________
 
-colors_pred <- c(
-    "Anomalous"       = "#D9230F", 
-    "Typical"         = "#228B22", 
-    "All Fibroblasts" = "#606060"
-)
+# Custom Color Logic
+enrichment_df$enrichment_class <- ifelse(enrichment_df$log2fc > 0, "Anomalous Enriched", "Typical Enriched")
 
-p <- ggplot(smooth_curves, aes(x = distance, y = cdf, color = prediction)) +
-    geom_line(linewidth = 1) +
+p <- ggplot(enrichment_df, aes(x = dist_bin, y = log2fc, fill = enrichment_class)) +
+    geom_col(width = 0.7, color = "black", size = 0.3) +
     
-    # 3 Panels Horizontal
-    facet_wrap(~panel_label, scales = "free_x", nrow = 1) + 
+    # Horizontal line at 0 (No difference)
+    geom_hline(yintercept = 0, linetype = "solid", color = "black", size = 0.5) +
     
-    geom_blank(data = limit_df) +
-    geom_text(data = ann_text, aes(label = label), 
-              color = "black", size = 3.5, fontface = "italic", hjust=0.5) +
+    # Facets
+    facet_wrap(~panel_label, scales = "fixed") +
     
-    scale_color_manual(name = "Population", values = colors_pred) +
+    # Colors
+    scale_fill_manual(values = c("Anomalous Enriched" = "#D9230F", "Typical Enriched" = "#228B22")) +
     
+    # Labels
     labs(
-        title = "Co-Localization Analysis: The Inflammatory Niche",
-        subtitle = "Anomalous Fibroblasts are spatially coupled with Damage and Immunity",
-        x = expression(bold("Distance to Feature ("*mu*"m)")), 
-        y = "Cumulative Proportion"
+        title = "Spatial Enrichment Analysis: The Inflammatory Niche",
+        subtitle = "Log2 Fold Enrichment of Anomalous vs. Typical Fibroblasts at specific distances",
+        x = expression(bold("Distance from Feature ("*mu*"m)")),
+        y = expression(bold("Log"[2]*" Enrichment (Anomalous / Typical)")),
+        fill = "Enrichment Status"
     ) +
     
+    # Theme
     theme_classic(base_size = 14) +
     theme(
-        strip.background = element_blank(),
-        strip.text = element_text(face = "bold", size = 10),
-        panel.grid.major.y = element_line(color = "grey92"), 
-        legend.position = "bottom", 
-        plot.title = element_text(face="bold", hjust=0.5),
-        plot.subtitle = element_text(hjust=0.5, size=11),
-        axis.text.x = element_text(angle=0, hjust=0.5)
-    ) +
-    coord_cartesian(expand = FALSE, ylim = c(0, 1.05))
+        strip.background = element_rect(fill = "grey95", color = NA),
+        strip.text = element_text(face = "bold", size = 11),
+        axis.text.x = element_text(angle = 45, hjust = 1, color = "black"),
+        axis.text.y = element_text(color = "black"),
+        panel.grid.major.y = element_line(color = "grey90", linetype = "dashed"),
+        legend.position = "bottom",
+        plot.title = element_text(face = "bold", hjust = 0.5),
+        plot.subtitle = element_text(hjust = 0.5, size = 11)
+    )
 
 print(p)
 
-# Adjusted width for 3 panels (was 16 for 4 panels)
-ggsave("figures/merfish/co-localization_analysis.png", plot = p, width = 12, height = 8, dpi = 600)
-cat("✓ Final 3-Panel Localization Plot Saved.\n")
+ggsave("figures/merfish/spatial_enrichment_analysis.png", plot = p, width = 12, height = 7, dpi = 600)
+cat("✓ Spatial Enrichment Bar Plot saved.\n")

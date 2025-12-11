@@ -44,7 +44,7 @@ ecm_homeostasis_signature <- c("Col1a2", "Timp2", "Col6a1", "Sparc", "Dpt")
 
 # Parameters
 CELL_TYPE_TO_PLOT <- "Fibroblast_Lineage" 
-PC_SUBSET <- 1:4
+PC_SUBSET <- 1:3
 REF_CELL_TYPE_COL <- "analysis_class"
 QUERY_CELL_TYPE_COL <- "analysis_class"
 ASSAY_NAME <- "logcounts"
@@ -170,5 +170,5 @@ theme(
 print(pca_ecm_plot)
 
 dir.create("figures/merfish", showWarnings = FALSE, recursive = TRUE)
-ggsave("figures/merfish/pca_fibroblast_lineage_ecm_corrected.png", pca_ecm_plot, width = 12, height = 8, dpi = 600)
+ggsave("figures/merfish/pca_ecm.png", pca_ecm_plot, width = 12, height = 8, dpi = 600)
 cat("✓ Plot saved.\n")

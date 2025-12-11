@@ -21,8 +21,6 @@ dss9_data <- readRDS("data/merfish/dss9_data.rds")
 set.seed(0)
 
 cat("\n--- Grouping Fibroblast Lineage ---\n")
-# Logic: Grab anything that looks like a Fibroblast, IAF, FRC, or Pericyte
-# This ensures we capture the transition states.
 is_fibro_lineage <- function(x) {
     grepl("^Fibro|^IAF", x)
 }
@@ -45,15 +43,13 @@ cat(sprintf("Total Fibroblasts in Query:       %d\n", sum(dss9_data$analysis_cla
 
 cat("\n--- Running Anomaly Detection on Fibroblast Lineage ---\n")
 
-# We compare the lumped "Fibroblast_Lineage" from Query (Sick) 
-# against the "Fibroblast_Lineage" from Reference (Healthy).
 anomaly_output <- detectAnomaly(
     query_data = dss9_data,
     reference_data = healthy_data, 
     query_cell_type_col = "analysis_class", 
     ref_cell_type_col = "analysis_class", 
-    cell_types = "Fibroblast_Lineage", # The lumped category
-    pc_subset = 1:4,
+    cell_types = "Fibroblast_Lineage", 
+    pc_subset = 1:3,
     n_tree = 500,
     anomaly_threshold = 0.5, 
     max_cells_query = NULL, 
@@ -67,17 +63,15 @@ anomaly_output <- detectAnomaly(
 
 cat("\n--- Generating PCA Anomaly Plot ---\n")
 
-# Use the plot() method from scDiagnostics.
-# This visualizes the Anomaly Score (Red = High Anomaly, Blue/Grey = Low).
 anomaly_plot <- plot(
     anomaly_output,
-    cell_type = "Fibroblast_Lineage", # Plot the lumped category
-    pc_subset = 1:4,
-    data_type = "query",  # Show the query cells colored by anomaly score
+    cell_type = "Fibroblast_Lineage", 
+    pc_subset = 1:3,
+    data_type = "query",  
     n_tree = 500,
-    diagonal_facet = "density",
+    diagonal_facet = "ridge",
     upper_facet = "blank",
-    max_cells_query = 2000 # Downsample slightly for clearer dots
+    max_cells_query = 2000 
 )
 
 # Add styling and titles
@@ -102,7 +96,7 @@ print(anomaly_plot)
 
 dir.create("figures/merfish", showWarnings = FALSE, recursive = TRUE)
 
-ggsave("figures/merfish/merfish_pca_anomaly_plot_lumped.png", 
+ggsave("figures/merfish/pca_anomaly.png", 
        plot = anomaly_plot, 
        width = 12, 
        height = 8, 

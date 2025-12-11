@@ -95,7 +95,7 @@ scatter_fn <- function(data, mapping, ...) {
     ggplot(data = data, mapping = mapping) +
         geom_point(data = ~subset(., dataset == "Query"), alpha = 0.5, size = 1.5, show.legend = FALSE) +
         geom_point(data = ~subset(., dataset == "Reference"), alpha = 0.7, size = 1.5, show.legend = FALSE) +
-        scale_shape_manual(values = c("Reference" = 16, "Query" = 1)) +
+        scale_shape_manual(values = c("Reference" = 1, "Query" = 16)) +
         viridis::scale_color_viridis(option = "B") +
         theme_minimal() +
         theme(panel.border = element_rect(color = "black", fill = NA, linewidth = 0.5))

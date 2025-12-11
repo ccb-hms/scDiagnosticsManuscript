@@ -183,11 +183,12 @@ create_graph_object <- function(sender_name, title_text) {
                                       "Neutrophil", "IAE", "Stem/Crypt Base"),
                            guide = guide_legend(override.aes = list(size=5))) +
         
-        # REMOVED: geom_node_text (Solved the overlap issue)
-        
         # Keep Gene Pair Labels (Center)
         geom_node_label(aes(label=ifelse(col_type=="Pair", name, ""), filter=col_type=="Pair"), 
-                        size=3, fontface="italic", fill="white", label.size=0.1) +
+                        size=5,                  
+                        fontface="bold.italic",  
+                        fill="white", 
+                        label.size=0.25) +
         
         theme_void() + 
         coord_cartesian(clip="off", xlim=c(0.5, 3.5)) +
@@ -202,9 +203,9 @@ create_graph_object <- function(sender_name, title_text) {
     return(p)
 }
 
-# __________________
+# ________________
 # Combine & Save
-# __________________
+# ________________
 
 p1 <- create_graph_object("All Fibroblasts", "A. All Fibroblasts (Avg)")
 p2 <- create_graph_object("Typical Fibro", "B. Typical Fibro (Homeostatic)")
@@ -221,5 +222,5 @@ final_plot <- p1 + p2 + p3 +
     )
 
 print(final_plot)
-ggsave("figures/merfish/network_analysis.png", plot=final_plot, width=20, height=8, dpi=600)
+ggsave("figures/merfish/network_analysis.png", plot=final_plot, width=26, height=8, dpi=600)
 cat("\n✓ Saved clean network plot with legend to figures/merfish/network_analysis.png\n")
