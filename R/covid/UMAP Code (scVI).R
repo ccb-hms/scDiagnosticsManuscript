@@ -43,13 +43,13 @@ umap_covid <- as.data.frame(reducedDim(covid_data, "UMAP_scVI"))
 colnames(umap_covid) <- c("UMAP1", "UMAP2")
 
 # Extract and prepare metadata
-meta_normal <- as.data.frame(colData(normal_data)) %>%
-    select(author_cell_type_merged) %>%
+meta_normal <- as.data.frame(colData(normal_data)) |>
+    select(author_cell_type_merged) |>
     mutate(disease_status = "Healthy",
            hybrid_cell_type = author_cell_type_merged)
 
-meta_covid <- as.data.frame(colData(covid_data)) %>%
-    select(author_cell_type_merged, azimuth_celltype_l1_merged) %>%
+meta_covid <- as.data.frame(colData(covid_data)) |>
+    select(author_cell_type_merged, azimuth_celltype_l1_merged) |>
     mutate(disease_status = "COVID-19",
            hybrid_cell_type = azimuth_celltype_l1_merged)
 
@@ -160,12 +160,22 @@ p_disease <- ggplot(plot_df, aes(x = UMAP1, y = UMAP2, color = disease_status)) 
 
 # Plot 2: UMAP colored by hybrid cell types
 cat("Creating UMAP plot by hybrid cell type...\n")
-label_df <- plot_df %>%
-    filter(!is.na(hybrid_cell_type)) %>%
-    group_by(hybrid_cell_type) %>%
+types_to_keep <- plot_df |>
+    count(hybrid_cell_type) |>
+    filter(n >= 200) |>
+    pull(hybrid_cell_type)
+
+plot_df_filtered <- plot_df |>
+    filter(hybrid_cell_type %in% types_to_keep)
+
+cat(sprintf("   -> Filtered plot to %d cell types (>= 100 cells each).\n", length(types_to_keep)))
+
+label_df <- plot_df_filtered |> 
+    filter(!is.na(hybrid_cell_type)) |>
+    group_by(hybrid_cell_type) |>
     summarise(UMAP1 = median(UMAP1), UMAP2 = median(UMAP2), .groups = 'drop')
 
-p_celltype <- ggplot(plot_df, aes(x = UMAP1, y = UMAP2)) +
+p_celltype <- ggplot(plot_df_filtered, aes(x = UMAP1, y = UMAP2)) +
     geom_point(aes(color = hybrid_cell_type), size = point_size, alpha = point_alpha + 0.1) +
     scale_color_manual(values = cell_type_colors, name = "Cell Type", na.value = "grey80") + 
     labs(x = "UMAP 1", y = "UMAP 2") +
@@ -174,7 +184,7 @@ p_celltype <- ggplot(plot_df, aes(x = UMAP1, y = UMAP2)) +
 
 # Plot 3: UMAP colored by IFN signature
 cat("Creating UMAP plot by IFN signature...\n")
-p_ifn <- ggplot(plot_df, aes(x = UMAP1, y = UMAP2, color = IFN_signature)) +
+p_ifn <- ggplot(plot_df_filtered, aes(x = UMAP1, y = UMAP2, color = IFN_signature)) +
     geom_point(size = point_size, alpha = 0.5) +
     scale_color_viridis_c(name = "IFN Score", option = "plasma") + 
     labs(x = "UMAP 1", y = "UMAP 2") +
@@ -193,9 +203,9 @@ print(p_ifn)
 
 dir.create("figures/covid", showWarnings = FALSE, recursive = TRUE)
 
-ggsave("figures/covid/scvi_umap_1_by_disease.png", p_disease, width = 10, height = 8, dpi = 600)
-ggsave("figures/covid/scvi_umap_2_by_hybrid_celltype.png", p_celltype, width = 10, height = 8, dpi = 600)
-ggsave("figures/covid/scvi_umap_3_by_ifn.png", p_ifn, width = 10, height = 8, dpi = 600)
+ggsave("figures/covid/scvi_umap__disease.png", p_disease, width = 10, height = 8, dpi = 600)
+ggsave("figures/covid/scvi_umap__celltype.png", p_celltype, width = 10, height = 8, dpi = 600)
+ggsave("figures/covid/scvi_umap__ifn.png", p_ifn, width = 10, height = 8, dpi = 600)
 
 cat("✓ Plots saved to figures/covid/ directory.\n")
 cat("\n", paste(rep("=", 45), collapse = ""), "\n")

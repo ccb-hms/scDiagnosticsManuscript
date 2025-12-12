@@ -105,11 +105,18 @@ plot_df <- data.frame(
 plot_df$anomaly_status <- ifelse(plot_df$barcode %in% anomalous_barcodes, "Anomalous", "Typical")
 
 # Add ECM Score
-healthy_fibro_signature_genes <- c("Col1a2", "Timp2", "Col6a1", "Sparc", "Dpt")
-available_genes <- intersect(healthy_fibro_signature_genes, rownames(dss9_data))
 if(length(available_genes) > 0) {
     signature_expression <- assay(dss9_data, "logcounts")[available_genes, , drop = FALSE]
-    plot_df$ecm_score <- colMeans(signature_expression)
+    
+    # 1. Calculate raw mean
+    raw_score <- colMeans(signature_expression)
+    
+    # 2. Cap at 1.5 (Winsorize)
+    capped_score <- pmin(raw_score, 1.5)
+    
+    # 3. Scale by 2 (Range is now 0 to 3)
+    plot_df$ecm_score <- capped_score * 2
+    
 } else {
     plot_df$ecm_score <- 0
 }
@@ -272,6 +279,9 @@ panel_c <- ggplot(panel_c_df, aes(x=x, y=y, color=display_group)) +
     guides(color = guide_legend(override.aes = list(size=3)))
 
 # --- PANEL D: ECM Score ---
+
+GLOBAL_ECM_LIMIT <- 3.0
+
 panel_d_df <- plot_df |> arrange(ecm_score)
 
 panel_d <- ggplot() +
@@ -279,7 +289,13 @@ panel_d <- ggplot() +
                aes(x=x, y=y), color = bg_color, size = point_size) +
     geom_point(data = subset(panel_d_df, broad_type %in% c("Fibroblast", "Inflamed Fibroblast")), 
                aes(x=x, y=y, color = ecm_score), size = point_size) +
-    scale_color_viridis_c(option = "plasma", direction = -1, name = "ECM Score") +
+    scale_color_viridis_c(
+        option = "plasma", 
+        direction = 1, 
+        name = "ECM Score",
+        limits = c(0, GLOBAL_ECM_LIMIT),
+        oob = scales::squish
+    ) +
     labs(title = "D. Loss of Homeostasis Signature") +
     common_theme
 

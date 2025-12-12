@@ -65,12 +65,19 @@ pca_output <- scDiagnostics::projectPCA(
     max_cells_ref = MAX_CELLS
 )
 
-# Clean IDs and Calculate Score
+# Clean IDs
 pca_output$original_cell_id <- gsub("Reference_|Query_", "", rownames(pca_output))
+pca_output$dataset <- factor(pca_output$dataset, levels = c("Query", "Reference"))
+
+# _____________________
+# Calculate ECM Score
+# _____________________
+
+# Identify available genes
 common_genes <- intersect(rownames(dss9_data), rownames(healthy_data))
 signature_genes_avail <- intersect(ecm_homeostasis_signature, common_genes)
 
-# Extract expression for score
+# Extract Data for BOTH Reference and Query cells in the PCA
 ref_cells_toplot <- pca_output$original_cell_id[pca_output$dataset == "Reference"]
 query_cells_toplot <- pca_output$original_cell_id[pca_output$dataset == "Query"]
 
@@ -79,32 +86,42 @@ full_expr_matrix <- cbind(
     assay(dss9_data, ASSAY_NAME)[signature_genes_avail, query_cells_toplot, drop = FALSE]
 )
 
-pca_output$ecm_score <- colMeans(full_expr_matrix, na.rm = TRUE)[match(pca_output$original_cell_id, colnames(full_expr_matrix))]
-pca_output$dataset <- factor(pca_output$dataset, levels = c("Query", "Reference"))
+# Calculate, Cap, and Scale
+if(length(signature_genes_avail) > 0) {
+    # Raw Mean
+    raw_score <- colMeans(full_expr_matrix, na.rm = TRUE)
+    
+    # Cap at 1.5 (Winsorize)
+    capped_score <- pmin(raw_score, 1.5)
+    
+    # Scale by 2 (New Range: 0 to 3.0)
+    final_score <- capped_score * 2
+    
+    # Map back to pca_output dataframe ensuring correct order
+    pca_output$ecm_score <- final_score[match(pca_output$original_cell_id, names(final_score))]
+} else {
+    pca_output$ecm_score <- 0
+}
 
 # __________________________
 # Custom Plotting Functions 
 # __________________________
 
+GLOBAL_ECM_LIMIT <- 3.0
+
 # BOTH Reference and Query are colored by ECM Score
 scatter_fn <- function(data, mapping, ...) {
     ggplot(data = data, mapping = mapping) +
-        # 1. Plot Reference (Open Circle) - Colored by Score
         geom_point(data = ~subset(., dataset == "Reference"), 
-                   aes(color = ecm_score),
-                   shape = 1,          
-                   alpha = 0.5, 
-                   size = 0.75) +
-        
-        # 2. Plot Query (Filled Point) - Colored by Score
+                   aes(color = ecm_score), shape = 1, alpha = 0.5, size = 0.75) +
         geom_point(data = ~subset(., dataset == "Query"), 
-                   aes(color = ecm_score), 
-                   shape = 16,         
-                   alpha = 0.8, 
-                   size = 0.75) +
-        
-        # Shared Gradient (Plasma)
-        viridis::scale_color_viridis(option = "plasma", direction = -1) + 
+                   aes(color = ecm_score), shape = 16, alpha = 0.8, size = 0.75) +
+        viridis::scale_color_viridis(
+            option = "plasma", 
+            direction = 1, 
+            limits = c(min(data$ecm_score, na.rm=TRUE), GLOBAL_ECM_LIMIT), 
+            oob = scales::squish
+        ) + 
         theme_minimal() +
         theme(panel.border = element_rect(color = "black", fill = NA, linewidth = 0.5))
 }
@@ -132,12 +149,16 @@ blank_fn <- function(data, mapping, ...) {
 # Shows the Colorbar for ECM Score
 legend_plot <- ggplot(pca_output, aes(x = PC1, y = PC2, color = ecm_score)) +
     geom_point() +
-    viridis::scale_color_viridis(option = "plasma", direction = -1, name = "ECM Homeostasis\nScore") +
-    theme(
-        legend.position = "right", 
-        legend.box = "vertical",
-        legend.key = element_rect(fill = NA, color = NA) 
-    )
+    viridis::scale_color_viridis(
+        option = "plasma", 
+        direction = 1, 
+        name = "ECM Homeostasis\nScore",
+        limits = c(min(pca_output$ecm_score, na.rm=TRUE), GLOBAL_ECM_LIMIT),
+        oob = scales::squish
+    ) +
+    theme(legend.position = "right", legend.box = "vertical", 
+          legend.key = element_rect(fill = NA, color = NA))
+
 plot_legend <- GGally::grab_legend(legend_plot)
 
 # ________________

@@ -126,7 +126,7 @@ all_scores_df <- all_scores_df |>
 # __________________
 
 col_pal <- c("All Fibroblasts"="grey40", "Typical Fibro"="#228B22", "Anomalous Fibro"="#D9230F", 
-             "Neutrophil"="#1F78B4", "IAE"="#FDBF6F", "Stem/Crypt Base"="#008B8B")
+             "Neutrophil"="#1F78B4", "IAE"="#E7298A", "Stem/Crypt Base"="#008B8B")
 
 create_graph_object <- function(sender_name, title_text) {
     
