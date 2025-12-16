@@ -109,7 +109,8 @@ message("\n--- Creating Merged Versions of Annotations ---")
 if ("celltypist_predicted_labels" %in% colnames(colData(covid_data_original))) {
     covid_data_original <- addMergedCellTypes(
         sce_object = covid_data_original,
-        input_col_name = "celltypist_predicted_labels"
+        input_col_name = "celltypist_predicted_labels", 
+        dataset = "COVID"
     )
 }
 
@@ -117,7 +118,8 @@ if ("celltypist_predicted_labels" %in% colnames(colData(covid_data_original))) {
 if ("celltypist_majority_voting" %in% colnames(colData(covid_data_original))) {
     covid_data_original <- addMergedCellTypes(
         sce_object = covid_data_original,
-        input_col_name = "celltypist_majority_voting"
+        input_col_name = "celltypist_majority_voting", 
+        dataset = "COVID"
     )
 }
 message("✓ Merged cell type columns created.")

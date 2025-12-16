@@ -7,150 +7,157 @@ library(SingleCellExperiment)
 library(zellkonverter)
 library(reticulate)
 
-# Source files
+# Source auxiliary functions
 source("R/auxiliary/environmentSetupCellTypist.R")
+source("R/auxiliary/addMergedCellTypes.R")
 
 # ----------------------------------------------------------
 
+# ________________________
+# Setup and Data Loading
+# ________________________
+
+message("--- Initializing CellTypist Integration (MERFISH) ---")
+
 # Ensure Python environment is set up
-cat("Ensuring Python environment is available...\n")
+message("Ensuring Python environment is available...")
 environmentSetupCellTypist()
 
-# Configuration
-ORIGINAL_MERFISH_FILE <- "data/merfish/dss9_data.rds"
+# Define file paths
+# Note: Integrating back into DSS9 query data
+ORIGINAL_QUERY_FILE <- "data/merfish/dss9_data.rds"
 ANNOTATED_QUERY_FILE <- "data/merfish/annotated_query_data.h5ad"
 
-cat("Loading original MERFISH SCE object...\n")
-dss9_data_original <- readRDS(ORIGINAL_MERFISH_FILE)
+# Load data
+message("\nLoading original DSS9 SCE object...")
+dss9_data_original <- readRDS(ORIGINAL_QUERY_FILE)
 
-cat("Loading CellTypist annotated results...\n")
+message("Loading CellTypist annotated results from Python...")
 adata_annotated <- reticulate::import("scanpy")$read_h5ad(ANNOTATED_QUERY_FILE)
-
-cat("Converting annotated AnnData to SCE (annotations only)...\n")
 sce_annotations_only <- AnnData2SCE(adata_annotated)
 
-cat("Original MERFISH data dimensions:", dim(dss9_data_original), "\n")
-cat("Annotations data dimensions:", dim(sce_annotations_only), "\n")
+message("Original DSS9 data dimensions: ", ncol(dss9_data_original), " cells x ", nrow(dss9_data_original), " genes")
+message("Annotation data dimensions: ", ncol(sce_annotations_only), " cells x ", nrow(sce_annotations_only), " genes")
 
-# Check cell order matches
+# _______________________________
+# Data Validation and Alignment
+# _______________________________
+
+message("\n--- Validating Cell Alignment ---")
+
 cell_names_original <- colnames(dss9_data_original)
 cell_names_annotated <- colnames(sce_annotations_only)
 
 if (!identical(cell_names_original, cell_names_annotated)) {
   warning("Cell order doesn't match exactly, attempting to align...")
   
-  # Find common cells
   common_cells <- intersect(cell_names_original, cell_names_annotated)
-  cat("Common cells found:", length(common_cells), "\n")
-  cat("Original cells:", length(cell_names_original), "\n")
-  cat("Annotated cells:", length(cell_names_annotated), "\n")
+  message("Common cells found: ", length(common_cells))
   
   if(length(common_cells) == 0) {
     stop("No common cells found between original and annotated data!")
   }
   
-  # Align both objects to common cells
+  # Align both objects to the common set of cells in the correct order
   dss9_data_original <- dss9_data_original[, common_cells]
   sce_annotations_only <- sce_annotations_only[, common_cells]
   
-  cat("After alignment - both datasets have", ncol(dss9_data_original), "cells\n")
+  message("Alignment complete. Both datasets now have ", ncol(dss9_data_original), " cells.")
+} else {
+    message("✓ Cell names and order match perfectly.")
 }
 
-# Identify which CellTypist annotation columns are actually present
+# ____________________________________
+# Annotation Integration and Renaming
+# ____________________________________
+
+message("\n--- Integrating and Renaming CellTypist Annotations ---")
+
+# 1. Identify which columns are present from the Python script
 annotation_coldata <- colData(sce_annotations_only)
-available_cols <- colnames(annotation_coldata)
+possible_python_cols <- c("predicted_labels", "majority_voting", "conf_score")
+present_python_cols <- intersect(possible_python_cols, colnames(annotation_coldata))
 
-# Define possible CellTypist columns and check which ones exist
-possible_celltypist_cols <- c("predicted_labels", "majority_voting", "conf_score")
-present_celltypist_cols <- intersect(possible_celltypist_cols, available_cols)
-
-cat("Available annotation columns in data:\n")
-print(available_cols)
-
-if(length(present_celltypist_cols) == 0) {
+if(length(present_python_cols) == 0) {
   stop("No CellTypist annotation columns found! Expected at least 'predicted_labels'.")
 }
+message("Found raw Python columns: ", paste(present_python_cols, collapse = ", "))
 
-cat("CellTypist columns found:\n")
-print(present_celltypist_cols)
+# 2. Extract only these columns
+celltypist_annotations <- annotation_coldata[, present_python_cols, drop = FALSE]
 
-# Extract only the CellTypist columns that are present
-celltypist_annotations <- annotation_coldata[, present_celltypist_cols, drop = FALSE]
+# 3. Rename the columns to add the 'celltypist_' prefix for clarity
+name_map <- c(
+    "predicted_labels"  = "celltypist_predicted_labels",
+    "majority_voting"   = "celltypist_majority_voting",
+    "conf_score"        = "celltypist_conf_score"
+)
+current_names <- colnames(celltypist_annotations)
+colnames(celltypist_annotations) <- name_map[current_names]
+message("Renamed columns to: ", paste(colnames(celltypist_annotations), collapse = ", "))
 
-cat("Adding CellTypist annotation columns:\n")
-print(colnames(celltypist_annotations))
+# 4. Add the renamed columns to the original SCE object
+colData(dss9_data_original) <- cbind(colData(dss9_data_original), celltypist_annotations)
+message("✓ Prefixed annotation columns successfully added.")
 
-# Add CellTypist annotations to original MERFISH data
-cat("Adding CellTypist annotations to original MERFISH data...\n")
-original_coldata <- colData(dss9_data_original)
-combined_coldata <- cbind(original_coldata, celltypist_annotations)
+# __________________________________
+# Create Merged Annotation Columns
+# __________________________________
 
-# Update the original SCE object with annotations
-colData(dss9_data_original) <- combined_coldata
+message("\n--- Creating Merged Versions of Annotations ---")
 
-cat("Final colData columns:\n")
-print(colnames(colData(dss9_data_original)))
-
-# Summary of annotations (conditional on what's available)
-cat("\n=== CellTypist Annotation Summary ===\n")
-
-# Always check for predicted_labels (this should always be present)
-if ("predicted_labels" %in% colnames(colData(dss9_data_original))) {
-  cat("Predicted cell types (top 10):\n")
-  pred_table <- sort(table(colData(dss9_data_original)$predicted_labels), decreasing = TRUE)
-  print(head(pred_table, 10))
-} else {
-  cat("⚠️  Warning: 'predicted_labels' column not found!\n")
+# Use the new, prefixed column names as input for the merging function
+if ("celltypist_predicted_labels" %in% colnames(colData(dss9_data_original))) {
+    dss9_data_original <- addMergedCellTypes(
+        sce_object = dss9_data_original,
+        input_col_name = "celltypist_predicted_labels", 
+        dataset = "MERFISH"
+    )
 }
 
-# Check for majority_voting (may or may not be present)
-if ("majority_voting" %in% colnames(colData(dss9_data_original))) {
-  cat("\nMajority voting cell types (top 10):\n")
-  maj_table <- sort(table(colData(dss9_data_original)$majority_voting), decreasing = TRUE)
-  print(head(maj_table, 10))
-  
-  # Compare predicted_labels vs majority_voting if both are present
-  if ("predicted_labels" %in% colnames(colData(dss9_data_original))) {
-    pred_labels <- colData(dss9_data_original)$predicted_labels
-    maj_labels <- colData(dss9_data_original)$majority_voting
-    agreement <- sum(pred_labels == maj_labels, na.rm = TRUE) / length(pred_labels)
-    cat("Agreement between predicted_labels and majority_voting:", 
-        round(100 * agreement, 1), "%\n")
-  }
+# Defensively merge majority_voting labels only if they exist
+if ("celltypist_majority_voting" %in% colnames(colData(dss9_data_original))) {
+    dss9_data_original <- addMergedCellTypes(
+        sce_object = dss9_data_original,
+        input_col_name = "celltypist_majority_voting", 
+        dataset = "MERFISH"
+    )
+}
+message("✓ Merged cell type columns created.")
+
+# __________________________
+# Final Summary and Saving
+# __________________________
+
+message("\n--- Final Summary and Validation ---")
+
+# Check for the primary merged predictions
+if ("celltypist_predicted_labels_merged" %in% colnames(colData(dss9_data_original))) {
+  cat("\nMerged predicted cell types (top 10):\n")
+  print(head(sort(table(dss9_data_original$celltypist_predicted_labels_merged), decreasing = TRUE), 10))
 } else {
-  cat("\nMajority voting: Not performed (majority_voting=False in Python script)\n")
+  cat("\nWarning: Merged predicted labels column not found!\n")
 }
 
 # Check for confidence scores
-if ("conf_score" %in% colnames(colData(dss9_data_original))) {
-  conf_scores <- colData(dss9_data_original)$conf_score
+if ("celltypist_conf_score" %in% colnames(colData(dss9_data_original))) {
+  conf_scores <- dss9_data_original$celltypist_conf_score
   cat("\nConfidence score summary:\n")
   print(summary(conf_scores))
-  
-  low_conf_count <- sum(conf_scores < 0.5, na.rm = TRUE)
-  low_conf_pct <- round(100 * low_conf_count / length(conf_scores), 1)
-  cat("Low confidence cells (<0.5):", low_conf_count, 
-      paste0("(", low_conf_pct, "%)\n"))
-  
-  high_conf_count <- sum(conf_scores >= 0.8, na.rm = TRUE)
-  high_conf_pct <- round(100 * high_conf_count / length(conf_scores), 1)
-  cat("High confidence cells (≥0.8):", high_conf_count, 
-      paste0("(", high_conf_pct, "%)\n"))
 } else {
-  cat("\nConfidence scores: Not available\n")
+  cat("\nConfidence scores: Not available.\n")
 }
 
-# SAVE BACK TO ORIGINAL FILE (overwriting it)
-cat("Saving annotated data back to original file...\n")
-saveRDS(dss9_data_original, ORIGINAL_MERFISH_FILE)
+# Save the final, fully annotated object
+message("\nSaving fully annotated data back to original file...")
+saveRDS(dss9_data_original, ORIGINAL_QUERY_FILE)
 
-cat("\n=== Integration Complete ===\n")
-cat("CellTypist annotations added to:", ORIGINAL_MERFISH_FILE, "\n")
-cat("Final object dimensions:", dim(dss9_data_original), "\n")
-cat("Total colData columns:", ncol(colData(dss9_data_original)), "\n")
+message("\n✓✓✓ Integration Complete! ✓✓✓")
+message("CellTypist annotations have been successfully added to: ", ORIGINAL_QUERY_FILE)
 
-# Summary of what was added
-cat("\nCellTypist annotations successfully integrated:\n")
-for(col in present_celltypist_cols) {
-  cat("✓ ", col, "\n", sep = "")
+# Final confirmation of what was added
+final_celltypist_cols <- grep("celltypist", colnames(colData(dss9_data_original)), value = TRUE)
+message("\nFinal CellTypist-related columns in object:")
+for(col in final_celltypist_cols) {
+  message("- ", col)
 }

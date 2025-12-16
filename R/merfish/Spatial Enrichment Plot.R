@@ -151,10 +151,10 @@ enrichment_df$panel_label <- factor(enrichment_df$panel_label,
 enrichment_df$enrichment_class <- ifelse(enrichment_df$log2fc > 0, "Anomalous Enriched", "Typical Enriched")
 
 p <- ggplot(enrichment_df, aes(x = dist_bin, y = log2fc, fill = enrichment_class)) +
-    geom_col(width = 0.7, color = "black", size = 0.3) +
+    geom_col(width = 0.35, color = "black", size = 0.3) +
     
     # Horizontal line at 0 (No difference)
-    geom_hline(yintercept = 0, linetype = "solid", color = "black", size = 0.5) +
+    geom_hline(yintercept = 0, linetype = "solid", color = "black", linewidth = 0.5) +
     
     # Facets
     facet_wrap(~panel_label, scales = "fixed") +

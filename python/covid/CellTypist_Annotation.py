@@ -1,6 +1,6 @@
-# ----------------------------------------------
-# COVID-19 - CellTypist Cell Type Annotation
-# ----------------------------------------------
+# ------------------------------------------------
+# COVID-19 PBMC - CellTypist Cell Type Annotation
+# ------------------------------------------------
 
 # Load libraries
 import pandas as pd
@@ -9,7 +9,7 @@ import celltypist
 import numpy as np
 from datetime import datetime
 
-# ----------------------------------------------
+# ------------------------------------------------
 
 # Configuration
 ANNDATA_REF_FILE = "data/covid/reference_data.h5ad"

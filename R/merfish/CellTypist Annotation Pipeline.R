@@ -1,27 +1,27 @@
-# ---------------------------------------------------
-# COVID-19 PBMC - CellTypist Annotation Pipeline
-# ---------------------------------------------------
+# ---------------------------------------------------------
+# MERFISH Mouse Colon IBD - CellTypist Annotation Pipeline
+# ---------------------------------------------------------
 
 # Load libraries
 library(SingleCellExperiment)
 library(zellkonverter)
 library(reticulate)
 
-# Source files 
+# Source files
 source("R/auxiliary/environmentSetupCellTypist.R")
 
-# ---------------------------------------------------
+# ---------------------------------------------------------
 
 # _________________________
 # Pipeline Initialization
 # _________________________
 
-cat("=== COVID-19 CellTypist Annotation Pipeline ===\n")
+cat("=== MERFISH CellTypist Annotation Pipeline ===\n")
 
 # Create data output directory if it doesn't exist
-if (!dir.exists("data/covid")) {
-  dir.create("data/covid", recursive = TRUE)
-  cat("✓ Created output directory: data/covid\n")
+if (!dir.exists("data/merfish")) {
+  dir.create("data/merfish", recursive = TRUE)
+  cat("✓ Created output directory: data/merfish\n")
 }
 
 # Setting the seed
@@ -39,23 +39,26 @@ environmentSetupCellTypist()
 # _______________________________________
 
 cat("\n--- Step 2: Preparing data for Python annotation ---\n")
-source("R/covid/CellTypist Data Preparation.R")
+# Ensure you save the script below as "CellTypist_Data_Preparation.R" in R/merfish/
+source("R/merfish/CellTypist_Data_Preparation.R")
 
 # ___________________________________________
 # Step 3: Run CellTypist Annotation (Python)
 # ___________________________________________
 
 cat("\n--- Step 3: Running CellTypist annotation in Python ---\n")
-python_script <- "python/covid/CellTypist_Annotation.py"
+# Ensure you save the python script in python/merfish/
+python_script <- "python/merfish/CellTypist_Annotation.py"
 system(paste("conda run -n celltypist_env python", python_script))
 cat("✓ Python script execution complete.\n")
 
-# ____________________________________
+# ________________________________________
 # Step 4: Integrate Results (Python -> R)
-# ____________________________________
+# ________________________________________
 
 cat("\n--- Step 4: Integrating annotations with original R object ---\n") 
-source("R/covid/CellTypist Results Integration.R")
+# Ensure you save the integration script in R/merfish/
+source("R/merfish/CellTypist_Results_Integration.R")
 
 # _____________________________________
 # Step 5: Clean Up Intermediate Files
@@ -63,9 +66,9 @@ source("R/covid/CellTypist Results Integration.R")
 
 cat("\n--- Step 5: Cleaning up all intermediate .h5ad files ---\n")
 h5ad_files <- c(
-  "data/covid/reference_data.h5ad",
-  "data/covid/query_data.h5ad", 
-  "data/covid/annotated_query_data.h5ad"
+  "data/merfish/reference_data.h5ad",
+  "data/merfish/query_data.h5ad", 
+  "data/merfish/annotated_query_data.h5ad"
 )
 
 for (file in h5ad_files) {
@@ -80,7 +83,7 @@ for (file in h5ad_files) {
 # _________________________
 
 cat("\n--- Step 6: Final Validation ---\n")
-result <- readRDS("data/covid/covid_data_sce.rds")
+result <- readRDS("data/merfish/dss9_data.rds")
 
 cat("Final object dimensions: ", nrow(result), " genes x ", ncol(result), " cells\n")
 
@@ -101,4 +104,4 @@ if(length(annotation_cols) > 0) {
 # __________________
 
 cat("\n🎉🎉🎉 Pipeline Complete! 🎉🎉🎉\n")
-cat("✓ CellTypist annotations are now integrated into: data/covid/covid_data_sce.rds\n")
+cat("✓ CellTypist annotations are now integrated into: data/merfish/dss9_data.rds\n")

@@ -28,40 +28,15 @@ set.seed(0)
 
 cat("\n--- Mapping Cell Types ---\n")
 
-map_cell_types <- function(labels) {
-  case_when(
-    # FIBROBLAST LINEAGE
-    grepl("^IAF", labels) ~ "Inflamed Fibroblast",
-    grepl("^Fibro", labels) ~ "Fibroblast",
-    
-    # STROMAL OTHERS
-    grepl("FRC|Pericyte", labels, ignore.case = TRUE) ~ "Pericyte/FRC",
-    
-    # SMOOTH MUSCLE
-    grepl("^IASMC", labels) ~ "Inflamed SMC",
-    grepl("SMC", labels) ~ "Smooth Muscle",
-    
-    # EPITHELIAL & STEM
-    grepl("^IAE", labels) ~ "Inflamed Epithelial",
-    grepl("Stem|TA", labels) ~ "Stem/TA", 
-    grepl("Colonocytes|Goblet|Epithelial|M cells|Repair associated", labels) ~ "Epithelial",
-    
-    # IMMUNE
-    grepl("Neutrophil", labels, ignore.case = TRUE) ~ "Neutrophil",
-    grepl("B cell|T|Macrophage|Monocyte|DC|ILC2|Plasma|Mast", labels) ~ "Other Immune",
-    
-    # OTHERS
-    grepl("Endothelial|EC", labels) ~ "Endothelial",
-    grepl("Glia|Neuron", labels) ~ "Enteric Nervous",
-    grepl("ICC", labels) ~ "ICC",
-    grepl("Adipose", labels) ~ "Adipose",
-    
-    TRUE ~ "Other"
-  )
+if (!"tier2_merged" %in% colnames(colData(dss9_data))) {
+  stop("Column 'tier2_merged' not found in dss9_data. Please run the annotation integration pipeline first.")
 }
 
-dss9_data$broad_panel_a <- map_cell_types(dss9_data$tier2)
-healthy_data$broad_panel_a <- map_cell_types(healthy_data$tier2)
+# Use the pre-calculated merged column for plotting categories
+dss9_data$broad_panel_a <- dss9_data$tier2_merged
+healthy_data$broad_panel_a <- healthy_data$tier2_merged
+
+cat("✓ Using 'tier2_merged' as the source for cell type categories.\n")
 
 # __________________
 # Anomaly Detection 
@@ -69,6 +44,7 @@ healthy_data$broad_panel_a <- map_cell_types(healthy_data$tier2)
 
 cat("\n--- Running Anomaly Detection ---\n")
 
+# Define analysis class based on the merged columns
 healthy_data$analysis_class <- ifelse(healthy_data$broad_panel_a == "Fibroblast", "Fibroblast_Lineage", "Ignore")
 dss9_data$analysis_class <- ifelse(dss9_data$broad_panel_a %in% c("Fibroblast", "Inflamed Fibroblast"), "Fibroblast_Lineage", "Ignore")
 
@@ -84,6 +60,7 @@ anomaly_output <- detectAnomaly(
     max_cells_ref = NULL
 )
 
+# Extract anomalous barcodes
 anomalous_barcodes <- unlist(lapply(anomaly_output, function(res) {
     if(is.null(res)) return(NULL)
     names(res$query_anomaly[res$query_anomaly == TRUE])
@@ -99,25 +76,33 @@ plot_df <- data.frame(
     x = spatialCoords(dss9_data)[, "x"],
     y = spatialCoords(dss9_data)[, "y"],
     tier2 = dss9_data$tier2,
-    broad_type = dss9_data$broad_panel_a
+    broad_type = dss9_data$broad_panel_a # Using merged type
 )
 
 plot_df$anomaly_status <- ifelse(plot_df$barcode %in% anomalous_barcodes, "Anomalous", "Typical")
 
-# Add ECM Score
+# Add ECM Score (Loss of Homeostasis Signature)
+# Define standard fibrosis/ECM genes often found in MERFISH panels
+target_ecm_genes <- c("Col1a1", "Col1a2", "Col3a1", "Fn1", "Timp1", "Sparc", "Mmp2", "Vim")
+available_genes <- intersect(target_ecm_genes, rownames(dss9_data))
+
+cat(sprintf("Calculating ECM score using %d available genes: %s\n", 
+            length(available_genes), paste(available_genes, collapse=", ")))
+
 if(length(available_genes) > 0) {
     signature_expression <- assay(dss9_data, "logcounts")[available_genes, , drop = FALSE]
     
     # 1. Calculate raw mean
     raw_score <- colMeans(signature_expression)
     
-    # 2. Cap at 1.5 (Winsorize)
+    # 2. Cap at 1.5 (Winsorize) to prevent outliers washing out the plot
     capped_score <- pmin(raw_score, 1.5)
     
-    # 3. Scale by 2 (Range is now 0 to 3)
+    # 3. Scale by 2 (Range is roughly 0 to 3 for plotting)
     plot_df$ecm_score <- capped_score * 2
     
 } else {
+    warning("No ECM genes found in dataset rows. ECM score will be 0.")
     plot_df$ecm_score <- 0
 }
 

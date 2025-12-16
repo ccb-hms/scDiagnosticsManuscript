@@ -1,19 +1,21 @@
-# -----------------------------------------------------------------
+# ----------------------------------------------------------------
 # MERFISH Mouse Colon IBD - Add R (Azimuth & SingleR) Annotations
-# -----------------------------------------------------------------
+# ----------------------------------------------------------------
 
 # Load libraries
 library(SingleCellExperiment)
 library(BiocParallel)
 library(parallel)
 
-# Source files
+# Source files (Ensure these paths are correct relative to your project root)
 source("R/auxiliary/performSingleRWithSubsampling.R")
 source("R/auxiliary/performAzimuthAnnotation.R")
+source("R/auxiliary/addMergedCellTypes.R")
 
-# -----------------------------------------------------------------
+# -----------------------------------------------------
 
-# Read all processed datasets
+# Read processed datasets
+# Using MERFISH paths
 healthy_data <- readRDS("data/merfish/healthy_data.rds")
 dss9_data <- readRDS("data/merfish/dss9_data.rds") 
 
@@ -29,7 +31,7 @@ if(.Platform$OS.type == "windows") {
     bpparam <- MulticoreParam(workers = min(detectCores() - 4, 6))
 }
 
-# Create output directories
+# Create output directories for MERFISH
 if(!dir.exists("data/merfish/Azimuth")) dir.create("data/merfish/Azimuth", recursive = TRUE)
 if(!dir.exists("data/merfish/SingleR")) dir.create("data/merfish/SingleR", recursive = TRUE)
 
@@ -37,7 +39,7 @@ if(!dir.exists("data/merfish/SingleR")) dir.create("data/merfish/SingleR", recur
 # Azimuth Annotations
 # ____________________
 
-# Set path to your custom reference (created by the reference creation script)
+# Set path to your custom reference
 custom_reference_path <- "data/merfish/Azimuth/custom_azimuth_reference"
 
 # Verify the reference exists
@@ -46,45 +48,18 @@ if(!dir.exists(custom_reference_path)) {
          "\nPlease run the Azimuth reference creation script first!")
 }
 
-# Check if reference files exist
-ref_files <- c(file.path(custom_reference_path, "ref.Rds"),
-               file.path(custom_reference_path, "idx.annoy"))
-
-if(!all(file.exists(ref_files))) {
-    missing_files <- ref_files[!file.exists(ref_files)]
-    stop("Missing reference files: ", paste(missing_files, collapse = ", "),
-         "\nPlease run the Azimuth reference creation script first!")
-}
-
 cat("Using custom reference from:", custom_reference_path, "\n")
-
-# Load reference info if available
-ref_info_path <- file.path(custom_reference_path, "reference_info.rds")
-if(file.exists(ref_info_path)) {
-    ref_info <- readRDS(ref_info_path)
-    cat("Reference info:\n")
-    cat("- Cells:", ref_info$n_cells, "\n")
-    cat("- Cell types:", length(ref_info$cell_types), "\n")
-    cat("- Created:", ref_info$creation_date, "\n")
-}
-
-# Choose reference to use
-reference_to_use <- custom_reference_path
-
-# Option 2: Use standard PBMC reference instead
-# reference_to_use <- "pbmcref"
-
-# Option 3: Use path to downloaded reference
-# reference_to_use <- "/path/to/downloaded/reference"
 
 # Apply Azimuth annotations
 cat("Running Azimuth annotation with custom reference...\n")
-azimuth_merfish_output <- performAzimuthAnnotation(
+azimuth_dss9_output <- performAzimuthAnnotation(
     sce_obj = dss9_data,
-    dataset_name = "merfish", 
-    reference_path = reference_to_use
+    dataset_name = "dss9", 
+    reference_path = custom_reference_path
 )
-dss9_data <- azimuth_merfish_output$sce_annotated
+
+# Extract annotated object
+dss9_data <- azimuth_dss9_output$sce_annotated
 
 cat("✓ Azimuth annotation complete!\n")
 
@@ -93,46 +68,70 @@ cat("✓ Azimuth annotation complete!\n")
 # _____________________
 
 # SingleR: Healthy -> DSS9
-singler_healthy_output <- performSingleRWithSubsampling(
+# Note: Using 'tier2' as the annotation column from healthy_data
+singler_output <- performSingleRWithSubsampling(
     ref_sce = healthy_data,
     query_sce = dss9_data,
-    ref_name = "healthy",
+    ref_name = "healthy_merfish",
     annotation_col = "tier2",
     max_cells_ref = NULL,
     bpparam = bpparam
 )
-dss9_data$singler_annotations <- singler_healthy_output$annotations
-dss9_data$singler_scores <- singler_healthy_output$scores
+
+dss9_data$singler_annotations <- singler_output$annotations
+dss9_data$singler_scores <- singler_output$scores
 
 # Set annotations as character data
 dss9_data$singler_annotations <- as.character(dss9_data$singler_annotations)
 
+# __________________________________
+# Create Merged Annotation Columns
+# __________________________________
+
+message("--- Creating Merged Versions of Annotations ---")
+
+# Use the flexible function to add merged columns directly to the SCE object
+dss9_data <- addMergedCellTypes(sce_object = dss9_data, input_col_name = "singler_annotations", 
+                                dataset = "MERFISH")
+dss9_data <- addMergedCellTypes(sce_object = dss9_data, input_col_name = "azimuth_celltype_l1", 
+                                dataset = "MERFISH")
+dss9_data <- addMergedCellTypes(sce_object = dss9_data, input_col_name = "azimuth_celltype_l2", 
+                                dataset = "MERFISH")
+
+message("Merged annotation columns created successfully.")
+message("Example of merged SingleR annotations:")
+print(head(table(dss9_data$singler_annotations_merged)))
+
 # __________________
-# SAVE ALL RESULTS
+# Save All Results
 # __________________
 
 # Save annotated SCE objects
+# Saving back to MERFISH data directory
 saveRDS(dss9_data, "data/merfish/dss9_data.rds") 
 
 # Save SingleR outputs
-saveRDS(singler_healthy_output, "data/merfish/SingleR/singler_healthy_output.rds")
+saveRDS(singler_output, "data/merfish/SingleR/singler_dss9_output.rds")
 
 # Save Azimuth outputs
-saveRDS(azimuth_merfish_output$azimuth_results, "data/merfish/Azimuth/azimuth_merfish_results.rds")
+saveRDS(azimuth_dss9_output$azimuth_results, "data/merfish/Azimuth/azimuth_dss9_results.rds")
 
 # Save Seurat objects with Azimuth annotations
-saveRDS(azimuth_merfish_output$seurat_object, "data/merfish/Azimuth/azimuth_merfish_seurat.rds")
+saveRDS(azimuth_dss9_output$seurat_object, "data/merfish/Azimuth/azimuth_dss9_seurat.rds")
 
 # Save custom reference info
 reference_info <- list(
-    reference_path = reference_to_use,
-    reference_type = if(reference_to_use == custom_reference_path) "custom_healthy" else "standard",
+    reference_path = custom_reference_path,
+    reference_type = "custom_healthy_merfish",
     creation_date = Sys.Date()
 )
 saveRDS(reference_info, "data/merfish/Azimuth/reference_info.rds")
 
 # Clean up
 rm(healthy_data, dss9_data, 
-   singler_healthy_output,
-   azimuth_merfish_output,
-   custom_reference_path, reference_to_use, reference_info)
+   singler_output,
+   azimuth_dss9_output,
+   custom_reference_path, reference_info)
+
+gc()
+message("Pipeline finished. Annotated MERFISH objects saved.")

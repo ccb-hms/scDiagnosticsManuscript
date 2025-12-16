@@ -12,6 +12,7 @@ library(Matrix)
 
 # Source auxiliary functions
 source("R/auxiliary/addReferencePCA.R")
+source("R/auxiliary/addMergedCellTypes.R")
 
 # ---------------------------------------------------------------
 
@@ -69,6 +70,26 @@ message("After QC, cells remaining: ",
         "DSS9 = ", ncol(sce_dss9), " (removed ", sum(discard_d9), ")")
 
 
+# _____________________________________________
+# Biological Filtering (Healthy Reference Only)
+# _____________________________________________
+
+# Goal: Remove inflammation-associated cells (IAE, IAF, IASMC) from the Healthy dataset
+# so the reference represents a truly "healthy" state.
+
+inflamed_patterns <- "^(IAE|IAF|IASMC)"
+is_inflamed <- grepl(inflamed_patterns, sce_healthy$tier2)
+
+if (sum(is_inflamed) > 0) {
+    message(sprintf("Removing %d inflammation-associated cells (IAE, IAF, IASMC) from Healthy dataset.", sum(is_inflamed)))
+    sce_healthy <- sce_healthy[, !is_inflamed]
+} else {
+    message("No inflammation-associated cells found in Healthy dataset.")
+}
+
+message("Healthy reference count after biological filtering: ", ncol(sce_healthy))
+
+
 # _______________
 # Normalization
 # _______________
@@ -76,7 +97,7 @@ message("After QC, cells remaining: ",
 # Re-calculate logcounts on the filtered data to ensure correct library size factors
 sce_healthy <- logNormCounts(sce_healthy, assay.type = "counts")
 sce_dss9    <- logNormCounts(sce_dss9, assay.type = "counts")
-message("Re-calculated logcounts on QC-filtered data.")
+message("Re-calculated logcounts on filtered data.")
 
 
 # _________________________
@@ -98,36 +119,65 @@ message("PCA computed for both objects.")
 
 
 # _____________________________
+# Cell Type Annotation Merging
+# _____________________________
+
+message("Merging fine-grained cell type annotations into broader categories...")
+
+# Use function to add the merged column
+sce_healthy <- addMergedCellTypes(sce_object = sce_healthy, input_col_name = "tier2",
+                                  dataset = "MERFISH")
+sce_dss9 <- addMergedCellTypes(sce_object = sce_dss9, input_col_name = "tier2",
+                               dataset = "MERFISH")
+
+message("Cell type merging complete for both datasets.")
+message("Merged cell type distribution in reference (normal):")
+print(sort(table(sce_healthy$tier2_merged), decreasing = TRUE))
+
+
+# _____________________________
 # Final Formatting and Saving
 # _____________________________
 
 # Define a function to apply final formatting steps
 formatAndFinalizeSCE <- function(sce_object, cols_to_keep) {
 
-    # Subset colData to keep only necessary columns
+    # 1. Subset colData to keep only necessary columns
+    # Ensure 'sample_id' or 'mouse_id' is kept if needed for scVI batch correction
+    # Adding "mouse_id" to the keep list just in case.
+    cols_to_keep <- c(cols_to_keep, "mouse_id", "sample_id")
     cols_to_keep <- intersect(cols_to_keep, colnames(colData(sce_object)))
     colData(sce_object) <- colData(sce_object)[, cols_to_keep, drop = FALSE]
-  
-    # Remove original counts assay to save space
-    assay(sce_object, "counts") <- NULL 
     
-    # <<< FIX #1: REMOVE ALTERNATIVE EXPERIMENTS >>>
+    # 2. Handle Assays (Crucial for scVI)
+    # scVI requires raw counts. We must NOT delete them.
+    # Convert both counts and logcounts to in-memory sparse matrices.
+    
+    if ("counts" %in% assayNames(sce_object)) {
+        assay(sce_object, "counts") <- as(assay(sce_object, "counts"), "CsparseMatrix")
+    }
+    
+    if ("logcounts" %in% assayNames(sce_object)) {
+        assay(sce_object, "logcounts") <- as(assay(sce_object, "logcounts"), "CsparseMatrix")
+    }
+    
+    # 3. Clean up
     # This removes the nested 'Blank' experiment that holds on-disk data
     altExps(sce_object) <- NULL
-
-    # Convert the main assay to an in-memory sparse matrix
-    # (The object now only has 'logcounts' so we can be generic)
-    assay(sce_object) <- as(assay(sce_object), "CsparseMatrix")
   
-    # Add cell names
+    # 4. Add cell names
     colnames(sce_object) <- paste0("cell", 1:ncol(sce_object))
     
     return(sce_object)
 }
 
 # Apply final formatting to both objects
-sce_healthy_final <- formatAndFinalizeSCE(sce_healthy, cols_to_keep = c("tier2"))
-sce_dss9_final    <- formatAndFinalizeSCE(sce_dss9, cols_to_keep = c("tier2"))
+# Note: Adding "sample_id" if it exists, as the scVI script looks for it
+if(!"sample_id" %in% colnames(colData(sce_healthy))) sce_healthy$sample_id <- "Healthy_Ref"
+if(!"sample_id" %in% colnames(colData(sce_dss9))) sce_dss9$sample_id <- "DSS9_Query"
+
+sce_healthy_final <- formatAndFinalizeSCE(sce_healthy, cols_to_keep = c("tier2", "tier2_merged"))
+sce_dss9_final    <- formatAndFinalizeSCE(sce_dss9, cols_to_keep = c("tier2", "tier2_merged"))
 
 # Create directory if it doesn't exist
 if (!dir.exists("data/merfish")) {

@@ -109,9 +109,12 @@ covid_data$singler_annotations <- as.character(covid_data$singler_annotations)
 message("--- Creating Merged Versions of Annotations ---")
 
 # Use the flexible function to add merged columns directly to the SCE object
-covid_data <- addMergedCellTypes(sce_object = covid_data, input_col_name = "singler_annotations")
-covid_data <- addMergedCellTypes(sce_object = covid_data, input_col_name = "azimuth_celltype_l1")
-covid_data <- addMergedCellTypes(sce_object = covid_data, input_col_name = "azimuth_celltype_l2")
+covid_data <- addMergedCellTypes(sce_object = covid_data, input_col_name = "singler_annotations", 
+                                 dataset = "COVID")
+covid_data <- addMergedCellTypes(sce_object = covid_data, input_col_name = "azimuth_celltype_l1", 
+                                 dataset = "COVID")
+covid_data <- addMergedCellTypes(sce_object = covid_data, input_col_name = "azimuth_celltype_l2", 
+                                 dataset = "COVID")
 
 message("Merged annotation columns created successfully.")
 message("Example of merged SingleR annotations:")

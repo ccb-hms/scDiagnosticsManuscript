@@ -1,18 +1,15 @@
 # ------------------------------------------------
-# COVID-19 PBMC - R Package Installation Pipeline
+# MERFISH - R Package Installation Pipeline
 # ------------------------------------------------
 
 # This script checks for and installs all necessary R packages 
-# for the analysis pipeline on an HPC cluster like O2. 
-# It avoids re-installing packages that are already present.
+# for the MERFISH analysis pipeline on an HPC cluster like O2. 
 
 # ____________________
 # Set CRAN Repository
 # ____________________
 
-# Using a reliable CRAN mirror is good practice on HPC systems.
 options(repos = c(CRAN = "https://cran.rstudio.com/"))
-
 
 # _________________________
 # Define Required Packages
@@ -23,34 +20,38 @@ cran_packages <- c(
     "dplyr",        # Data manipulation
     "tidyr",        # Data tidying
     "tibble",       # Modern data frames
-    "Matrix",       # Handling sparse matrices (often base, but good to check)
+    "Matrix",       # Handling sparse matrices
     "reticulate",   # R interface to Python
     "remotes",      # Needed to install packages from GitHub
-    "here"          # For robust file paths
-    # NOTE: Seurat moved to GitHub section for version 5.3.1.0
+    "here",         # For robust file paths
+    "ggplot2",      # Core plotting
+    "patchwork",    # Combining plots
+    "viridis"       # Color palettes (used for ECM scores)
 )
 
 # Packages to be installed from Bioconductor
 bioc_packages <- c(
-    "zellkonverter",          # Reading h5ad files
+    "zellkonverter",          # Reading/Writing h5ad files
     "SingleCellExperiment",   # Core object for scRNA-seq data
     "HDF5Array",              # On-disk data representation
     "DelayedArray",           # Handling large, on-disk arrays
-    "scran",                  # Single-cell analysis tools (HVGs, etc.)
-    "scater",                 # Single-cell analysis tools (PCA, UMAP, etc.)
-    "BiocParallel",           # For parallel processing in Bioconductor
-    "SingleR",                # A reference-based annotation tool
-    "biomaRt",                # For converting gene IDs
-    "SpatialExperiment",      # For single-cell spatial analysis tools
-    "MerfishData"             # For MERFISH data loading
+    "scran",                  # Single-cell analysis tools
+    "scater",                 # Single-cell analysis tools (PCA, UMAP)
+    "BiocParallel",           # Parallel processing
+    "SingleR",                # Reference-based annotation
+    "biomaRt",                # Gene ID conversion
+    "SpatialExperiment",      # Core object for Spatial data
+    "MerfishData"             # MERFISH specific data structures
 )
 
 # Packages to be installed from GitHub
 github_packages <- list(
-    "Seurat" = "satijalab/seurat@v5.3.1.0",  # Specific version from GitHub
-    "Azimuth" = "satijalab/azimuth"           # Latest from GitHub
+    "Seurat" = "satijalab/seurat@v5.3.1.0",   # Specific version required for Azimuth
+    "Azimuth" = "satijalab/azimuth",          # Reference mapping
+    
+    # --- Anomaly Detection ---
+    "scDiagnostics" = "ccb-hms/scDiagnostics" 
 )
-
 
 # _______________________
 # Installation from CRAN
@@ -66,14 +67,13 @@ for (pkg in cran_packages) {
     }
 }
 
-
 # _______________________________
 # Installation from Bioconductor
 # _______________________________
 
 message("\n--- Checking and installing Bioconductor packages ---")
 
-# First, ensure BiocManager itself is installed
+# Ensure BiocManager is installed
 if (!requireNamespace("BiocManager", quietly = TRUE)) {
     message("Installing 'BiocManager'...")
     install.packages("BiocManager")
@@ -88,14 +88,12 @@ for (pkg in bioc_packages) {
     }
 }
 
-
 # _________________________
 # Installation from GitHub
 # _________________________
 
 message("\n--- Checking and installing GitHub packages ---")
 
-# Install packages from GitHub with specific versions
 for (pkg_name in names(github_packages)) {
     github_repo <- github_packages[[pkg_name]]
     
@@ -108,7 +106,7 @@ for (pkg_name in names(github_packages)) {
             message("✗ Failed to install ", pkg_name, ": ", e$message)
         })
     } else {
-        # Check if we need to update to the specific version
+        # Specific check for Seurat version pinning
         if (pkg_name == "Seurat") {
             current_version <- packageVersion("Seurat")
             target_version <- "5.3.1.0"
@@ -125,7 +123,6 @@ for (pkg_name in names(github_packages)) {
     }
 }
 
-
 # ____________
 # Final Check
 # ____________
@@ -133,7 +130,7 @@ for (pkg_name in names(github_packages)) {
 message("\n-------------------------------------------------")
 message("All package checks are complete.")
 
-# Verify specific versions
+# Verify specific critical versions
 message("\nVersion verification:")
 tryCatch({
     seurat_version <- packageVersion("Seurat")
@@ -143,9 +140,15 @@ tryCatch({
         azimuth_version <- packageVersion("Azimuth")
         message("✓ Azimuth version: ", azimuth_version)
     }
+    
+    if (requireNamespace("scDiagnostics", quietly = TRUE)) {
+        diag_version <- packageVersion("scDiagnostics")
+        message("✓ scDiagnostics version: ", diag_version)
+    }
+    
 }, error = function(e) {
-    message("Could not verify package versions: ", e$message)
+    message("Could not verify some package versions: ", e$message)
 })
 
-message("The R environment should now be ready for the pipeline.")
+message("The R environment should now be ready for the MERFISH pipeline.")
 message("-------------------------------------------------")

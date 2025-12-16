@@ -16,8 +16,6 @@ library(dplyr)
 cat("\n--- Loading Day 0 (Healthy) and Day 9 (DSS) Datasets ---\n")
 healthy_data <- readRDS("data/merfish/healthy_data.rds")
 dss9_data <- readRDS("data/merfish/dss9_data.rds")
-healthy_data$tier2 <- as.character(healthy_data$tier2)
-dss9_data$tier2 <- as.character(dss9_data$tier2)
 cat("✓ Datasets loaded.\n")
 
 # Setting the seed
