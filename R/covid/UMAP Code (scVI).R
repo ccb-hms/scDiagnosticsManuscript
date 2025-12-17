@@ -203,9 +203,9 @@ print(p_ifn)
 
 dir.create("figures/covid", showWarnings = FALSE, recursive = TRUE)
 
-ggsave("figures/covid/scvi_umap__disease.png", p_disease, width = 10, height = 8, dpi = 600)
-ggsave("figures/covid/scvi_umap__celltype.png", p_celltype, width = 10, height = 8, dpi = 600)
-ggsave("figures/covid/scvi_umap__ifn.png", p_ifn, width = 10, height = 8, dpi = 600)
+ggsave("figures/covid/scvi_umap_disease.png", p_disease, width = 10, height = 8, dpi = 600)
+ggsave("figures/covid/scvi_umap_celltype.png", p_celltype, width = 10, height = 8, dpi = 600)
+ggsave("figures/covid/scvi_umap_ifn.png", p_ifn, width = 10, height = 8, dpi = 600)
 
 cat("✓ Plots saved to figures/covid/ directory.\n")
 cat("\n", paste(rep("=", 45), collapse = ""), "\n")

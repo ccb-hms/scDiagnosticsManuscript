@@ -238,9 +238,9 @@ print(p_ecm)
 
 dir.create("figures/merfish", showWarnings = FALSE, recursive = TRUE)
 
-ggsave("figures/merfish/fastmnn_umap_1_by_disease.png", p_disease, width = 8, height = 6, dpi = 600)
-ggsave("figures/merfish/fastmnn_umap_2_by_celltype.png", p_celltype, width = 10, height = 8, dpi = 600)
-ggsave("figures/merfish/fastmnn_umap_3_by_ecm.png", p_ecm, width = 10, height = 8, dpi = 600)
+ggsave("figures/merfish/fastmnn_umap_disease.png", p_disease, width = 8, height = 6, dpi = 600)
+ggsave("figures/merfish/fastmnn_umap_celltype.png", p_celltype, width = 10, height = 8, dpi = 600)
+ggsave("figures/merfish/fastmnn_umap_ecm.png", p_ecm, width = 10, height = 8, dpi = 600)
 
 cat("✓ Plots saved to figures/merfish/ directory with 'fastmnn_' prefix.\n")
 cat("\n", paste(rep("=", 45), collapse = ""), "\n")

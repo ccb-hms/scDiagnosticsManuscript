@@ -208,9 +208,9 @@ print(p_ecm)
 
 dir.create("figures/merfish", showWarnings = FALSE, recursive = TRUE)
 
-ggsave("figures/merfish/scvi_umap__disease.png", p_disease, width = 8, height = 6, dpi = 600)
-ggsave("figures/merfish/scvi_umap__celltype.png", p_celltype, width = 10, height = 8, dpi = 600)
-ggsave("figures/merfish/scvi_umap__ecm_score.png", p_ecm, width = 10, height = 8, dpi = 600)
+ggsave("figures/merfish/scvi_umap_disease.png", p_disease, width = 8, height = 6, dpi = 600)
+ggsave("figures/merfish/scvi_umap_celltype.png", p_celltype, width = 10, height = 8, dpi = 600)
+ggsave("figures/merfish/scvi_umap_ecm.png", p_ecm, width = 10, height = 8, dpi = 600)
 
 cat("✓ Plots saved to figures/merfish/ directory.\n")
 cat("\n", paste(rep("=", 45), collapse = ""), "\n")

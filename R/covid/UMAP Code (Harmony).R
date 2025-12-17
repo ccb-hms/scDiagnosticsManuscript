@@ -229,9 +229,9 @@ print(p_ifn)
 dir.create("figures/covid", showWarnings = FALSE, recursive = TRUE)
 
 # Save the plots with descriptive names
-ggsave("figures/covid/harmony_umap_1_by_disease.png", p_disease, width = 10, height = 8, dpi = 300)
-ggsave("figures/covid/harmony_umap_2_by_hybrid_celltype.png", p_celltype, width = 10, height = 8, dpi = 300)
-ggsave("figures/covid/harmony_umap_3_by_ifn.png", p_ifn, width = 10, height = 8, dpi = 300)
+ggsave("figures/covid/harmony_umap_disease.png", p_disease, width = 10, height = 8, dpi = 300)
+ggsave("figures/covid/harmony_umap_hybrid_celltype.png", p_celltype, width = 10, height = 8, dpi = 300)
+ggsave("figures/covid/harmony_umap_ifn.png", p_ifn, width = 10, height = 8, dpi = 300)
 
 cat("✓ Plots saved to figures/covid/ directory with 'harmony_' prefix.\n")
 cat("\n", paste(rep("=", 45), collapse = ""), "\n")
