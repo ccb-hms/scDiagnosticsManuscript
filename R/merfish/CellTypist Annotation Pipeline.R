@@ -40,7 +40,7 @@ environmentSetupCellTypist()
 
 cat("\n--- Step 2: Preparing data for Python annotation ---\n")
 # Ensure you save the script below as "CellTypist_Data_Preparation.R" in R/merfish/
-source("R/merfish/CellTypist_Data_Preparation.R")
+source("R/merfish/CellTypist Data Preparation.R")
 
 # ___________________________________________
 # Step 3: Run CellTypist Annotation (Python)
@@ -58,7 +58,7 @@ cat("✓ Python script execution complete.\n")
 
 cat("\n--- Step 4: Integrating annotations with original R object ---\n") 
 # Ensure you save the integration script in R/merfish/
-source("R/merfish/CellTypist_Results_Integration.R")
+source("R/merfish/CellTypist Results Integration.R")
 
 # _____________________________________
 # Step 5: Clean Up Intermediate Files
