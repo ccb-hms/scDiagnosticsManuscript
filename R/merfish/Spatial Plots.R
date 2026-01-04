@@ -251,7 +251,7 @@ panel_c_df$display_group <- factor(panel_c_df$display_group,
 panel_c_df <- panel_c_df |> arrange(display_group)
 
 panel_c_colors <- c(
-    "Typical"   = "#33A02C", 
+    "Typical"   = "#000000", 
     "Anomalous" = "#E31A1C", 
     "Other"     = bg_color
 )
