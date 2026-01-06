@@ -37,7 +37,7 @@ yoshida_ifn_signature <- c(
 )
 
 # Compute distributional shifts for genes with top loadings
-gene_shifts <- calculateTopLoadingGeneShifts(
+gene_shifts <- calculateGeneShifts(
      query_data = covid_data[yoshida_ifn_signature,],
      reference_data = normal_data[yoshida_ifn_signature,],
      query_cell_type_col = "azimuth_celltype_l1",
@@ -91,3 +91,45 @@ plot(gene_shifts,
 # Save the barplot
 ggsave("figures/covid/gene_shifts_barplot.png")
 
+# __________________________________
+# Calculate Pseudo-Bulk Fold Change
+# __________________________________
+
+# Key genes
+key_ifn_genes <- c("IFI6", "ISG15", "LY6E")
+
+# Run anomaly detection on CD14 monocytes
+anomaly_output <- detectAnomaly(
+    reference_data = normal_data,
+    query_data = covid_data,
+    ref_cell_type_col = "author_cell_type",
+    query_cell_type_col = "azimuth_celltype_l1",
+    cell_types = "CD14_mono",
+    pc_subset = 1:5,
+    n_tree = 500,
+    anomaly_threshold = 0.5,
+    assay_name = "logcounts",
+    max_cells_ref = 5000,
+    max_cells_query = 5000
+)
+
+# Extract anomalous cell indices
+anomaly_logical <- anomaly_output[["CD14_mono"]][["query_anomaly"]]
+
+# Subset to CD14 monocytes
+normal_cd14 <- normal_data[, normal_data$author_cell_type == "CD14_mono"]
+covid_cd14 <- covid_data[, covid_data$azimuth_celltype_l1 == "CD14_mono"]
+
+# Extract logcounts and calculate pseudo-bulk means
+normal_expr <- logcounts(normal_cd14)[key_ifn_genes, ]
+covid_anom_expr <- logcounts(covid_cd14)[key_ifn_genes, anomaly_logical]
+
+mean_normal <- rowMeans(normal_expr)
+mean_covid_anom <- rowMeans(covid_anom_expr)
+log2fc <- mean_covid_anom - mean_normal
+
+# Print results
+cat("===== log2-fold change (pseudo-bulk) =====\n")
+for (i in seq_along(key_ifn_genes)) {
+  cat(sprintf("%s: %.2f\n", key_ifn_genes[i], log2fc[i]))
+}
