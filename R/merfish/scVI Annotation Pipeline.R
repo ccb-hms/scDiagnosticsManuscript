@@ -15,9 +15,24 @@ source("R/merfish/scVI Data Preparation.R")
 # ________________________________
 
 message("\n--- Step 2: Running scVI/scArches in Python ---")
-# This command assumes a conda environment named 'scvi-env' has been set up
+
+# Get Python from activated conda environment
+conda_prefix <- Sys.getenv("CONDA_PREFIX")
+if (conda_prefix == "") {
+  stop("CONDA_PREFIX not set. Ensure conda environment is activated in SBATCH script.")
+}
+
+python_path <- file.path(conda_prefix, "bin", "python")
+message("Using Python: ", python_path)
+
+# Run Python script
 python_script <- "python/merfish/scVI_Annotation.py"
-system(paste("conda run -n scvi-env python", python_script))
+exit_code <- system(paste(python_path, python_script))
+
+if (exit_code != 0) {
+  stop("Python script failed with exit code ", exit_code)
+}
+
 message("--- Python script finished ---")
 
 # ________________________________________

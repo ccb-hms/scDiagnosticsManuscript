@@ -2,37 +2,52 @@
 # COVID-19 PBMC - Run Full scVI/scArches Pipeline
 # -------------------------------------------------
 
-# __________________________________________________
+# ___________________________________
 # Step 1: Prepare Data (R -> Python)
-# __________________________________________________
+# ___________________________________
 
 message("\n--- Step 1: Preparing data for scVI (R -> Python) ---")
-source("R/covid/scVI_Data_Preparation.R")
+source("R/covid/scVI Data Preparation.R")
 
-# __________________________________________________
+# _________________________________
 # Step 2: Run Annotation (Python)
-# __________________________________________________
+# _________________________________
 
 message("\n--- Step 2: Running scVI/scArches in Python ---")
-# This command assumes a conda environment named 'scvi-env' has been set up
-# by the sbatch script.
-system("python python/covid/scVI_Annotation.py")
+
+# Get Python from activated conda environment
+conda_prefix <- Sys.getenv("CONDA_PREFIX")
+if (conda_prefix == "") {
+  stop("CONDA_PREFIX not set. Ensure conda environment is activated in SBATCH script.")
+}
+
+python_path <- file.path(conda_prefix, "bin", "python")
+message("Using Python: ", python_path)
+
+# Run Python script
+python_script <- "python/covid/scVI_Annotation.py"
+exit_code <- system(paste(python_path, python_script))
+
+if (exit_code != 0) {
+  stop("Python script failed with exit code ", exit_code)
+}
+
 message("--- Python script finished ---")
 
-# __________________________________________________
+# _________________________________________
 # Step 3: Integrate Results (Python -> R)
-# __________________________________________________
+# _________________________________________
 
 message("\n--- Step 3: Integrating results back into R (Python -> R) ---")
-source("R/covid/scVI_Results_Integration.R")
+source("R/covid/scVI Results Integration.R")
 
-# __________________________________________________
+# ____________________________________
 # Step 4: Clean Up Intermediate Files
-# __________________________________________________
+# ____________________________________
 
 message("\n--- Step 4: Cleaning up all intermediate files ---")
 
-# --- UPDATED: Add the two CSV files to the list of files to remove ---
+# Add the two CSV files to the list of files to remove
 files_to_remove <- c(
   "data/covid/scvi_reference_data.h5ad",
   "data/covid/scvi_query_data.h5ad",
@@ -48,8 +63,8 @@ for (file in files_to_remove) {
 }
 message("✓ Temporary files removed.")
 
-# _________________________
+# __________________
 # Pipeline Complete
-# _________________________
+# __________________
 
 message("\n🎉 --- scVI/scArches Pipeline Finished Successfully! --- 🎉")

@@ -36,8 +36,6 @@ prepare_for_scvi <- function(sce, is_reference = TRUE) {
     # scVI needs 'sample_id' for batch correction.
     # The reference also needs 'tier2' for annotation training.
     
-    # NOTE: Ensure 'sample_id' exists in your object. If not, and you don't have batches, 
-    # you may need to create a dummy column: sce$sample_id <- "batch1"
     essential_cols <- "sample_id" 
     
     if (is_reference) {

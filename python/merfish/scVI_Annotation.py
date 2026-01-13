@@ -3,17 +3,17 @@
 # ---------------------------------------------------------
 
 import scvi
+import scarches as sca
 import scanpy as sc
 import anndata
 import pandas as pd
-from sklearn.neighbors import KNeighborsClassifier
 
 # --- Configuration ---
 ANNDATA_REF_FILE = "data/merfish/scvi_reference_data.h5ad"
 ANNDATA_QUERY_FILE = "data/merfish/scvi_query_data.h5ad"
 QUERY_PRED_CSV_FILE = "data/merfish/scvi_predictions.csv"
 REF_UMAP_CSV_FILE = "data/merfish/scvi_reference_umap.csv"
-CELL_TYPE_KEY = "tier2"  # Using tier2 as the annotation label
+CELL_TYPE_KEY = "tier2"
 BATCH_KEY = "sample_id"
 
 def main():
@@ -24,20 +24,14 @@ def main():
     adata_ref = sc.read_h5ad(ANNDATA_REF_FILE)
     adata_query = sc.read_h5ad(ANNDATA_QUERY_FILE)
     
-    # Save original barcodes before any manipulation
     original_ref_barcodes = adata_ref.obs.index.tolist()
     original_query_barcodes = adata_query.obs.index.tolist()
-    
-    # Save reference labels before they are lost in concatenation
     reference_labels = adata_ref.obs[CELL_TYPE_KEY].copy()
 
     # 2. Setup and Train Reference Model
     print("\n--- Training Reference scVI Model ---")
     scvi.model.SCVI.setup_anndata(adata_ref, batch_key=BATCH_KEY)
     vae_ref = scvi.model.SCVI(adata_ref)
-    
-    # Note: MERFISH datasets are often smaller in feature space (genes) but can have many cells.
-    # Default parameters usually work well, but ensure you have enough epochs if cells > 100k.
     vae_ref.train()
 
     # 3. Map Query Data
@@ -55,26 +49,43 @@ def main():
         label="data_source", index_unique=None
     )
     
-    # Compute neighbors and UMAP on the joint latent space
     sc.pp.neighbors(adata_full, use_rep="X_scVI")
     sc.tl.umap(adata_full)
 
-    # 5. Separate processed data and perform annotation
-    print("\n--- Annotating Query Cells via k-NN ---")
+    # 5. Separate and perform annotation with scArches
+    print("\n--- Annotating Query Cells via scArches weighted k-NN ---")
     adata_ref_processed = adata_full[adata_full.obs.data_source == 'ref'].copy()
     adata_query_processed = adata_full[adata_full.obs.data_source == 'query'].copy()
 
-    knn_classifier = KNeighborsClassifier(n_neighbors=50, weights='distance')
-    knn_classifier.fit(adata_ref_processed.obsm["X_scVI"], reference_labels)
-    query_pred = knn_classifier.predict(adata_query_processed.obsm["X_scVI"])
+    # Add cell type labels to reference
+    adata_ref_processed.obs[CELL_TYPE_KEY] = reference_labels
 
-    # 6. Create pandas DataFrames for both reference and query
+    # Use scArches weighted k-NN trainer
+    knn_transformer = sca.utils.knn.weighted_knn_trainer(
+        train_adata=adata_ref_processed,
+        train_adata_emb="X_scVI",
+        n_neighbors=50,
+    )
+
+    # Transfer labels with uncertainty
+    labels, uncert = sca.utils.knn.weighted_knn_transfer(
+        query_adata=adata_query_processed,
+        query_adata_emb="X_scVI",
+        label_keys=CELL_TYPE_KEY,
+        knn_model=knn_transformer,
+        ref_adata_obs=adata_ref_processed.obs,
+    )
+
+    query_pred = labels.loc[adata_query_processed.obs.index, CELL_TYPE_KEY].values
+    query_confidence = uncert.loc[adata_query_processed.obs.index, CELL_TYPE_KEY].values
+
+    # 6. Create pandas DataFrames
     print("--- Assembling results into DataFrames ---")
     
-    # Create DataFrame for QUERY results (predictions + UMAP)
     query_results_df = pd.DataFrame({
         'barcode': adata_query_processed.obs.index,
         'scvi_prediction': query_pred,
+        'scvi_confidence': query_confidence,
         'UMAP_scVI_1': adata_query_processed.obsm["X_umap"][:, 0],
         'UMAP_scVI_2': adata_query_processed.obsm["X_umap"][:, 1]
     }).set_index('barcode').loc[original_query_barcodes]
@@ -85,7 +96,7 @@ def main():
         'UMAP_scVI_2': adata_ref_processed.obsm["X_umap"][:, 1]
     }).set_index('barcode').loc[original_ref_barcodes]
 
-    # 7. Save results to two separate CSV files
+    # 7. Save results
     print(f"\nSaving query predictions and UMAP to {QUERY_PRED_CSV_FILE}...")
     query_results_df.to_csv(QUERY_PRED_CSV_FILE)
     

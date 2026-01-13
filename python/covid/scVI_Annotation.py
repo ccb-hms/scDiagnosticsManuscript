@@ -2,11 +2,14 @@
 # COVID-19 PBMC - scVI/scArches Annotation and UMAP
 # --------------------------------------------------
 
+import os
+os.environ["JAX_PLATFORMS"] = "cpu"
+
 import scvi
+import scarches as sca
 import scanpy as sc
 import anndata
 import pandas as pd
-from sklearn.neighbors import KNeighborsClassifier
 
 # --- Configuration ---
 ANNDATA_REF_FILE = "data/covid/scvi_reference_data.h5ad"
@@ -55,22 +58,42 @@ def main():
     sc.pp.neighbors(adata_full, use_rep="X_scVI")
     sc.tl.umap(adata_full)
 
-    # 5. Separate processed data and perform annotation
-    print("\n--- Annotating Query Cells via k-NN ---")
+    # 5. Separate processed data and perform annotation with scArches
+    print("\n--- Annotating Query Cells via scArches weighted k-NN ---")
     adata_ref_processed = adata_full[adata_full.obs.data_source == 'ref'].copy()
     adata_query_processed = adata_full[adata_full.obs.data_source == 'query'].copy()
 
-    knn_classifier = KNeighborsClassifier(n_neighbors=50, weights='distance')
-    knn_classifier.fit(adata_ref_processed.obsm["X_scVI"], reference_labels)
-    query_pred = knn_classifier.predict(adata_query_processed.obsm["X_scVI"])
+    # Add cell type labels to reference for transfer
+    adata_ref_processed.obs[CELL_TYPE_KEY] = reference_labels
+
+    # Use scArches weighted k-NN trainer
+    knn_transformer = sca.utils.knn.weighted_knn_trainer(
+        train_adata=adata_ref_processed,
+        train_adata_emb="X_scVI",
+        n_neighbors=50,
+    )
+
+    # Use scArches weighted k-NN transfer to get predictions AND uncertainty
+    labels, uncert = sca.utils.knn.weighted_knn_transfer(
+        query_adata=adata_query_processed,
+        query_adata_emb="X_scVI",
+        label_keys=CELL_TYPE_KEY,
+        knn_model=knn_transformer,
+        ref_adata_obs=adata_ref_processed.obs,
+    )
+
+    # Extract predictions and uncertainty scores
+    query_pred = labels.loc[adata_query_processed.obs.index, CELL_TYPE_KEY].values
+    query_confidence = uncert.loc[adata_query_processed.obs.index, CELL_TYPE_KEY].values
 
     # 6. Create pandas DataFrames for both reference and query
     print("--- Assembling results into DataFrames ---")
     
-    # Create DataFrame for QUERY results (predictions + UMAP)
+    # Now includes scvi_confidence scores
     query_results_df = pd.DataFrame({
         'barcode': adata_query_processed.obs.index,
         'scvi_prediction': query_pred,
+        'scvi_confidence': query_confidence,
         'UMAP_scVI_1': adata_query_processed.obsm["X_umap"][:, 0],
         'UMAP_scVI_2': adata_query_processed.obsm["X_umap"][:, 1]
     }).set_index('barcode').loc[original_query_barcodes]
