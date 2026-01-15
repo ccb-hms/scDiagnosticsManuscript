@@ -266,7 +266,7 @@ full_expr <- cbind(
 pca_singler$ifn_score <- colMeans(full_expr, na.rm = TRUE)[pca_singler$original_cell_id]
 
 fig_s3_1a <- create_pca_plot_grid(pca_singler, "score", "Delta Score", "SingleR")
-fig_s3_1b <- create_pca_plot_grid(pca_singler, "ifn_score", "IFN Signature", "SingleR")
+fig_s3_1b <- create_pca_plot_grid(pca_singler, "ifn_score", "IFN Score", "SingleR")
 fig_s3_1c <- plot(anomaly_singler,
                   cell_type = CELL_TYPES_TO_PLOT,
                   pc_subset = PC_SUBSET,
@@ -314,7 +314,7 @@ full_expr <- cbind(
 pca_azimuth$ifn_score <- colMeans(full_expr, na.rm = TRUE)[pca_azimuth$original_cell_id]
 
 fig_s3_2a <- create_pca_plot_grid(pca_azimuth, "score", "Prediction Score", "Azimuth")
-fig_s3_2b <- create_pca_plot_grid(pca_azimuth, "ifn_score", "IFN Signature", "Azimuth")
+fig_s3_2b <- create_pca_plot_grid(pca_azimuth, "ifn_score", "IFN Score", "Azimuth")
 fig_s3_2c <- plot(anomaly_azimuth,
                   cell_type = CELL_TYPES_TO_PLOT,
                   pc_subset = PC_SUBSET,
@@ -362,7 +362,7 @@ full_expr <- cbind(
 pca_celltypist$ifn_score <- colMeans(full_expr, na.rm = TRUE)[pca_celltypist$original_cell_id]
 
 fig_s3_3a <- create_pca_plot_grid(pca_celltypist, "score", "Confidence Score", "CellTypist")
-fig_s3_3b <- create_pca_plot_grid(pca_celltypist, "ifn_score", "IFN Signature", "CellTypist")
+fig_s3_3b <- create_pca_plot_grid(pca_celltypist, "ifn_score", "IFN Score", "CellTypist")
 fig_s3_3c <- plot(anomaly_celltypist,
                   cell_type = CELL_TYPES_TO_PLOT,
                   pc_subset = PC_SUBSET,
@@ -410,7 +410,7 @@ full_expr <- cbind(
 pca_scarches$ifn_score <- colMeans(full_expr, na.rm = TRUE)[pca_scarches$original_cell_id]
 
 fig_s3_4a <- create_pca_plot_grid(pca_scarches, "score", "Uncertainty Score", "scArches")
-fig_s3_4b <- create_pca_plot_grid(pca_scarches, "ifn_score", "IFN Signature", "scArches")
+fig_s3_4b <- create_pca_plot_grid(pca_scarches, "ifn_score", "IFN Score", "scArches")
 fig_s3_4c <- plot(anomaly_scarches,
                   cell_type = CELL_TYPES_TO_PLOT,
                   pc_subset = PC_SUBSET,
