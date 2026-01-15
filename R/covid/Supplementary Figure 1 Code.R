@@ -86,6 +86,7 @@ umap_data_singler_anno <- data.frame(
 fig_s1a <- ggplot(umap_data_singler_anno, aes(x = UMAP1, y = UMAP2, color = CellType)) +
     geom_point(size = 0.1, alpha = 0.6) +
     scale_color_manual(values = cell_type_colors, na.value = "grey50") +
+    guides(color = guide_legend(ncol = 1)) +
     xlab("UMAP 1") +
     ylab("UMAP 2") +
     ggtitle("SingleR - Cell Type") +
@@ -101,7 +102,7 @@ fig_s1a <- ggplot(umap_data_singler_anno, aes(x = UMAP1, y = UMAP2, color = Cell
         panel.grid.major = element_line(color = "#E5E7EB", linewidth = 0.2),
         panel.grid.minor = element_blank(),
         panel.border = element_rect(color = "#D1D5DB", linewidth = 0.5, fill = NA),
-        plot.margin = margin(2, 2, 2, 2, "pt"),
+        plot.margin = margin(2, 0.5, 2, 0.5, "pt"),
         panel.background = element_rect(fill = "#FAFBFC", color = NA),
         aspect.ratio = 1
     )
@@ -142,7 +143,7 @@ fig_s1b <- ggplot(umap_data_singler_score, aes(x = UMAP1, y = UMAP2, color = Con
         panel.grid.major = element_line(color = "#E5E7EB", linewidth = 0.2),
         panel.grid.minor = element_blank(),
         panel.border = element_rect(color = "#D1D5DB", linewidth = 0.5, fill = NA),
-        plot.margin = margin(2, 2, 2, 2, "pt"),
+        plot.margin = margin(2, 0.5, 2, 0.5, "pt"),
         panel.background = element_rect(fill = "#FAFBFC", color = NA),
         aspect.ratio = 1
     )
@@ -160,6 +161,7 @@ umap_data_azimuth_anno <- data.frame(
 fig_s1c <- ggplot(umap_data_azimuth_anno, aes(x = UMAP1, y = UMAP2, color = CellType)) +
     geom_point(size = 0.1, alpha = 0.6) +
     scale_color_manual(values = cell_type_colors, na.value = "grey50") +
+    guides(color = guide_legend(ncol = 1)) +
     xlab("UMAP 1") +
     ylab("UMAP 2") +
     ggtitle("Azimuth - Cell Type") +
@@ -175,7 +177,7 @@ fig_s1c <- ggplot(umap_data_azimuth_anno, aes(x = UMAP1, y = UMAP2, color = Cell
         panel.grid.major = element_line(color = "#E5E7EB", linewidth = 0.2),
         panel.grid.minor = element_blank(),
         panel.border = element_rect(color = "#D1D5DB", linewidth = 0.5, fill = NA),
-        plot.margin = margin(2, 2, 2, 2, "pt"),
+        plot.margin = margin(2, 0.5, 2, 0.5, "pt"),
         panel.background = element_rect(fill = "#FAFBFC", color = NA),
         aspect.ratio = 1
     )
@@ -208,7 +210,7 @@ fig_s1d <- ggplot(umap_data_azimuth_score, aes(x = UMAP1, y = UMAP2, color = Pre
         panel.grid.major = element_line(color = "#E5E7EB", linewidth = 0.2),
         panel.grid.minor = element_blank(),
         panel.border = element_rect(color = "#D1D5DB", linewidth = 0.5, fill = NA),
-        plot.margin = margin(2, 2, 2, 2, "pt"),
+        plot.margin = margin(2, 0.5, 2, 0.5, "pt"),
         panel.background = element_rect(fill = "#FAFBFC", color = NA),
         aspect.ratio = 1
     )
@@ -226,6 +228,7 @@ umap_data_celltypist_anno <- data.frame(
 fig_s1e <- ggplot(umap_data_celltypist_anno, aes(x = UMAP1, y = UMAP2, color = CellType)) +
     geom_point(size = 0.1, alpha = 0.6) +
     scale_color_manual(values = cell_type_colors, na.value = "grey50") +
+    guides(color = guide_legend(ncol = 1)) +
     xlab("UMAP 1") +
     ylab("UMAP 2") +
     ggtitle("CellTypist - Cell Type") +
@@ -241,7 +244,7 @@ fig_s1e <- ggplot(umap_data_celltypist_anno, aes(x = UMAP1, y = UMAP2, color = C
         panel.grid.major = element_line(color = "#E5E7EB", linewidth = 0.2),
         panel.grid.minor = element_blank(),
         panel.border = element_rect(color = "#D1D5DB", linewidth = 0.5, fill = NA),
-        plot.margin = margin(2, 2, 2, 2, "pt"),
+        plot.margin = margin(2, 0.5, 2, 0.5, "pt"),
         panel.background = element_rect(fill = "#FAFBFC", color = NA),
         aspect.ratio = 1
     )
@@ -274,7 +277,7 @@ fig_s1f <- ggplot(umap_data_celltypist_score, aes(x = UMAP1, y = UMAP2, color = 
         panel.grid.major = element_line(color = "#E5E7EB", linewidth = 0.2),
         panel.grid.minor = element_blank(),
         panel.border = element_rect(color = "#D1D5DB", linewidth = 0.5, fill = NA),
-        plot.margin = margin(2, 2, 2, 2, "pt"),
+        plot.margin = margin(2, 0.5, 2, 0.5, "pt"),
         panel.background = element_rect(fill = "#FAFBFC", color = NA),
         aspect.ratio = 1
     )
@@ -292,6 +295,7 @@ umap_data_scarches_anno <- data.frame(
 fig_s1g <- ggplot(umap_data_scarches_anno, aes(x = UMAP1, y = UMAP2, color = CellType)) +
     geom_point(size = 0.1, alpha = 0.6) +
     scale_color_manual(values = cell_type_colors, na.value = "grey50") +
+    guides(color = guide_legend(ncol = 1)) +
     xlab("UMAP 1") +
     ylab("UMAP 2") +
     ggtitle("scArches - Cell Type") +
@@ -307,7 +311,7 @@ fig_s1g <- ggplot(umap_data_scarches_anno, aes(x = UMAP1, y = UMAP2, color = Cel
         panel.grid.major = element_line(color = "#E5E7EB", linewidth = 0.2),
         panel.grid.minor = element_blank(),
         panel.border = element_rect(color = "#D1D5DB", linewidth = 0.5, fill = NA),
-        plot.margin = margin(2, 2, 2, 2, "pt"),
+        plot.margin = margin(2, 0.5, 2, 0.5, "pt"),
         panel.background = element_rect(fill = "#FAFBFC", color = NA),
         aspect.ratio = 1
     )
@@ -340,7 +344,7 @@ fig_s1h <- ggplot(umap_data_scarches_score, aes(x = UMAP1, y = UMAP2, color = Un
         panel.grid.major = element_line(color = "#E5E7EB", linewidth = 0.2),
         panel.grid.minor = element_blank(),
         panel.border = element_rect(color = "#D1D5DB", linewidth = 0.5, fill = NA),
-        plot.margin = margin(2, 2, 2, 2, "pt"),
+        plot.margin = margin(2, 0.5, 2, 0.5, "pt"),
         panel.background = element_rect(fill = "#FAFBFC", color = NA),
         aspect.ratio = 1
     )
@@ -350,16 +354,15 @@ fig_s1h <- ggplot(umap_data_scarches_score, aes(x = UMAP1, y = UMAP2, color = Un
 # _________________
 
 fig_s1_combined <- plot_grid(fig_s1a, fig_s1b, 
-                              fig_s1c, fig_s1d,
-                              fig_s1e, fig_s1f,
-                              fig_s1g, fig_s1h,
-                              nrow = 4, ncol = 2, labels = "AUTO", 
-                              label_size = 11, label_fontface = "bold",
-                              label_x = 0.02, label_y = 0.98,
-                              rel_widths = c(1.3, 1))
+                             fig_s1c, fig_s1d,
+                             fig_s1e, fig_s1f,
+                             fig_s1g, fig_s1h,
+                             nrow = 4, ncol = 2, labels = "AUTO", 
+                             label_size = 11, label_fontface = "bold",
+                             label_x = 0.02, label_y = 0.98,
+                             rel_widths = c(0.9, 0.9))
 
-ggsave("figures/supp/Fig_S1_umaps_all_cells.pdf", fig_s1_combined, width = 15, height = 16, dpi = 300)
-ggsave("figures/supp/Fig_S1_umaps_all_cells.png", fig_s1_combined, width = 15, height = 16, dpi = 300)
+ggsave("figures/supp/Fig_S1_umaps.png", fig_s1_combined, width = 15, height = 16, dpi = 600)
 print("Figure S1 saved")
 
 # ________
