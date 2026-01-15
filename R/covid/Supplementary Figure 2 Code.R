@@ -83,7 +83,7 @@ fig_s2 <- ggplot(umap_data_ifn, aes(x = UMAP1, y = UMAP2, color = IFN_Score)) +
         aspect.ratio = 1
     )
 
-ggsave("figures/supp/Fig_S2_ifn_signature.png", fig_s2, width = 8, height = 8, dpi = 600)
+ggsave("figures/supp/covid/Fig_S2_ifn_signature.png", fig_s2, width = 8, height = 8, dpi = 600)
 
 print("Supplementary Figure S2 saved")
 
@@ -92,4 +92,4 @@ print("Supplementary Figure S2 saved")
 # ________
 
 print("Supplementary Figure S2 (IFN Signature) complete!")
-print("Saved in: figures/supp/")
+print("Saved in: figures/supp/covid/")

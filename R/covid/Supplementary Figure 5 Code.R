@@ -432,14 +432,14 @@ fig_s5_combined <- plot_grid(
     rel_widths = c(1, 1.1)
 )
 
-ggsave("figures/supp/Fig_S5_gene_expression_shifts.png", fig_s5_combined, width = 24, height = 24, dpi = 600)
+ggsave("figures/supp/covid/Fig_S5_gene_expression_shifts.png", fig_s5_combined, width = 24, height = 24, dpi = 600)
 
 # ________
 # Summary
 # ________
 
 print("Supplementary Figure S5 complete!")
-print("Saved in: figures/supp/")
+print("Saved in: figures/supp/covid/")
 
 # _____________________________________________________________________
 # Table S5: Correlation - Annotation Quantile vs scDiagnostics Anomaly

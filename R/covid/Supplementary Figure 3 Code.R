@@ -435,14 +435,14 @@ fig_s3_combined <- plot_grid(
     label_size = 12, label_fontface = "bold"
 )
 
-ggsave("figures/supp/Fig_S3_pca_comparison.png", fig_s3_combined, width = 18, height = 20, dpi = 600)
+ggsave("figures/supp/covid/Fig_S3_pca_comparison.png", fig_s3_combined, width = 18, height = 20, dpi = 600)
 
 # ________
 # Summary
 # ________
 
 print("Supplementary Figure S3 complete!")
-print("Saved in: figures/supp/")
+print("Saved in: figures/supp/covid/")
 
 # ____________________________________________
 # Table S3: Wilcoxon Test - IFN in Anomalies

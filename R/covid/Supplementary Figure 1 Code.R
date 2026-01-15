@@ -362,7 +362,7 @@ fig_s1_combined <- plot_grid(fig_s1a, fig_s1b,
                              label_x = 0.02, label_y = 0.98,
                              rel_widths = c(0.9, 0.9))
 
-ggsave("figures/supp/Fig_S1_umaps.png", fig_s1_combined, width = 15, height = 16, dpi = 600)
+ggsave("figures/supp/covid/Fig_S1_umaps.png", fig_s1_combined, width = 15, height = 16, dpi = 600)
 print("Figure S1 saved")
 
 # ________

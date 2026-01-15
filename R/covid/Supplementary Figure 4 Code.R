@@ -287,14 +287,14 @@ fig_s4_combined <- plot_grid(fig_s4a, fig_s4b,
                               nrow = 2, ncol = 2, labels = "AUTO",
                               label_size = 12, label_fontface = "bold")
 
-ggsave("figures/supp/Fig_S4_confidence_scores.png", fig_s4_combined, width = 14, height = 12, dpi = 600)
+ggsave("figures/supp/covid/Fig_S4_confidence_scores.png", fig_s4_combined, width = 14, height = 12, dpi = 600)
 
 # __________
 # Summary
 # __________
 
 print("Supplementary Figure S4 complete!")
-print("Saved in: figures/supp/")
+print("Saved in: figures/supp/covid/")
 
 # ___________________________________________________
 # Table S4: Wilcoxon Tests - Anomaly vs Confidence
