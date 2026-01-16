@@ -1,5 +1,5 @@
 # -------------------------------------------------------
-# MERFISH Mouse Colon IBD - Supplementary Figures 3
+# MERFISH Mouse Colon IBD - Supplementary Figure 3 Code
 # -------------------------------------------------------
 
 library(SingleCellExperiment)
@@ -264,6 +264,18 @@ for (pred_type in all_pred_types) {
         heatmap_counts["scArches", pred_type] <- n_total
     }
 }
+
+cat("\nCombined heatmap data (colored by sample size, text shows anomalous/total):\n")
+print(heatmap_display)
+
+# ===== Fill NA values with 0/0 =====
+cat("Filling NA cells with 0/0...\n")
+
+# Replace NA in display matrix with "0/0"
+heatmap_display[is.na(heatmap_display)] <- "0/0"
+
+# Replace NA in count matrix with 0 (will get colored as lowest value)
+heatmap_counts[is.na(heatmap_counts)] <- 0
 
 cat("\nCombined heatmap data (colored by sample size, text shows anomalous/total):\n")
 print(heatmap_display)
