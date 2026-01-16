@@ -1,5 +1,0 @@
----
-title: "Analysis: MERFISH IBD Data"
----
-
-This page presents the `scDiagnostics` results for the annotated MERFISH dataset, highlighting key diagnostic plots and interpretations.

@@ -6,66 +6,60 @@
 # General Development & IDE Files
 # -------------------------------------------------------------------
 
-# IDE-specific settings folders
 .vscode/
 .Rproj.user/
-
-# Operating System files
-.DS_Store  # macOS
-Thumbs.db  # Windows
-
-# Temporary backup files
+.DS_Store
+Thumbs.db
 *~
-
 
 # -------------------------------------------------------------------
 # R-Specific Files
 # -------------------------------------------------------------------
 
-# R session history and saved workspace
 .Rhistory
 .RData
-
 
 # -------------------------------------------------------------------
 # Python-Specific Files
 # -------------------------------------------------------------------
 
-# Compiled Python files
 __pycache__/
 *.py[cod]
-
-# Distribution / packaging
 build/
 dist/
 *.egg-info/
-
-# Python virtual environments (e.g., created by venv or conda)
 venv/
 .venv/
 env/
 .env/
 celltypist_env/
 
-# Conda environment definition files
-*.yml
-
-
 # -------------------------------------------------------------------
 # Project-Specific Generated Output & Data
 # -------------------------------------------------------------------
 
-# Ignore all shell scripts
+# Ignore shell scripts (large jobs)
 *.sh
 
-# Directory for logs from batch jobs
+# Logs from batch jobs
 logs/
 
-# Directory for large data files (raw, intermediate, final)
-data/
+# Ignore data subdirectories (but keep download script)
+data/covid/
+data/merfish/
 
-# Directory for generated figures and plots
-figures/
+# Generated figures
+figures/**/*
+!figures/.gitkeep
 
-# Directory for other analysis results (tables, etc.)
-results/
+# Generated results
+results/**/*
+!results/.gitkeep
+
+# Python environment files
+environment-*.yml
+
+# Quarto rendered output
+website/_site/
+website/.quarto/
+docs/

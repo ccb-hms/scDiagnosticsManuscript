@@ -1,5 +1,0 @@
----
-title: "Analysis: COVID-19 Data"
----
-
-This page presents the `scDiagnostics` results for the annotated COVID-19 dataset, highlighting key diagnostic plots and interpretations.

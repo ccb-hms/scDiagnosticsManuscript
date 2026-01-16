@@ -1,5 +1,0 @@
----
-title: "Processing: MERFISH IBD Data"
----
-
-This page details the preprocessing steps for the MERFISH mouse colitis dataset, from raw data import to a finalized `SpatialExperiment` object ready for annotation.
