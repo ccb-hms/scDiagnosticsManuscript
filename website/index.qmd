@@ -10,11 +10,22 @@ It provides comprehensive tutorials, analysis code, and reproducible workflows d
 
 ## Overview
 
-We showcase `scDiagnostics` using two distinct public datasets:
+We demonstrate `scDiagnostics` across three complementary systems:
 
-- **COVID-19 PBMC scRNA-seq** (~48,000 query cells): Dense, high-cell-count dataset diagnosing annotations from severe COVID-19 infection vs. healthy controls. Shows how annotation methods handle disease-driven transcriptomic shifts.
+**1. Controlled Simulation**
+- Synthetic data with known cell types and ground truth
+- Controlled introduction of annotation errors
+- Validates core diagnostic functions before real data application
 
-- **MERFISH Mouse Colitis** (~29,000 query cells): Spatial transcriptomics dataset evaluating annotations in DSS-induced inflammatory bowel disease (IBD). Demonstrates performance on targeted gene panels and spatial information.
+**2. COVID-19 PBMC scRNA-seq** (~6,800 query cells)
+- Dense, high-cell-count dataset diagnosing annotations from severe COVID-19 infection vs. healthy controls
+- Shows how annotation methods handle disease-driven transcriptomic shifts
+- Real-world application in infectious disease
+
+**3. MERFISH Mouse Colitis** (~29,000 query cells)
+- Spatial transcriptomics dataset evaluating annotations in DSS-induced inflammatory bowel disease (IBD)
+- Demonstrates performance on targeted gene panels and spatial information
+- Real-world application in chronic inflammation
 
 For each dataset, we generate annotations using four popular tools and compare their performance:
 
@@ -40,8 +51,10 @@ Get started here to set up your environment and understand the data:
 Explore the analysis workflows and results:
 
 - **[scDiagnostics Overview](overview-scdiagnostics.qmd)** — Introduction to diagnostic framework and key concepts
+- **[Simulation Analysis](results-simulation.qmd)** — Validation with synthetic data and controlled perturbations
 - **[COVID-19 Analysis](results-covid.qmd)** — Annotation quality assessment in dense scRNA-seq data
 - **[MERFISH Analysis](results-merfish.qmd)** — Annotation quality assessment in spatial transcriptomics
+- **[Exploring Annotation Tool Diagnostics](annotation-diagnostics.qmd)** — Investigate built-in quality metrics from each annotation method
 
 ## Citation
 

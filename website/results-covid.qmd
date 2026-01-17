@@ -1,3 +1,233 @@
 ---
-title: "scDiagnostics Manuscript"
+title: "COVID-19 PBMC Analysis"
 ---
+
+## Overview
+
+This page explores annotation quality in COVID-19 PBMC data by comparing healthy reference cells to severe COVID-19 patient cells. We use a combination of dimensionality reduction, gene expression analysis, and anomaly detection to understand how transcriptomic changes affect cell type annotation.
+
+## Dataset Context
+
+- **Healthy Reference:** 23,201 PBMC cells from 23 patients
+- **COVID-19 Query:** 48,148 PBMC cells from 86 severe COVID-19 patients
+- **Focus:** Interferon (IFN) response genes and transcriptomic shifts during severe infection
+- **Note:** Results below use `Azimuth` L1 annotations; similar patterns observed with `SingleR`, `CellTypist`, and `scArches` by changing `query_cell_type_col` parameter
+
+## Analysis Components
+
+### 1. UMAP Visualization (Figure A)
+
+**Script:** `R/covid/UMAP Code (scVI).R`
+
+Three complementary UMAP visualizations of the joint reference-query space:
+
+**A) Disease Status UMAP (Left)**
+
+- Healthy reference cells (blue) cluster tightly in the lower left region
+- COVID-19 query cells (pink) form a separate, larger cluster to the right
+- Clear spatial segregation indicates substantial transcriptomic remodeling during severe infection
+
+**B) Cell Type UMAP (Center)**
+
+- Cell type annotations are preserved across both datasets
+- Reference landscape: B cells, Plasma cells, HSPCs, and diverse T/NK populations
+- Immune composition remains similar despite disease state
+
+**C) IFN Signature UMAP (Right)**
+
+- Dramatic difference in interferon-stimulated gene expression
+- Reference cells: predominantly low IFN scores (dark purple)
+- Query cells: predominantly high IFN scores (yellow/orange)
+- This uniform, elevated IFN activation marks COVID-19 cells as a distinct transcriptomic state
+
+**Note:** Alternative dimensionality reduction methods (Fast MNN and Harmony) are also available in `UMAP Code (Fast MNN).R` and `UMAP Code (Harmony).R`.
+
+### 2. PCA with IFN Signature (Figure B)
+
+**Script:** `R/covid/PCA IFN Plot.R`
+
+Pairwise scatterplot matrix of first 3 PCs with:
+
+- **Diagonal:** Density distributions for reference (blue) vs. query (purple)
+- **Lower panels:** PCA scatter plots colored by IFN signature score
+  - Reference cells (hollow circles) cluster tightly in negative PC space with low IFN scores
+  - Query cells (solid circles) scatter across positive PC space with elevated IFN scores
+- **Upper panels:** Blank for clarity
+
+**Left panel (Reference):** Homogeneous reference population with minimal variation; IFN activation is baseline
+
+**Right panel (Query):** Heterogeneous distribution of COVID-19 cells; IFN activation drives separation from reference in PC space
+
+### 3. Anomaly Detection (Figure B, Right)
+
+**Script:** `R/covid/PCA Anomaly Plot.R`
+
+Identifies cells with transcriptomic profiles substantially different from the reference:
+
+- **Anomalous cells** (red): ~50% of COVID-19 cells with transcriptional patterns not well-represented in healthy reference
+- **Non-anomalous cells** (green/black): ~50% with relatively normal transcriptional structure
+- Reference cells (shown left) have minimal anomalies
+
+**Key finding:** A substantial and systematic fraction of COVID-19 cells are flagged as anomalous, indicating genuine disease-driven transcriptomic remodeling beyond simple continuous variation.
+
+::: {.callout-note collapse="true"}
+## Function Details: detectAnomaly()
+
+```{r}
+#| eval: false
+#| code-fold: false
+
+anomaly_output <- detectAnomaly(
+    query_data = covid_data,
+    reference_data = normal_data,
+    query_cell_type_col = "azimuth_celltype_l1_merged",
+    ref_cell_type_col = "author_cell_type_merged",
+    cell_types = c("CD14 mono"),
+    pc_subset = 1:5,
+    n_tree = 500,
+    anomaly_threshold = 0.5,
+    assay_name = "logcounts",
+    max_cells_query = NULL,
+    max_cells_ref = NULL
+)
+
+# Extract results for CD14 monocytes
+query_anomaly_status <- anomaly_output[["CD14 mono"]][["query_anomaly"]]
+reference_anomaly_status <- anomaly_output[["CD14 mono"]][["reference_anomaly"]]
+```
+
+**Parameters:**
+- `query_data`, `reference_data` — SCE objects to compare
+- `query_cell_type_col`, `ref_cell_type_col` — Column names containing cell type labels
+- `cell_types` — Specific cell type(s) to analyze
+- `pc_subset` — Principal components to use (1:5 = first 5 PCs)
+- `n_tree` — Number of trees for isolation forest (500 = balance speed/accuracy)
+- `anomaly_threshold` — Score threshold for anomaly classification (0.5 = 50th percentile)
+
+**Output:** Logical vectors indicating which cells are anomalous in each dataset
+
+**Flexibility note:** You can change `query_cell_type_col` to use different annotation systems:
+- `"azimuth_celltype_l1_merged"` (shown here)
+- `"singler_annotations_merged"`
+- `"celltypist_predicted_labels_merged"`
+- `"scvi_prediction_merged"`
+
+We observe consistent anomaly detection patterns across all four annotation methods, confirming that results reflect genuine biological divergence rather than method-specific artifacts.
+:::
+
+### 4. Gene Expression Shifts (Figure C)
+
+**Script:** `R/covid/Heatmap and Barplot Code.R`
+
+Analyzes 25 interferon-stimulated genes to quantify transcriptomic shifts:
+
+**C) Heatmap (Left)**
+
+- **Rows:** 25 interferon-stimulated genes (IFN signature)
+- **Columns:** Three comparisons (gray brackets at top)
+  - Query vs Reference (all)
+  - Query non-anomalous vs Reference
+  - Query anomalous vs Reference
+- **Color:** Blue (low) to Red (high expression)
+- Reference cells show uniformly low expression (blue)
+- Query cells show dramatically elevated expression (red)
+- Anomalous query cells show the most extreme upregulation
+
+**C) Barplot (Right)**
+
+- Individual log2-fold changes for each IFN gene
+- Gray bars: All query vs reference (median ~0.8 log2-fold)
+- Red bars: Anomalous vs reference (median ~1.5 log2-fold)
+- Light red bars: Non-anomalous vs reference (median ~0.5 log2-fold)
+- Nearly all 25 genes show statistically significant upregulation
+
+**Key observations:**
+
+- **Uniform IFN activation:** All 25 genes consistently upregulated; no selective subset
+- **Anomaly stratification:** Anomalous cells show 2-3 fold greater expression increase than non-anomalous cells
+- **Strongest signals:** LY6E, ISG15, and MX1 show the most dramatic fold changes (>1.5 log2-fold in anomalous)
+- **Statistical significance:** Paired t-tests show highly significant differences (p < 0.001) between anomalous and non-anomalous populations; Cohen's d indicates large effect sizes
+
+::: {.callout-note collapse="true"}
+## Function Details: calculateGeneShifts()
+
+```{r}
+#| eval: false
+#| code-fold: false
+
+gene_shifts <- calculateGeneShifts(
+    query_data = covid_data[yoshida_ifn_signature, ],
+    reference_data = normal_data[yoshida_ifn_signature, ],
+    query_cell_type_col = "azimuth_celltype_l1_merged",
+    ref_cell_type_col = "author_cell_type_merged",
+    cell_types = c("CD14 mono"),
+    pc_subset = 1:5,
+    n_top_loadings = 30,
+    assay_name = "logcounts",
+    p_value_threshold = 0.05,
+    adjust_method = "fdr",
+    detect_anomalies = TRUE,
+    anomaly_comparison = TRUE,
+    anomaly_threshold = 0.5,
+    max_cells_query = 5000,
+    max_cells_ref = 5000
+)
+
+# Plot results
+plot(
+    gene_shifts,
+    cell_type = "CD14 mono",
+    pc_subset = 1:5,
+    plot_type = "heatmap",
+    plot_by = "p_adjusted",
+    n_genes = 25,
+    significance_threshold = 0.05,
+    show_anomalies = TRUE,
+    pseudo_bulk = TRUE,
+    max_cells_query = 5000,
+    max_cells_ref = 5000
+)
+```
+
+**Parameters:**
+- `query_data`, `reference_data` — SCE objects (subset to genes of interest)
+- `query_cell_type_col`, `ref_cell_type_col` — Cell type labels
+- `cell_types` — Specific cell type to analyze
+- `pc_subset` — Principal components determining gene importance
+- `n_top_loadings` — Top genes by PC loadings to consider
+- `detect_anomalies` — Include anomaly detection (TRUE/FALSE)
+- `anomaly_comparison` — Separate results by anomaly status (TRUE/FALSE)
+- `max_cells_*` — Subsample for computational efficiency
+
+**Output:** Gene shift statistics with p-values, fold changes, and anomaly-stratified comparisons
+
+**Flexibility note:** All four annotation systems show similar gene shift patterns. Changing `query_cell_type_col` to any of the merged columns produces consistent results, validating that observed transcriptomic shifts are robust biological signals independent of annotation method.
+:::
+
+## Interpretation
+
+**COVID-19 cells exhibit:**
+
+1. **Spatial separation** — Distinct clustering from healthy reference in embedding space
+2. **Uniform IFN activation** — All 25 interferon genes co-regulated; reflects coordinated antiviral response
+3. **High anomaly rates** — High % of cells flagged as transcriptomically divergent from reference
+4. **Stratified dysregulation** — Anomalous cells show extreme IFN upregulation (1.5-2.0 log2-fold) vs. non-anomalous cells (~0.5 log2-fold)
+
+**Implications for annotation:**
+
+- **Distance-based methods may struggle** with cells showing this degree of transcriptomic shift
+- **Anomaly detection provides actionable signal** — Identifies the most dysregulated cells independent of annotation tool
+- **Built-in confidence scores may be insufficient** — Uniform IFN activation suggests systematic, coordinated remodeling that confidence scores may underestimate
+- **Biological signal is robust** — Consistent across multiple diagnostic approaches (PCA, anomaly detection, gene shifts) and reproducible with all four annotation methods
+
+## Figures Generated
+
+- `scvi_umap_disease.png` — UMAP by disease status
+- `scvi_umap_celltype.png` — UMAP by cell type
+- `scvi_umap_ifn.png` — UMAP by IFN signature
+- `pca_ifn.png` — PCA pairs plot with IFN scores and anomaly detection
+- `anomaly_plot.png` — PCA anomaly detection results
+- `covid_ifn_heatmap.png` — Gene shift heatmap
+- `gene_shifts_barplot.png` — Gene shift barplot
+
+

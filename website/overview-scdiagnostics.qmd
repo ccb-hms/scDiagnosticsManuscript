@@ -2,3 +2,33 @@
 title: "scDiagnostics Manuscript"
 ---
 
+## Next Steps
+
+We demonstrate `scDiagnostics` across three complementary analyses:
+
+**[Simulation Analysis](results-simulation.qmd)**
+
+- Controlled validation with known ground truth
+- Tests `detectAnomaly()` and diagnostic functions on synthetic data
+- Establishes baseline performance before real biological applications
+
+**[COVID-19 PBMC Analysis](results-covid.qmd)**
+
+- Apply validated diagnostics to severe COVID-19 infection
+- Observe disease-driven transcriptomic shifts in real patient data
+- Compare anomaly detection across four annotation methods
+- Understand annotation quality in dense scRNA-seq context
+
+**[MERFISH Colitis Analysis](results-merfish.qmd)**
+
+- Extend diagnostics to spatial transcriptomics (targeted gene panels)
+- Test anomaly detection on inflamed tissue with partial reference
+- Demonstrate reproducibility across different single-cell technologies
+- Show how anomaly detection identifies disease-associated cell states
+
+**[Exploring Annotation Tool Diagnostics](annotation-diagnostics.qmd)**
+
+- Investigate built-in confidence metrics from `SingleR`, `Azimuth`, `CellTypist`, `scArches`
+- Compare tool diagnostics with `scDiagnostics` anomaly detection
+- Understand when tool confidence scores align (or diverge) with anomalies
+- Learn which diagnostic signals are most informative for annotation quality assessment

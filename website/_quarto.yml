@@ -24,10 +24,14 @@ website:
         menu:
           - href: overview-scdiagnostics.qmd
             text: "scDiagnostics Overview"
+          - href: results-simulation.qmd
+            text: "Simulation"
           - href: results-covid.qmd
             text: "COVID-19"
           - href: results-merfish.qmd
             text: "MERFISH"
+          - href: annotation-diagnostics.qmd
+            text: "Exploring Tool Diagnostics"
   repo-url: https://github.com/ccb-hms/scDiagnosticsManuscript
   repo-actions: [edit, issue]
 

@@ -100,8 +100,8 @@ Both output objects are `SingleCellExperiment` format with:
 
 **Dimensions:**
 
-- Reference: ~23,201 cells, ~18,472  genes
-- Query: ~48,148 cells, ~18,472 genes
+- Reference: 23,201 cells, 18,472  genes
+- Query: 48,148 cells, 18,472 genes
 
 ## Downloading Pre-processed Data
 
