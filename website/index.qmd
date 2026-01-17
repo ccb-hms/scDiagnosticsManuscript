@@ -73,8 +73,8 @@ Christidis, A., Ghazi, A., Chawla, S., Turaga, N., Gentleman, R., & Geistlinger,
 
 **Annotation Methods:**
 
+- Butler, A. et al. (2023). Azimuth: a Shiny app demonstrating a query-reference mapping algorithm for single-cell data. URL [https://github.com/satijalab/azimuth](https://github.com/satijalab/azimuth). R package version 0.5.0.
 - Aran, D., et al. (2019). SingleR: Rapid immunoglobulin and T-cell receptor annotation from single cells. *Nat Immunol*, 20(2), 163–72.
-- Hao, Y., et al. (2021). Integrated analysis of multimodal single-cell data. *Cell*, 184(13), 3573-87.
 - Domínguez Conde, C., et al. (2022). Cross-tissue immune cell analysis reveals tissue-specific features in humans. *Science*, 376(6594), eabl5197.
 - Lotfollahi, M., et al. (2022). Mapping single-cell data to reference atlases by transfer learning. *Nat Biotechnol*, 40(1), 121–30.
 
