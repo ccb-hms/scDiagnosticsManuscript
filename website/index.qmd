@@ -12,7 +12,7 @@ It provides comprehensive tutorials, analysis code, and reproducible workflows d
 
 We demonstrate `scDiagnostics` across three complementary systems:
 
-**1. Controlled Simulation**
+**1. Controlled Simulation With [Splatter](https://www.bioconductor.org/packages/release/bioc/html/splatter.html)**
 
 - Synthetic data with known cell types and ground truth
 - Controlled introduction of annotation errors
