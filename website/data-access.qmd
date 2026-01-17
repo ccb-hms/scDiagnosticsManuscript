@@ -22,41 +22,37 @@ This will download all four SCE/SpatialExperiment objects into your `data/covid/
 
 Visit the [Zenodo repository](https://doi.org/10.5281/zenodo.18274942) and download:
 
-- `covid_data_sce.rds` — COVID-19 PBMC query (severe infection)
-- `normal_data_sce.rds` — Healthy PBMC reference
-- `dss9_data.rds` — MERFISH colitis query (day 9)
-- `healthy_data.rds` — Healthy colon MERFISH reference
+-   `covid_data_sce.rds` — COVID-19 PBMC query (severe infection)
+-   `normal_data_sce.rds` — Healthy PBMC reference
+-   `dss9_data.rds` — MERFISH colitis query (day 9)
+-   `healthy_data.rds` — Healthy colon MERFISH reference
 
 Place files in:
 
+```         
 data/
-
 ├── covid/
-
 │   ├── covid_data_sce.rds
-
 │   └── normal_data_sce.rds
-
 └── merfish/
-
 ├── dss9_data.rds
-
 └── healthy_data.rds
+```
 
 ## Data Contents
 
 All objects are `SingleCellExperiment` or `SpatialExperiment` format with:
 
-- **Expression data** in `assays()` (counts and logcounts)
-- **Cell metadata** in `colData()` including:
-  - Ground truth cell type annotations (`tier2_merged`)
-  - SingleR predictions (`singler_annotations_merged`)
-  - Azimuth predictions (`azimuth_celltype_l1_merged`)
-  - CellTypist predictions (`celltypist_predicted_labels_merged`)
-  - scArches predictions (`scvi_prediction_merged`)
-  - Method-specific confidence/uncertainty scores
-- **Dimensionality reductions** in `reducedDims()` (PCA, UMAP)
-- **Spatial coordinates** (MERFISH only)
+-   **Expression data** in `assays()` (counts and logcounts)
+-   **Cell metadata** in `colData()` including:
+    -   Ground truth cell type annotations (`tier2_merged`)
+    -   SingleR predictions (`singler_annotations_merged`)
+    -   Azimuth predictions (`azimuth_celltype_l1_merged`)
+    -   CellTypist predictions (`celltypist_predicted_labels_merged`)
+    -   scArches predictions (`scvi_prediction_merged`)
+    -   Method-specific confidence/uncertainty scores
+-   **Dimensionality reductions** in `reducedDims()` (PCA, UMAP)
+-   **Spatial coordinates** (MERFISH only)
 
 ## Loading Data
 
@@ -82,19 +78,19 @@ head(colData(covid_query))
 
 ### COVID-19 PBMC
 
-- **Query**: ~6,800 CD14+ monocytes from severe COVID-19 patients
-- **Reference**: ~23,200 CD14+ monocytes from healthy controls
-- **Total genes**: 18,472
-- **Source**: [Stephenson et al., Nature Medicine 2021](https://doi.org/10.1038/s41591-021-01329-2)
-- **Technology**: 10x Genomics scRNA-seq
+-   **Query**: \~6,800 CD14+ monocytes from severe COVID-19 patients
+-   **Reference**: \~23,200 CD14+ monocytes from healthy controls
+-   **Total genes**: 18,472
+-   **Source**: [Stephenson et al., Nature Medicine 2021](https://doi.org/10.1038/s41591-021-01329-2)
+-   **Technology**: 10x Genomics scRNA-seq
 
 ### MERFISH Mouse Colitis
 
-- **Query**: 29,040 cells from DSS-treated colon (day 9, peak inflammation)
-- **Reference**: 27,140 cells from healthy colon (day 0)
-- **Total genes**: 943 (MERFISH panel)
-- **Source**: [MerfishData package](https://bioconductor.org/packages/MerfishData) (Geistlinger et al., 2024); original data from [Cadinu et al., Cell 2024](https://doi.org/10.1016/j.cell.2024.02.026)
-- **Technology**: MERFISH spatial transcriptomics
+-   **Query**: 29,040 cells from DSS-treated colon (day 9, peak inflammation)
+-   **Reference**: 27,140 cells from healthy colon (day 0)
+-   **Total genes**: 943 (MERFISH panel)
+-   **Source**: [MerfishData package](https://bioconductor.org/packages/MerfishData) (Geistlinger et al., 2024); original data from [Cadinu et al., Cell 2024](https://doi.org/10.1016/j.cell.2024.02.026)
+-   **Technology**: MERFISH spatial transcriptomics
 
 ## Citation
 
