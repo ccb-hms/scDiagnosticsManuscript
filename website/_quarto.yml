@@ -1,3 +1,7 @@
+project:
+  type: website
+  output-dir: _site
+
 website:
   title: "scDiagnostics Manuscript Analysis"
   navbar:
