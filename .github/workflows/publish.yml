@@ -23,6 +23,11 @@ jobs:
         with:
           r-version: '4.4.1'
 
+      - name: Install R Dependencies
+        run: |
+          install.packages(c("knitr", "rmarkdown"), repos = "https://cloud.r-project.org/")
+        shell: Rscript {0}
+
       - name: Set up Quarto
         uses: quarto-dev/quarto-actions/setup@v2
 
