@@ -111,7 +111,7 @@ Before annotating query data, you must create an Azimuth reference from your hea
 **Workflow:**
 
 
-```{bash}
+```
 Step 1: Prepare data (R → h5ad)
 Step 2: Train and annotate (Python)
 Step 3: Integrate results (h5ad → R)
@@ -145,7 +145,7 @@ Step 3: Integrate results (h5ad → R)
 **Workflow:**
 
 
-```{bash}
+```
 Step 1: Select HVGs and prepare data (R → h5ad)
 Step 2: Train VAE and transfer labels (Python)
 Step 3: Integrate predictions and embeddings (h5ad → R)
