@@ -1,0 +1,17 @@
+---
+title: "Accessing Data"
+---
+
+## Quick Start: Download Data
+
+All processed datasets with cell type annotations are available on Zenodo.
+
+### Automated Download (Recommended)
+
+From the repository root, run:
+
+```{r}
+#| eval: false
+source("data/downloadData.R")
+downloadData()
+```

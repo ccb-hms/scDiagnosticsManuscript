@@ -1,7 +1,7 @@
-# data/download_data.R
-# Usage: source("data/download_data.R"); download_all_data()
+# data/downloadData.R
+# Usage: source("data/downloadData.R"); downloadData()
 
-download_all_data <- function() {
+downloadData <- function() {
   
   # Zenodo dataset: https://doi.org/10.5281/zenodo.18274942
   zenodo_base <- "https://zenodo.org/records/18274942/files/"
@@ -30,6 +30,3 @@ download_all_data <- function() {
   message("✓ All data downloaded successfully!")
   message("Data saved to data/covid/ and data/merfish/")
 }
-
-# Run this to download
-download_all_data()
