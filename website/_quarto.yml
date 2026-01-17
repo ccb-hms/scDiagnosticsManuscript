@@ -10,6 +10,8 @@ website:
         text: Home
       - text: "Data & Methods"
         menu:
+          - href: setup.qmd
+            text: "Setup & Installation"
           - href: data-access.qmd
             text: "Getting Data"
           - href: processing-covid.qmd

@@ -1,0 +1,174 @@
+---
+title: "Setup & Installation"
+---
+
+## Overview
+
+This page provides instructions for setting up the computational environment needed to run the analysis tutorials and preprocessing pipelines. The workflow requires both R and Python packages.
+
+## Quick Start
+
+If you're only downloading pre-processed data and running tutorials, you mainly need **R packages**. If you're preprocessing data from scratch, you'll need the full **R + Python** setup.
+
+## Part 1: R Packages
+
+All R dependencies can be installed with a single setup script.
+
+### Installation Script
+
+Run this R script once to install all required packages:
+
+```{r}
+#| eval: false
+source("R/covid/R Package Installation Pipeline.R")
+```
+
+Or for MERFISH-specific analysis:
+
+```{r}
+#| eval: false
+source("R/merfish/R Package Installation Pipeline.R")
+```
+
+**Note:** Both scripts install largely the same packages. Running either one will set you up for both COVID-19 and MERFISH analyses.
+
+### What Gets Installed
+
+**From CRAN:**
+- Data manipulation: `dplyr`, `tidyr`, `tibble`
+- Matrix operations: `Matrix`
+- Utilities: `reticulate`, `remotes`, `here`, `ggplot2`, `patchwork`, `viridis`
+
+**From Bioconductor:**
+
+- Core: `SingleCellExperiment`, `SpatialExperiment`
+- Analysis: `scran`, `scater`, `SingleR`, `biomaRt`
+- I/O: `zellkonverter`, `HDF5Array`, `MerfishData`
+- Parallel: `BiocParallel`
+
+**From GitHub:**
+
+- `Seurat` (v5.3.1.0 - specific version for Azimuth compatibility)
+- `Azimuth` (reference-based annotation)
+- `scDiagnostics` (anomaly detection)
+
+### Checking Installation
+
+After running the script, verify everything installed:
+
+```{r}
+#| eval: false
+# Test loading key packages
+library(SingleCellExperiment)
+library(scran)
+library(Azimuth)
+library(scDiagnostics)
+
+cat("✓ All R packages loaded successfully!\n")
+```
+
+---
+
+## Part 2: Python Environment (Optional)
+
+Only needed if you're running CellTypist or scVI/scArches annotation from scratch.
+
+### Option A: scVI/scArches via Conda
+
+This is the **recommended approach** for the complete pipeline.
+
+**Step 1:** Create the conda environment
+
+```bash
+conda env create -f environment-scvi.yml
+```
+
+**Step 2:** Activate it when running Python scripts
+
+```bash
+conda activate scvi-env
+```
+
+The `environment-scvi.yml` file is in the repository root and includes:
+
+- Python 3.9
+- `scvi-tools` and `scarches` (annotation tools)
+- `scanpy` (data handling)
+- JAX (GPU support, optional)
+
+### Option B: CellTypist Setup
+
+If using CellTypist separately, run the Python environment setup script:
+
+```{r}
+#| eval: false
+source("R/auxiliary/environmentSetupCellTypist.R")
+environmentSetupCellTypist()
+```
+
+This function:
+
+- Detects your Python installation
+- Creates a `celltypist_env` conda environment
+- Installs required packages: `scanpy`, `pandas`, `numpy`, `celltypist`
+- Tests imports and provides manual installation instructions if needed
+
+### Manual Python Installation
+
+If you prefer manual setup:
+
+```bash
+# For scVI/scArches
+conda create -n scvi-env python=3.9
+conda activate scvi-env
+pip install scvi-tools scarches scanpy leidenalg scikit-learn
+
+# For CellTypist
+conda create -n celltypist_env python=3.9
+conda activate celltypist_env
+conda install -c conda-forge scanpy pandas numpy
+pip install celltypist
+```
+
+---
+
+## System Requirements
+
+- **R:** Version 4.2 or later
+- **Python:** Version 3.9 (recommended for compatibility)
+- **Memory:** 16+ GB RAM recommended
+- **Disk:** ~50 GB for raw data + processed outputs
+
+## Troubleshooting
+
+**R package installation fails:**
+
+- Ensure you have C++ compilers installed (`Rtools` on Windows, `build-essential` on Linux, Xcode on Mac)
+- Update R to the latest stable version
+- Try installing packages individually with `BiocManager::install("package_name")`
+
+**Python environment issues:**
+
+- Ensure conda is installed: `conda --version`
+- Clear conda cache: `conda clean --all`
+- Reinstall environment: `conda env remove -n scvi-env && conda env create -f environment-scvi.yml`
+
+**reticulate can't find Python:**
+
+In R, explicitly set the Python path:
+
+```{r}
+#| eval: false
+library(reticulate)
+use_condaenv("scvi-env")  # or "celltypist_env"
+```
+
+---
+
+## Next Steps
+
+Once installation is complete:
+
+1. **Just want to explore results?** → Go to [Getting Data](data-access.qmd)
+2. **Want to preprocess data?** → Follow [COVID-19 Processing](processing-covid.qmd) or [MERFISH Processing](processing-merfish.qmd)
+3. **Ready for analysis?** → Start with [scDiagnostics Overview](overview-scdiagnostics.qmd)

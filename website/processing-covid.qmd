@@ -1,3 +1,124 @@
 ---
-title: "scDiagnostics Manuscript"
+title: "COVID-19 PBMC Processing"
 ---
+
+## Overview
+
+This page describes the data processing workflow for the COVID-19 PBMC dataset. The raw data originates from [CZI CELLxGENE](https://cellxgene.cziscience.com/collections/ddfad306-714d-4cc0-9985-d9072820c530) and undergoes two processing steps to generate the final reference and query datasets used in the analysis.
+
+## Data Source
+
+The raw dataset is downloaded from CZI CELLxGENE:
+
+**Collection:** [COVID-19 PBMC Single-Cell Data](https://cellxgene.cziscience.com/collections/ddfad306-714d-4cc0-9985-d9072820c530)
+
+**Format:** H5AD file (`covid_data.h5ad`)
+
+The dataset contains monocytes from both healthy controls and severe COVID-19 patients, profiled using 10x Genomics scRNA-seq.
+
+## Processing Pipeline
+
+The workflow consists of two sequential R scripts:
+
+### Step 1: Data Cleaning and Subsetting
+
+**File:** `R/covid/Data Cleaning and Metadata Removal.R`
+
+This script performs initial data cleaning and filtering:
+
+1. **Load raw H5AD file** — Uses `zellkonverter` to read the h5ad in memory-efficient mode
+2. **Remove pre-computed metadata** — Strips unnecessary metadata, neighbors, PCA and other slots to create a clean object
+3. **Filter for relevant samples** — Retains only:
+
+   - Healthy controls (normal disease status)
+   - COVID-19 patients (severe infection)
+   - Excludes other disease states and LPS-treated controls
+
+4. **Stratified sampling** — Samples cells proportionally:
+
+   - ~1,000 cells per healthy control sample (reference)
+   - ~500 cells per COVID-19 sample (query)
+
+5. **Convert to sparse matrix** — Realizes the delayed matrix into memory-efficient sparse format
+
+**Output:** `data/covid/covid_data_clean.rds` (~0.3 GB compressed)
+
+### Step 2: Quality Control, Processing, and Splitting
+
+**File:** `R/covid/Data QC and Processing.R`
+
+This script applies QC filters, normalizes data, and prepares reference/query splits:
+
+1. **QC filtering:**
+
+   - Cells: Keep those with ≥1000 total UMI counts
+   - Genes: Keep genes expressed in ≥10 cells
+
+2. **Assay naming and pseudo-count generation:**
+
+   - Rename primary assay to `logcounts` (data is already log-normalized)
+   - Generate `counts` assay by reversing log-transformation: `2^logcounts - 1`
+
+3. **Gene ID conversion:**
+
+   - Convert Ensembl gene IDs to HGNC gene symbols using the `convertEnsemblToSymbols()` function
+   - Leverages biomaRt to fetch HGNC symbols
+   - Handles missing symbols and duplicates by making gene names unique
+
+4. **Dataset splitting:**
+
+   - Reference: Healthy control cells
+   - Query: COVID-19 patient cells
+
+5. **Diagnostic-aware PCA:**
+
+   - Uses the `addReferencePCA()` function to identify highly variable genes (HVGs) in both reference and query
+   - Takes the union of HVGs to capture both stable and disease-specific signals
+   - Runs PCA on this shared feature space (50 components)
+
+6. **Cell type merging:**
+
+   - Uses the `addMergedCellTypes()` function to collapse fine-grained author-provided annotations into broader categories
+   - Enables comparison across different annotation granularities
+   - COVID-specific mapping groups cell types like CD14 monocytes, CD16 monocytes, CD4 T cells, CD8 T cells, etc.
+
+**Output:** 
+
+- `data/covid/normal_data_sce.rds` — Reference (healthy) dataset
+- `data/covid/covid_data_sce.rds` — Query (COVID-19) dataset
+
+## Final Datasets
+
+Both output objects are `SingleCellExperiment` format with:
+
+- **Assays:** `counts` (pseudo-counts) and `logcounts` (log-normalized)
+- **Metadata:** Cell-level annotations including:
+  - Disease status (normal vs. COVID-19)
+  - Sample ID, cell type, and other clinical metadata
+- **Reduced dimensions:** PCA (50 components) computed on diagnostic HVGs
+- **Row data:** Gene symbols and metadata
+
+**Dimensions:**
+
+- Reference: ~23,201 cells, ~18,472  genes
+- Query: ~48,148 cells, ~18,472 genes
+
+## Downloading Pre-processed Data
+
+Rather than running this pipeline yourself, you can download the final processed datasets directly:
+
+See [Getting Data](data-access.qmd) for download instructions.
+
+## Full Scripts
+
+For complete implementation details, see:
+
+- Step 1: `R/covid/Data Cleaning and Metadata Removal.R`
+- Step 2: `R/covid/Data QC and Processing.R`
+
+Supporting functions:
+
+- `R/auxiliary/convertEnsemblToSymbols.R` — Gene ID conversion via biomaRt
+- `R/auxiliary/addReferencePCA.R` — Diagnostic-aware PCA using union of reference and query HVGs
+- `R/auxiliary/addMergedCellTypes.R` — Cell type categorization with COVID-specific mappings
+
