@@ -4,7 +4,7 @@ title: "scDiagnostics Manuscript"
 
 ## Welcome
 
-This website accompanies the manuscript "*scDiagnostics: diagnostic tools for assessing cell type annotation quality in single-cell RNA-seq data*" (Christidis et al.). 
+This website accompanies the manuscript "*scDiagnostics: systematic assessment of cell type annotation in single-cell transcriptomics data*" (Christidis et al., in review). 
 
 It provides comprehensive tutorials, analysis code, and reproducible workflows demonstrating how [`scDiagnostics`](https://bioconductor.org/packages/scDiagnostics) can evaluate and diagnose automated cell type annotations across different single-cell technologies and biological contexts.
 
@@ -12,30 +12,72 @@ It provides comprehensive tutorials, analysis code, and reproducible workflows d
 
 We showcase `scDiagnostics` using two distinct public datasets:
 
-- **COVID-19 PBMC scRNA-seq**: Dense, high-cell-count dataset diagnosing annotations in severe infection vs. healthy controls
-- **MERFISH Mouse Colitis**: Spatial transcriptomics dataset evaluating annotations in inflammatory bowel disease (IBD)
+- **COVID-19 PBMC scRNA-seq** (~48,000 query cells): Dense, high-cell-count dataset diagnosing annotations from severe COVID-19 infection vs. healthy controls. Shows how annotation methods handle disease-driven transcriptomic shifts.
 
-For each dataset, we generate annotations using four popular tools:
+- **MERFISH Mouse Colitis** (~29,000 query cells): Spatial transcriptomics dataset evaluating annotations in DSS-induced inflammatory bowel disease (IBD). Demonstrates performance on targeted gene panels and spatial information.
 
-- [**SingleR**](https://bioconductor.org/packages/SingleR)
-- [**Azimuth**](https://github.com/satijalab/azimuth)
-- [**CellTypist**](https://www.celltypist.org/)
-- [**scVI/scArches**](https://docs.scvi-tools.org/)
+For each dataset, we generate annotations using four popular tools and compare their performance:
+
+- [**Azimuth**](https://github.com/satijalab/azimuth) — Weighted k-NN mapping
+- [**SingleR**](https://bioconductor.org/packages/SingleR) — Correlation-based assignment
+- [**CellTypist**](https://www.celltypist.org/) — Machine learning classifier
+- [**scVI/scArches**](https://docs.scvi-tools.org/) — Deep learning with VAE
 
 ## Navigation
 
-**[Data & Methods](data-access.qmd)** — Learn how to access datasets and run annotations
+### Data & Methods
 
-**[Tutorials & Results](overview-scdiagnostics.qmd)** — Explore diagnostic analyses and interpretation
+Get started here to set up your environment and understand the data:
+
+- **[Setup & Installation](setup.qmd)** — Install R/Python packages and set up environments
+- **[Getting Data](data-access.qmd)** — Download pre-processed datasets from Zenodo
+- **[COVID-19 Processing](processing-covid.qmd)** — Data cleaning, QC, and preprocessing workflow
+- **[MERFISH Processing](processing-merfish.qmd)** — MERFISH-specific processing and biological filtering
+- **[Adding Annotations](adding-annotations.qmd)** — Apply all four annotation methods to query data
+
+### Tutorials & Results
+
+Explore the analysis workflows and results:
+
+- **[scDiagnostics Overview](overview-scdiagnostics.qmd)** — Introduction to diagnostic framework and key concepts
+- **[COVID-19 Analysis](results-covid.qmd)** — Annotation quality assessment in dense scRNA-seq data
+- **[MERFISH Analysis](results-merfish.qmd)** — Annotation quality assessment in spatial transcriptomics
+
+## Key Findings
+
+- **Annotation methods show substantial agreement** on major cell types but diverge on rare/inflamed populations
+- **Anomaly detection identifies transcriptomically divergent cells** that correlate with disease state
+- **Inflamed fibroblasts are frequently misclassified** as smooth muscle cells, particularly by distance-based methods
+- **Confidence scores alone are insufficient** — need complementary diagnostics like anomaly detection
 
 ## Citation
 
-If you use the code or data from this repository, please cite:
+If you use this code or data, please cite:
 
-Christidis, A., Ghazi, A., Chawla, S., Turaga, N., Gentleman, R., & Geistlinger, L. (XXXX). scDiagnostics: diagnostic tools for assessing cell type annotation quality in single-cell RNA-seq data. *[Journal]*. [DOI]
+Christidis, A., Ghazi, A., Chawla, S., Turaga, N., Gentleman, R., & Geistlinger, L. (2026). scDiagnostics: diagnostic tools for assessing cell type annotation quality in single-cell RNA-seq data. *In Review*
+
+**Preprint:** Available at bioRxiv (link pending)
+
+## References
+
+**Datasets:**
+
+- Stephenson, E., et al. (2021). Single-cell multi-omics analysis of the immune response in COVID-19. *Nature Medicine*, 27, 904–916.
+- Cadinu, P., et al. (2024). Charting the cellular biogeography in colitis reveals fibroblast trajectories and coordinated spatial remodeling. *Cell*, 187(8), 2010-2028.
+
+**Annotation Methods:**
+
+- Aran, D., et al. (2019). SingleR: Rapid immunoglobulin and T-cell receptor annotation from single cells. *Nat Immunol*, 20(2), 163–172.
+- Hao, Y., et al. (2021). Integrated analysis of multimodal single-cell data. *Cell*, 184(13), 3573-3587.
+- Domínguez Conde, C., et al. (2022). Cross-tissue immune cell analysis reveals tissue-specific features in humans. *Science*, 376(6594), eabl5197.
+- Lotfollahi, M., et al. (2022). Mapping single-cell data to reference atlases by transfer learning. *Nat Biotechnol*, 40(1), 121–130.
 
 ## Repository
 
-Full code and analysis scripts: [github.com/ccb-hms/scDiagnosticsManuscript](https://github.com/ccb-hms/scDiagnosticsManuscript)
+**Code and scripts:** [github.com/ccb-hms/scDiagnosticsManuscript](https://github.com/ccb-hms/scDiagnosticsManuscript)
 
-Data (Zenodo): [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.18274942.svg)](https://doi.org/10.5281/zenodo.18274942)
+**Data (Zenodo):** [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.18274942.svg)](https://doi.org/10.5281/zenodo.18274942)
+
+## Contact
+
+For questions or feedback, please open an issue on [GitHub](https://github.com/ccb-hms/scDiagnosticsManuscript/issues).

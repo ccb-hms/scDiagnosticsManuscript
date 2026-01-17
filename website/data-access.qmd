@@ -46,8 +46,8 @@ All objects are `SingleCellExperiment` or `SpatialExperiment` format with:
 -   **Expression data** in `assays()` (counts and logcounts)
 -   **Cell metadata** in `colData()` including:
     -   Ground truth cell type annotations (`tier2_merged`)
-    -   SingleR predictions (`singler_annotations_merged`)
     -   Azimuth predictions (`azimuth_celltype_l1_merged`)
+    -   SingleR predictions (`singler_annotations_merged`)
     -   CellTypist predictions (`celltypist_predicted_labels_merged`)
     -   scArches predictions (`scvi_prediction_merged`)
     -   Method-specific confidence/uncertainty scores
@@ -78,8 +78,8 @@ head(colData(covid_query))
 
 ### COVID-19 PBMC
 
--   **Query**: \~6,800 CD14+ monocytes from severe COVID-19 patients
--   **Reference**: \~23,200 CD14+ monocytes from healthy controls
+-   **Query**: 48,148 cells from COVID-19 patients
+-   **Reference**: 23,201 cells from healthy controls
 -   **Total genes**: 18,472
 -   **Source**: [Stephenson et al., Nature Medicine 2021](https://doi.org/10.1038/s41591-021-01329-2)
 -   **Technology**: 10x Genomics scRNA-seq

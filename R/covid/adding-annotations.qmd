@@ -4,60 +4,28 @@ title: "Adding Annotations"
 
 ## Overview
 
-This page describes how to add cell type annotations from four popular tools (Azimuth, SingleR, CellTypist, and scArches) to your processed data. The workflow applies these tools to assign cell types to cells in your query dataset using reference data as a guide.
+This page describes how to add cell type annotations from four popular tools (SingleR, Azimuth, CellTypist, and scArches) to your processed data. The workflow applies these tools to assign cell types to cells in your query dataset using reference data as a guide.
 
 All annotation methods are applied to the same query and reference datasets, allowing for direct comparison of annotation quality across methods.
 
 ## Workflow Summary
 
-For each annotation method, the workflow follows these steps:
+For each annotation method, the workflow follows three steps:
 
 1. **Data Preparation** — Format data for the annotation tool
 2. **Run Annotation** — Apply the annotation method
 3. **Results Integration** — Add predictions back to your SCE object
 
-For some methods (Azimuth, CellTypist, scArches), a preliminary step creates a reference or sets up the environment.
-
----
-
 ## Method 1: Azimuth (R-based)
 
 **What it does:** Performs reference-based mapping using weighted nearest neighbors after dimensionality alignment.
 
-### Step 1a: Create Azimuth Reference (Run Once)
-
-Before annotating query data, you must create an Azimuth reference from your healthy reference dataset.
-
-**Script:** `R/covid/Create Azimuth Reference.R`
-
-**Key steps:**
-
-- Loads healthy reference data
-- Runs SCTransform (standardized normalization)
-- Computes PCA (50 dimensions)
-- Generates UMAP in reference space
-- Creates searchable Azimuth reference index
-
-**Key parameters:**
-
-- 3,000 variable features (standard for reproducibility)
-- 50 PCA dimensions
-- 300 UMAP epochs (optimized for efficiency)
-- 100 k-neighbors for robustness
-
-**Output:** Creates `data/covid/Azimuth/custom_azimuth_reference/` with reference files and metadata.
-
-**Note:** This step only needs to run once per reference dataset.
-
-### Step 1b: Annotate Query Data
-
 **Scripts:**
-
 - `R/auxiliary/performAzimuthAnnotation.R` — Core annotation function
 - `R/covid/Add R (Azimuth and SingleR) Annotations.R` — Main execution script
+- Requires pre-built reference (created separately)
 
 **Key features:**
-
 - Integrates query into reference PCA space
 - Weighted k-NN voting for label transfer
 - Fast and memory-efficient
@@ -65,7 +33,6 @@ Before annotating query data, you must create an Azimuth reference from your hea
 - Mapping quality scores included
 
 **Output columns added to SCE:**
-
 - `azimuth_celltype_l1` / `azimuth_celltype_l2` — Predicted labels
 - `azimuth_celltype_l1_merged` / `azimuth_celltype_l2_merged` — Collapsed categories
 - `azimuth_score_l1` / `azimuth_score_l2` — Prediction confidence scores
@@ -78,19 +45,16 @@ Before annotating query data, you must create an Azimuth reference from your hea
 **What it does:** Correlates cell expression profiles against reference data to assign cell types.
 
 **Scripts:**
-
 - `R/auxiliary/performSingleRWithSubsampling.R` — Core annotation function with smart subsampling
-- `R/covid/Add R (Azimuth and SingleR) Annotations.R` — Main execution script (also runs SingleR)
+- `R/covid/Add R (Azimuth and SingleR) Annotations.R` — Main execution script
 
 **Key features:**
-
 - Uses Spearman correlation and differential expression analysis
 - Intelligent subsampling: preserves rare cell types while sampling common types proportionally
 - Produces confidence scores via "delta scores"
-- No separate reference preparation needed
+- No separate preparation step needed
 
 **Output columns added to SCE:**
-
 - `singler_annotations` — Predicted cell type labels
 - `singler_annotations_merged` — Collapsed to broader categories
 - `singler_scores` — Confidence scores (delta scores)
@@ -102,30 +66,25 @@ Before annotating query data, you must create an Azimuth reference from your hea
 **What it does:** Uses a trained logistic regression classifier to predict cell types.
 
 **Scripts (in order):**
-
 1. `R/auxiliary/environmentSetupCellTypist.R` — Sets up Python environment (conda)
 2. `R/covid/CellTypist Data Preparation.R` — Converts SCE to AnnData format (.h5ad)
 3. `python/covid/CellTypist_Annotation.py` — Trains classifier and annotates query cells (Python)
 4. `R/covid/CellTypist Results Integration.R` — Integrates predictions back into SCE
 
 **Workflow:**
-
-
-```{bash}
-Step 1: Prepare data (R → h5ad)
-Step 2: Train and annotate (Python)
-Step 3: Integrate results (h5ad → R)
+```bash
+# Step 1: Prepare data (R → h5ad)
+# Step 2: Train and annotate (Python)
+# Step 3: Integrate results (h5ad → R)
 ```
 
 **Key features:**
-
 - Machine learning-based approach
 - Requires Python environment with scanpy and celltypist
 - Memory-efficient data handling (removes non-essential metadata)
 - Produces confidence scores for each prediction
 
 **Output columns added to SCE:**
-
 - `celltypist_predicted_labels` — Predicted cell type
 - `celltypist_predicted_labels_merged` — Collapsed to broader categories
 - `celltypist_conf_score` — Classification confidence (0-1)
@@ -137,22 +96,18 @@ Step 3: Integrate results (h5ad → R)
 **What it does:** Uses variational autoencoders (VAE) to learn a shared latent space and transfers annotations via weighted k-NN in that space.
 
 **Scripts (in order):**
-
 1. `R/covid/scVI Data Preparation.R` — Selects HVGs, converts to AnnData format
 2. `python/covid/scVI_Annotation.py` — Trains VAE on reference, maps query, performs k-NN transfer (Python)
 3. `R/covid/scVI Results Integration.R` — Integrates predictions and UMAP coordinates into SCE
 
 **Workflow:**
-
-
-```{bash}
-Step 1: Select HVGs and prepare data (R → h5ad)
-Step 2: Train VAE and transfer labels (Python)
-Step 3: Integrate predictions and embeddings (h5ad → R)
+```bash
+# Step 1: Select HVGs and prepare data (R → h5ad)
+# Step 2: Train VAE and transfer labels (Python)
+# Step 3: Integrate predictions and embeddings (h5ad → R)
 ```
 
 **Key features:**
-
 - Deep learning approach (variational autoencoder)
 - Learns unified latent representation capturing both reference and query variation
 - Includes uncertainty estimates from k-NN voting
@@ -160,13 +115,11 @@ Step 3: Integrate predictions and embeddings (h5ad → R)
 - More computationally intensive but captures complex patterns
 
 **Output columns added to SCE:**
-
 - `scvi_prediction` — Predicted cell type from k-NN transfer
 - `scvi_prediction_merged` — Collapsed to broader categories
 - `scvi_confidence` — Uncertainty score (0-1, lower = more confident)
 
 **Reduced dimensions:**
-
 - `UMAP_scVI` — 2D UMAP in joint reference-query latent space
 
 ---
@@ -179,8 +132,7 @@ All methods create merged versions of their annotations by collapsing fine-grain
 - Dataset-specific mapping rules (COVID vs. MERFISH)
 - Enables comparison across methods at consistent granularity
 
-**Example:**
-
+**Example:** 
 - Original: `CD4_naive`, `CD4_CM`, `CD4_EM` → Merged: `CD4 T`
 
 ---
@@ -191,16 +143,13 @@ All methods create merged versions of their annotations by collapsing fine-grain
 
 ```{r}
 #| eval: false
-# Step 1: Create Azimuth reference (run once)
-source("R/covid/Create Azimuth Reference.R")
-
-# Step 2: Run Azimuth + SingleR (R only)
+# Run SingleR + Azimuth (R only)
 source("R/covid/Add R (Azimuth and SingleR) Annotations.R")
 
-# Step 3: Run CellTypist (R + Python)
+# Run CellTypist (R + Python)
 source("R/covid/CellTypist Annotation Pipeline.R")
 
-# Step 4: Run scVI/scArches (R + Python)
+# Run scVI/scArches (R + Python)
 source("R/covid/scVI Annotation Pipeline.R")
 ```
 
@@ -216,13 +165,12 @@ The only difference: uses `tier2` as the reference annotation column instead of 
 
 After running all four methods, your SCE object will contain:
 
-- 4 annotation systems (Azimuth L1, Azimuth L2, SingleR, CellTypist, scArches)
+- 4 annotation systems (SingleR, Azimuth L1, Azimuth L2, CellTypist, scArches)
 - 4 merged annotation columns (collapsed categories)
-- 5 confidence/uncertainty score columns
+- 4-5 confidence/uncertainty score columns
 - UMAP coordinates from scArches
 
 This allows you to:
-
 - Compare which methods agree/disagree
 - Assess annotation confidence
 - Investigate discordant cells using `scDiagnostics`
@@ -232,6 +180,5 @@ This allows you to:
 ## Next Steps
 
 Once annotations are added, proceed to:
-
 - [scDiagnostics Overview](overview-scdiagnostics.qmd) — Learn about anomaly detection
 - [Results](results-covid.qmd) or [Results](results-merfish.qmd) — Analyze annotation patterns
