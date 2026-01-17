@@ -69,7 +69,7 @@ anomaly_output <- detectAnomaly(
     n_tree = 1000,
     anomaly_threshold = 0.5
 )
-```[end]
+```
 
 **Returns:** Anomaly scores and classification for each cell
 
@@ -92,7 +92,7 @@ plotCellTypePCA_custom(
     upper_facet = "blank",
     cell_type_colors = cell_type_colors
 )
-```[end]
+```
 
 **Returns:** Pairwise PCA scatterplots with density distributions
 
@@ -198,4 +198,3 @@ Apply validated diagnostics to real data:
 - `cell_type_B_isoForest.png` — Anomaly scores for Cell Type B (with misclassified C)
 - `cell_type_A_anomaly_density_missing.png` — Anomaly score distribution (A, with C misclassified)
 - `cell_type_B_anomaly_density_missing.png` — Anomaly score distribution (B, with C misclassified)
-```[end]
