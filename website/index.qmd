@@ -13,16 +13,19 @@ It provides comprehensive tutorials, analysis code, and reproducible workflows d
 We demonstrate `scDiagnostics` across three complementary systems:
 
 **1. Controlled Simulation**
+
 - Synthetic data with known cell types and ground truth
 - Controlled introduction of annotation errors
 - Validates core diagnostic functions before real data application
 
-**2. COVID-19 PBMC scRNA-seq** (~6,800 query cells)
+**2. COVID-19 PBMC scRNA-seq** (~48,800 query cells)
+
 - Dense, high-cell-count dataset diagnosing annotations from severe COVID-19 infection vs. healthy controls
 - Shows how annotation methods handle disease-driven transcriptomic shifts
 - Real-world application in infectious disease
 
 **3. MERFISH Mouse Colitis** (~29,000 query cells)
+
 - Spatial transcriptomics dataset evaluating annotations in DSS-induced inflammatory bowel disease (IBD)
 - Demonstrates performance on targeted gene panels and spatial information
 - Real-world application in chronic inflammation
