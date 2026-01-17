@@ -16,6 +16,7 @@ We showcase `scDiagnostics` using two distinct public datasets:
 - **MERFISH Mouse Colitis**: Spatial transcriptomics dataset evaluating annotations in inflammatory bowel disease (IBD)
 
 For each dataset, we generate annotations using four popular tools:
+
 - [**SingleR**](https://bioconductor.org/packages/SingleR)
 - [**Azimuth**](https://github.com/satijalab/azimuth)
 - [**CellTypist**](https://www.celltypist.org/)

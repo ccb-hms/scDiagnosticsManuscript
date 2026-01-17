@@ -15,3 +15,90 @@ From the repository root, run:
 source("data/downloadData.R")
 downloadData()
 ```
+
+This will download all four SCE/SpatialExperiment objects into your `data/covid/` and `data/merfish/` directories.
+
+### Manual Download
+
+Visit the [Zenodo repository](https://doi.org/10.5281/zenodo.18274942) and download:
+
+- `covid_data_sce.rds` — COVID-19 PBMC query (severe infection)
+- `normal_data_sce.rds` — Healthy PBMC reference
+- `dss9_data.rds` — MERFISH colitis query (day 9)
+- `healthy_data.rds` — Healthy colon MERFISH reference
+
+Place files in:
+
+data/
+├── covid/
+│   ├── covid_data_sce.rds
+│   └── normal_data_sce.rds
+└── merfish/
+├── dss9_data.rds
+└── healthy_data.rds
+
+## Data Contents
+
+All objects are `SingleCellExperiment` or `SpatialExperiment` format with:
+
+- **Expression data** in `assays()` (logcounts)
+- **Cell metadata** in `colData()` including:
+  - Ground truth cell type annotations (`tier2_merged`)
+  - SingleR predictions (`singler_annotations_merged`)
+  - Azimuth predictions (`azimuth_celltype_l1_merged`)
+  - CellTypist predictions (`celltypist_predicted_labels_merged`)
+  - scArches predictions (`scvi_prediction_merged`)
+  - Method-specific confidence/uncertainty scores
+- **Dimensionality reductions** in `reducedDims()` (UMAP, PCA)
+
+## Loading Data
+
+Once downloaded:
+
+```{r}
+#| eval: false
+library(SingleCellExperiment)
+
+# COVID-19 data
+covid_query <- readRDS("data/covid/covid_data_sce.rds")
+covid_ref <- readRDS("data/covid/normal_data_sce.rds")
+
+# MERFISH data
+merfish_query <- readRDS("data/merfish/dss9_data.rds")
+merfish_ref <- readRDS("data/merfish/healthy_data.rds")
+
+# Inspect annotations
+head(colData(covid_query))
+```
+
+## Dataset Details
+
+### COVID-19 PBMC
+
+- **Query**: 6,765 CD14+ monocytes from severe COVID-19 patients
+- **Reference**: 6,804 CD14+ monocytes from healthy controls
+- **Source**: [Ren et al., Cell 2021](https://doi.org/10.1016/j.cell.2021.02.018)
+- **Technology**: 10x Genomics scRNA-seq
+
+### MERFISH Mouse Colitis
+
+- **Query**: 44,324 cells from DSS-treated colon (day 9, peak inflammation)
+- **Reference**: 26,482 cells from healthy colon (day 0)
+- **Source**: [Cadinu et al., Cell 2024](https://doi.org/10.1016/j.cell.2024.02.026)
+- **Technology**: MERFISH spatial transcriptomics
+- **Genes**: 943 genes measured
+
+## Citation
+
+If using these datasets, please cite:
+
+**COVID-19 data:**
+Ren, X., et al. (2021). COVID-19 immune features revealed by a large-scale single-cell transcriptome atlas. *Cell*, 184(7), 1895-1913.
+
+**MERFISH data:**
+Cadinu, P., et al. (2024). Charting the cellular biogeography in colitis reveals fibroblast trajectories and coordinated spatial remodeling. *Cell*, 187(8), 2010-2028.
+
+**scDiagnostics package:**
+[See main citation on home page](index.qmd)
+```
+
