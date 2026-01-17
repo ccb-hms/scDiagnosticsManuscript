@@ -43,13 +43,6 @@ Explore the analysis workflows and results:
 - **[COVID-19 Analysis](results-covid.qmd)** — Annotation quality assessment in dense scRNA-seq data
 - **[MERFISH Analysis](results-merfish.qmd)** — Annotation quality assessment in spatial transcriptomics
 
-## Key Findings
-
-- **Annotation methods show substantial agreement** on major cell types but diverge on rare/inflamed populations
-- **Anomaly detection identifies transcriptomically divergent cells** that correlate with disease state
-- **Inflamed fibroblasts are frequently misclassified** as smooth muscle cells, particularly by distance-based methods
-- **Confidence scores alone are insufficient** — need complementary diagnostics like anomaly detection
-
 ## Citation
 
 If you use this code or data, please cite:
@@ -62,15 +55,15 @@ Christidis, A., Ghazi, A., Chawla, S., Turaga, N., Gentleman, R., & Geistlinger,
 
 **Datasets:**
 
-- Stephenson, E., et al. (2021). Single-cell multi-omics analysis of the immune response in COVID-19. *Nature Medicine*, 27, 904–916.
-- Cadinu, P., et al. (2024). Charting the cellular biogeography in colitis reveals fibroblast trajectories and coordinated spatial remodeling. *Cell*, 187(8), 2010-2028.
+- Stephenson, E., et al. (2021). Single-cell multi-omics analysis of the immune response in COVID-19. *Nature Medicine*, 27, 904–16.
+- Cadinu, P., et al. (2024). Charting the cellular biogeography in colitis reveals fibroblast trajectories and coordinated spatial remodeling. *Cell*, 187(8), 2010-28.
 
 **Annotation Methods:**
 
-- Aran, D., et al. (2019). SingleR: Rapid immunoglobulin and T-cell receptor annotation from single cells. *Nat Immunol*, 20(2), 163–172.
-- Hao, Y., et al. (2021). Integrated analysis of multimodal single-cell data. *Cell*, 184(13), 3573-3587.
+- Aran, D., et al. (2019). SingleR: Rapid immunoglobulin and T-cell receptor annotation from single cells. *Nat Immunol*, 20(2), 163–72.
+- Hao, Y., et al. (2021). Integrated analysis of multimodal single-cell data. *Cell*, 184(13), 3573-87.
 - Domínguez Conde, C., et al. (2022). Cross-tissue immune cell analysis reveals tissue-specific features in humans. *Science*, 376(6594), eabl5197.
-- Lotfollahi, M., et al. (2022). Mapping single-cell data to reference atlases by transfer learning. *Nat Biotechnol*, 40(1), 121–130.
+- Lotfollahi, M., et al. (2022). Mapping single-cell data to reference atlases by transfer learning. *Nat Biotechnol*, 40(1), 121–30.
 
 ## Repository
 
