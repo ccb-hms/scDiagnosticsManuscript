@@ -4,27 +4,27 @@ title: "Simulation Analysis"
 
 ## Overview
 
-This page validates `scDiagnostics` core functionality using controlled simulations. Synthetic single-cell data with known ground truth allows us to:
+This page demonstrates `scDiagnostics` core functionality using controlled simulations. Here, we use synthetic single-cell data with known ground truth composition to:
 
-- Verify anomaly detection works correctly on well-behaved data (baseline)
-- Test diagnostic sensitivity when reference is incomplete (missing cell type)
+- Verify anomaly detection works correctly on pre-defined data properties
+- Test diagnostic capabilities for detectiong out-of-reference populations in the query, i.e. situation where the reference is incomplete / misses one or more cell types present in the query
 - Establish baseline metrics before applying to real biological data
-- Understand how diagnostic functions respond to controlled perturbations
+- Understand how diagnostic functions perform on controlled perturbations of the data
 
 ## Simulation Data Generation
 
-We use [**splatter**](https://bioconductor.org/packages/splatter) to generate realistic synthetic scRNA-seq data~\cite{zappia17}. Splatter is a statistical simulation framework that generates single-cell RNA-seq count matrices with user-specified parameters including cell type structure, batch effects, differential expression, and gene-gene correlations. This allows for ground-truth validation where the true cell type identity of every cell is known—impossible with real biological data.
+We use [**splatter**](https://bioconductor.org/packages/splatter) to generate realistic synthetic scRNA-seq data~\cite{zappia17}. Splatter is a statistical simulation framework that generates single-cell RNA-seq count matrices with user-specified parameters including cell type structure, batch effects, differential expression, and gene-gene correlations. This allows for an evalutation where the true cell type identity of every cell is known - an assumption that typically does not apply for real-world data.
 
-**Why synthetic data for validation?**
+**Why synthetic data?**
 
 - **Known ground truth** — Every cell has a definitive true cell type identity
 - **Controlled perturbations** — We can systematically introduce annotation errors (missing cell types) and measure detection sensitivity
 - **Reproducibility** — Results are deterministic and not confounded by biological heterogeneity
-- **Baseline establishment** — Determines what "normal" anomaly detection looks like before analyzing complex real data
+- **Baseline establishment** — Determines expectations for anomaly detection before analyzing complex real data
 
 ## Simulation Design
 
-**Data generation using Splatter:**
+**Data generation using splatter:**
 
 - Three cell types: A, B, C (each ~333 cells)
 - Two batches (reference and query, 500 cells each)
@@ -32,9 +32,9 @@ We use [**splatter**](https://bioconductor.org/packages/splatter) to generate re
 - Strong marker genes for each cell type
 - No outliers or technical artifacts
 
-**Annotation method:**
+**Cell type annotation method:**
 
-Query cells are annotated using [**SingleR**](https://bioconductor.org/packages/SingleR)~\cite{aran19}, a reference-based annotation tool that correlates query cell expression against reference pseudobulk profiles. SingleR provides a practical test case for evaluating annotation quality diagnostics.
+Query cells are annotated using [**SingleR**](https://bioconductor.org/packages/SingleR)~\cite{aran19}, a reference-based annotation tool that correlates query cell expression against reference pseudobulk profiles. This provides a practical test case for evaluating annotation diagnostics.
 
 **Scenario 1: Baseline (Identical Cell Types)**
 

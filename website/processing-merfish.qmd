@@ -4,11 +4,11 @@ title: "MERFISH Processing"
 
 ## Overview
 
-This page describes the data processing workflow for the MERFISH mouse colon IBD dataset. The raw data is accessed via the Bioconductor `MerfishData` package and undergoes filtering, quality control, and normalization to generate the final reference (healthy) and query (DSS-induced colitis) datasets.
+This page describes the data processing workflow for the MERFISH mouse colitis dataset. The raw data is obtained through the Bioconductor `MerfishData` package and undergoes filtering, quality control, and normalization to generate the fully-processed analysis-ready reference (healthy) and query (DSS-induced colitis) datasets.
 
 ## Data Source
 
-The raw dataset is provided by the `MerfishData` package:
+The raw dataset is available through `MerfishData` R/Bioconductor package:
 
 **Package:** [MerfishData](https://bioconductor.org/packages/MerfishData)
 
@@ -20,7 +20,7 @@ The raw dataset is provided by the `MerfishData` package:
 
 ## Processing Pipeline
 
-The workflow is executed through a single comprehensive R script:
+The workflow is executed through a single R script:
 
 **File:** `R/merfish/Data QC and Processing.R`
 
@@ -36,12 +36,10 @@ spe <- MouseColonIbdCadinu2024()
 
 Then filter for:
 
-- **Slice:** Tissue slice 2 (consistent sampling region)
+- **Slice:** Tissue slice 2 
 - **Single mouse per condition:**
-  - Healthy: Mouse ID 082421_D0_m6
+  - Healthy (Day 0): Mouse ID 082421_D0_m6
   - DSS-treated (Day 9): Mouse ID 062221_D9_m3
-
-This approach avoids batch effects from comparing multiple mice while retaining biological replicates within each condition.
 
 ### Step 2: Quality Control Filtering
 
@@ -53,13 +51,13 @@ Apply adaptive QC thresholds to remove low-quality cells:
 
 ### Step 3: Biological Filtering (Reference Only)
 
-**Reference dataset only:** Remove inflammation-associated cell states from the healthy tissue using the `addMergedCellTypes()` function with MERFISH-specific mappings:
+**Reference dataset only:** Remove any cells labeled as inflammation-associated from the healthy reference using the `addMergedCellTypes()` function including:
 
 - IAE (Inflamed Epithelial)
 - IAF (Inflamed Fibroblast)
 - IASMC (Inflamed SMC)
 
-This ensures the reference represents truly quiescent, healthy tissue without residual inflammation signals. Query cells retain all cell states.
+as those were considered artifacts from the manual-marker based annotation performed by the authors on the overall clustering of cells across timepoints.
 
 ### Step 4: Normalization
 
@@ -81,16 +79,16 @@ Uses the `addMergedCellTypes()` function with MERFISH-specific mapping rules to 
 
 Cell type groups include: Fibroblast, Inflamed Fibroblast, Smooth Muscle, Inflamed SMC, Epithelial, Inflamed Epithelial, Stem/TA, Immune lineages (Neutrophil, Macrophage, etc.), Endothelial, and others.
 
-### Step 7: Final Formatting
+### Step 7: Formatting & Cleaning
 
 - Subset metadata to essential columns (cell type, sample info)
 - Convert assays to in-memory sparse matrices (required for downstream tools like scVI)
 - Remove alternative experiments to reduce file size
 - Add standardized cell names
 
-## Final Datasets
+## Fully-processed analysis-ready datasets
 
-Both output objects are `SpatialExperiment` format with:
+Both output objects are in `SpatialExperiment` format with:
 
 - **Assays:** `counts` (raw) and `logcounts` (log-normalized)
 - **Spatial data:** X/Y coordinates retained
@@ -99,18 +97,16 @@ Both output objects are `SpatialExperiment` format with:
   - Cell type (tier2 and tier2_merged)
   - Mouse ID and sample type
 
-- **Reduced dimensions:** PCA (50 components) computed on diagnostic HVGs
+- **Reduced dimensions:** PCA (50 components) computed on selected HVGs
 
 **Dimensions:**
 
-- Reference (Healthy): ~27,140 cells, 943 genes
-- Query (DSS9): ~29,040 cells, 943 genes
+- Reference (Healthy baseline, Day 0): 27,140 cells; 943 genes
+- Query (DSS-induced colitis, Day 9): 29,040 cells; 943 genes
 
 ## Downloading Pre-processed Data
 
-Rather than running this pipeline yourself, download the final processed datasets:
-
-See [Getting Data](data-access.qmd) for download instructions.
+Rather than running this pipeline from scratch (slow), fully processed datasets can be obtained directly following the instructions on the [Data retrieval](data-access.qmd) page (fast).
 
 ## Full Script
 
@@ -122,11 +118,3 @@ Supporting functions:
 
 - `R/auxiliary/addReferencePCA.R` — Diagnostic-aware PCA using union of reference and query HVGs
 - `R/auxiliary/addMergedCellTypes.R` — Cell type categorization with MERFISH-specific mappings
-
-
-
-
-
-
-
-

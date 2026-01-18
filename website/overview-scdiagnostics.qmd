@@ -4,46 +4,46 @@ title: "scDiagnostics Overview"
 
 ## What is scDiagnostics?
 
-**The Problem:** Cell type annotation is a critical step in single-cell RNA-seq analysis. Most researchers use reference-based annotation tools (like `SingleR` or `Azimuth`) to automatically assign cell types to new cells by comparing them to well-characterized reference datasets. However, these tools provide only a cell type label and a confidence score—they don't tell you *why* a cell might be uncertain, or whether the reference and query datasets are fundamentally compatible.
+**The Problem:** Cell type annotation is a critical step in single-cell RNA-seq analysis. Most researchers use reference-based annotation tools (like `SingleR` or `Azimuth`) to automatically assign cell type labels to a new query dataset by comparing the query to a well-characterized reference datasets. However, such an annotation transfer typically only provides a cell type prediction and a confidence score for each query cell — further information as to the causes of prediction uncertainty, or whether the reference and query datasets are compatible enough and suitable for such an annotation transfer in the first place, is typically not provided.
 
-**The Solution:** `scDiagnostics` provides systematic diagnostic tools to evaluate annotation quality beyond simple confidence scores. It helps you:
+**The Solution:** `scDiagnostics` provides systematic diagnostic tools to evaluate cell type annotation that is compatible with major annotation tools, and that complement and go beyond inspection of annotation confidence scores. The package helps to:
 
-- **Assess dataset alignment** — Are your query and reference datasets similar enough for reliable annotation transfer?
-- **Detect anomalous cells** — Identify cells that deviate from reference structure, suggesting novel states, batch effects, or annotation issues
-- **Understand gene expression shifts** — Quantify which genes drive differences between query and reference, and whether these shifts are biological or technical
-- **Compare annotation methods** — Validate results across multiple annotation tools to increase confidence
+- **Project Query onto the Reference** - To identify structural agreements and disagreements between datasets in reduced dimensional space,  
+- **Assess dataset alignment** — Are the query and reference datasets similar enough for reliable annotation transfer?
+- **Detect anomalous cells** — Identify cells that deviate from reference structure, suggesting novel cell states / types, batch effects, or annotation issues
+- **Characterize annotation anomalies** — Determine which genes drive differences between query and reference, and whether these expression changes point to biological or technical factors
 
-For a complete overview of all available functions, visit the [scDiagnostics reference page](https://ccb-hms.github.io/scDiagnostics/reference/index.html) or the [Bioconductor package page](https://www.bioconductor.org/packages/release/bioc/html/scDiagnostics.html).
+For an overview of the available functions, see the [scDiagnostics reference page](https://ccb-hms.github.io/scDiagnostics/reference/index.html) or the [Bioconductor package landing page](https://www.bioconductor.org/packages/release/bioc/html/scDiagnostics.html).
 
-## Before You Start: Data Requirements
+## Before You Start: Input format & requirements
 
 ### What You Need
 
-`scDiagnostics` works with **SingleCellExperiment (SCE)** objects—standard containers for single-cell data in R/Bioconductor. You need:
+`scDiagnostics` accepts the widely-used **SingleCellExperiment (SCE)** data format as input, providing integrated data containers for single-cell data in R/Bioconductor. You need:
 
-1. **A reference SCE object** — Well-annotated cells with known cell type identity
-2. **A query SCE object** — New cells you want to annotate or diagnose
-3. **Both with log-normalized counts** — `scDiagnostics` assumes data is log-transformed (typically `logcounts` assay)
+1. **A reference SCE object** — Expert-annotated dataset eg from reference-atlas collections such as the Human Cell Atlas
+2. **A query SCE object** — Single-cell data from a new experiment you want to analyze
+3. **Both with log-normalized counts** — `scDiagnostics` assumes data is log-transformed (typically `logcounts` assay of the SCE object)
 4. **Both with cell type annotations** — Column(s) in `colData()` containing cell type labels
 
 ### Getting Started
 
 ::: {.callout-tip}
-## Step 1: Install scDiagnostics and Dependencies
+## Step 1: Install scDiagnostics and Required Dependencies
 
-See **[Setup & Installation](setup.qmd)** in the Data & Methods section for complete installation instructions.
+See the **[Setup & Installation](setup.qmd)** page in the Data & Methods tab for detailed installation instructions.
 :::
 
 ::: {.callout-tip}
 ## Step 2: Obtain Pre-processed Data
 
-Pre-processed reference and query SCE objects are available for download. See **[Getting Data](data-access.qmd)** in the Data & Methods section.
+Pre-processed reference and query SCE objects are available for download. See **[Data retrieval](data-access.qmd)** in the Data & Methods tab.
 :::
 
 ::: {.callout-tip}
-## Step 3: Add Cell Type Annotations
+## Step 3: Predict Cell Type Annotations
 
-If your data doesn't yet have annotations, see **[Adding Annotations](adding-annotations.qmd)** in the Data & Methods section to learn how to run SingleR, Azimuth, CellTypist, or scArches.
+If your data doesn't have cell type labels annotated yet, see **[Cell Type Annotation](adding-annotations.qmd)** in the Data & Methods tab to learn how to run SingleR, Azimuth, CellTypist, or scArches.
 :::
 
 ::: {.callout-tip}
@@ -79,7 +79,7 @@ head(colData(covid_data))
 
 ### Step 1: Visualize Query vs. Reference in PCA Space
 
-Visualize how your query cells project onto the reference PCA space to get an intuitive sense of dataset alignment.
+Visualize how the query cells project onto the reference PCA space to get an intuitive sense of dataset alignment and potential dataset incompatibility issues.
 
 ```{r}
 #| eval: false
@@ -149,7 +149,7 @@ Identify which genes drive differences between query and reference using supervi
 #| eval: false
 #| code-fold: false
 
-# Define Yoshida interferon signature genes
+# IFN-response gene signature from Yoshida et al
 ifn_genes <- c(
     "BST2", "CMPK2", "EIF2AK2", "EPSTI1", "HERC5", "IFI35", "IFI44L",
     "IFI6", "IFIT3", "ISG15", "LY6E", "MX1", "MX2", "OAS1", "OAS2",
@@ -251,7 +251,7 @@ This tutorial demonstrates three foundational functions. `scDiagnostics` provide
 - `calculateMMDPValue()` — Maximum mean discrepancy test
 - `calculateCramerPValue()` — Cramer test on multivariate distributions
 
-See the [complete reference](https://ccb-hms.github.io/scDiagnostics/reference/index.html) for full function documentation and [package website](https://ccb-hms.github.io/scDiagnostics/index.html) for additional vignettes.
+See the [complete reference manual](https://ccb-hms.github.io/scDiagnostics/reference/index.html) for individual function documentation and [package website](https://ccb-hms.github.io/scDiagnostics/index.html) for additional analysis vignettes.
 
 ## Full Analyses
 

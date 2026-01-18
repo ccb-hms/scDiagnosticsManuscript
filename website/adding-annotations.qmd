@@ -1,16 +1,17 @@
 ---
-title: "Adding Annotations"
+title: "Cell type annotation"
 ---
 
 ## Overview
 
-This page describes how to add cell type annotations from four popular tools (Azimuth, SingleR, CellTypist, and scArches) to your processed data. The workflow applies these tools to assign cell types to cells in your query dataset using reference data as a guide.
+This page describes how to predict cell type labels with four popular annotation tools (Azimuth, SingleR, CellTypist, and scArches) for the preprocessed data. The workflow applies these tools to assign cell types to cells in the query dataset based on the cell type categories in the reference data.
 
-All annotation methods are applied to the same query and reference datasets, allowing for direct comparison of annotation quality across methods.
+
+All four annotation tools are applied to the same query and reference datasets and can be directly assessed with the diagnostic functionality from `scDiagnostics`.
 
 ## Workflow Summary
 
-For each annotation method, the workflow follows these steps:
+Irrespective of the annotation tool, the workflow always consists of the following steps:
 
 1. **Data Preparation** — Format data for the annotation tool
 2. **Run Annotation** — Apply the annotation method
@@ -22,7 +23,7 @@ For some methods (Azimuth, CellTypist, scArches), a preliminary step creates a r
 
 ## Method 1: Azimuth (R-based)
 
-**What it does:** Performs reference-based mapping using weighted nearest neighbors after dimensionality alignment.
+**What it does:** Performs reference-based mapping using weighted nearest neighbors after dimensionality reduction.
 
 ### Step 1a: Create Azimuth Reference (Run Once)
 
@@ -33,27 +34,27 @@ Before annotating query data, you must create an Azimuth reference from your hea
 **Key steps:**
 
 - Loads healthy reference data
-- Runs SCTransform (standardized normalization)
+- Runs SCTransform (standard normalization)
 - Computes PCA (50 dimensions)
 - Generates UMAP in reference space
 - Creates searchable Azimuth reference index
 
 **Key parameters:**
 
-- 3,000 variable features (standard for reproducibility)
+- 3,000 variable features (for reproducibility)
 - 50 PCA dimensions
 - 300 UMAP epochs (optimized for efficiency)
 - 100 k-neighbors for robustness
 
 **Output:** Creates `data/covid/Azimuth/custom_azimuth_reference/` with reference files and metadata.
 
-**Note:** This step only needs to run once per reference dataset.
+**Note:** This step only needs to be run once per reference dataset.
 
 ### Step 1b: Annotate Query Data
 
 **Scripts:**
 
-- `R/auxiliary/performAzimuthAnnotation.R` — Core annotation function
+- `R/auxiliary/performAzimuthAnnotation.R` — Core annotation functionality
 - `R/covid/Add R (Azimuth and SingleR) Annotations.R` — Main execution script
 
 **Key features:**
@@ -85,7 +86,7 @@ Before annotating query data, you must create an Azimuth reference from your hea
 **Key features:**
 
 - Uses Spearman correlation and differential expression analysis
-- Intelligent subsampling: preserves rare cell types while sampling common types proportionally
+- Conservative subsampling: preserves rare cell types while sampling common types proportionally
 - Produces confidence scores via "delta scores"
 - No separate reference preparation needed
 
@@ -173,7 +174,7 @@ Step 3: Integrate predictions and embeddings (h5ad → R)
 
 ## Merged Annotations
 
-All methods create merged versions of their annotations by collapsing fine-grained cell types into broader categories. These are added automatically by the `addMergedCellTypes()` function:
+All tools also provided merged versions of the predicted cell type labels by collapsing fine-grained assignments into broader categories. These are added automatically by the `addMergedCellTypes()` function:
 
 - Aggregates related cell types (e.g., all T cell subtypes → "T cell")
 - Dataset-specific mapping rules (COVID vs. MERFISH)
@@ -185,7 +186,7 @@ All methods create merged versions of their annotations by collapsing fine-grain
 
 ---
 
-## Running the Annotations
+## Performing cell type annotation
 
 ### COVID-19 Data:
 
@@ -214,18 +215,18 @@ The only difference: uses `tier2` as the reference annotation column instead of 
 
 ## Annotation Comparison
 
-After running all four methods, your SCE object will contain:
+After running all four annotation tools, the resulting SCE object contains:
 
-- 4 annotation systems (Azimuth L1, Azimuth L2, SingleR, CellTypist, scArches)
+- Fine-grained cell type labels (Azimuth L1, Azimuth L2, SingleR, CellTypist, scArches)
 - 4 merged annotation columns (collapsed categories)
 - 5 confidence/uncertainty score columns
 - UMAP coordinates from scArches
 
-This allows you to:
+This can be used to:
 
-- Compare which methods agree/disagree
-- Assess annotation confidence
-- Investigate discordant cells using `scDiagnostics`
+- Explore agreements and disagreements between tools
+- Interrogate annotation confidence
+- Perform in-depth assessment of annotation ambiguities with `scDiagnostics`
 
 ---
 
@@ -233,5 +234,5 @@ This allows you to:
 
 Once annotations are added, proceed to:
 
-- [scDiagnostics Overview](overview-scdiagnostics.qmd) — Learn about anomaly detection
-- [Results](results-covid.qmd) or [Results](results-merfish.qmd) — Analyze annotation patterns
+- [scDiagnostics Overview](overview-scdiagnostics.qmd) — Learn about core diagnostic functionality of scDiagnostics
+- [Results](results-covid.qmd) or [Results](results-merfish.qmd) — Perform diagnostic assessments of cell type annotation for two real-world single-cell datasets
