@@ -31,25 +31,25 @@ For a complete overview of all available functions, visit the [scDiagnostics ref
 ::: {.callout-tip}
 ## Step 1: Install scDiagnostics and Dependencies
 
-See **[Setup & Installation](../setup.qmd)** in the Data & Methods section for complete installation instructions.
+See **[Setup & Installation](setup.qmd)** in the Data & Methods section for complete installation instructions.
 :::
 
 ::: {.callout-tip}
 ## Step 2: Obtain Pre-processed Data
 
-Pre-processed reference and query SCE objects are available for download. See **[Getting Data](../data-access.qmd)** in the Data & Methods section.
+Pre-processed reference and query SCE objects are available for download. See **[Getting Data](data-access.qmd)** in the Data & Methods section.
 :::
 
 ::: {.callout-tip}
 ## Step 3: Add Cell Type Annotations
 
-If your data doesn't yet have annotations, see **[Adding Annotations](../adding-annotations.qmd)** in the Data & Methods section to learn how to run SingleR, Azimuth, CellTypist, or scArches.
+If your data doesn't yet have annotations, see **[Adding Annotations](adding-annotations.qmd)** in the Data & Methods section to learn how to run SingleR, Azimuth, CellTypist, or scArches.
 :::
 
 ::: {.callout-tip}
 ## Step 4: Prepare Data for Analysis
 
-See **[COVID-19 Processing](../processing-covid.qmd)** and **[MERFISH Processing](../processing-merfish.qmd)** for examples of data preprocessing workflows (QC filtering, normalization, PCA computation).
+See **[COVID-19 Processing](processing-covid.qmd)** and **[MERFISH Processing](processing-merfish.qmd)** for examples of data preprocessing workflows (QC filtering, normalization, PCA computation).
 :::
 
 ## Quick Start Tutorial
@@ -104,6 +104,8 @@ pca_plot
 - **Lower scatter panels:** Individual cells plotted. Query cells (filled circles) nested within reference (hollow circles) = well-matched datasets
 - **Separated distributions:** Query cells shifted far from reference = potential biological shift or technical incompatibility
 
+![PCA projection of query (COVID-19) cells onto reference (healthy) PCA space. Diagonal panels show density distributions; lower panels show individual cells. Query cells (filled purple circles) are projected relative to reference cells (hollow blue circles).](figs/overview_pca_projection.png)
+
 ### Step 2: Detect Anomalous Cells
 
 Use isolation forests to identify cells deviating from the reference transcriptomic structure.
@@ -119,7 +121,8 @@ anomaly_results <- detectAnomaly(
     query_cell_type_col = "azimuth_celltype_l1_merged",
     ref_cell_type_col = "author_cell_type_merged",
     cell_types = "CD14 mono",
-    pc_subset = 1:5
+    pc_subset = 1:5,
+    anomaly_threshold = 0.5,
 )
 
 # Visualize anomaly results
@@ -136,22 +139,37 @@ plot(anomaly_results,
 - **Clustered anomalies** = Coordinated biological response (e.g., disease activation)
 - **Scattered anomalies** = Potential quality control issues
 
+![Anomaly detection results for CD14+ monocytes. Diagonal panels show density distributions of PCs stratified by anomaly status. Lower panels show PCA scatter plots where red dots indicate anomalous cells and green/black dots indicate non-anomalous cells.](figs/overview_anomaly_detection.png)
+
 ### Step 3: Quantify Gene Expression Shifts
 
-Identify which genes drive differences between query and reference.
+Identify which genes drive differences between query and reference using supervised analysis of interferon-stimulated genes.
 
 ```{r}
 #| eval: false
 #| code-fold: false
 
+# Define Yoshida interferon signature genes
+ifn_genes <- c(
+    "BST2", "CMPK2", "EIF2AK2", "EPSTI1", "HERC5", "IFI35", "IFI44L",
+    "IFI6", "IFIT3", "ISG15", "LY6E", "MX1", "MX2", "OAS1", "OAS2",
+    "PARP9", "PLSCR1", "SAMD9", "SAMD9L", "SP110", "STAT1", "TRIM22",
+    "UBE2L6", "XAF1", "IRF7"
+)
+
+# Subset to IFN genes only (supervised analysis)
+healthy_data_ifn <- healthy_data[ifn_genes, ]
+covid_data_ifn <- covid_data[ifn_genes, ]
+
 # Calculate gene expression shifts
 gene_shifts <- calculateGeneShifts(
-    query_data = covid_data,
-    reference_data = healthy_data,
+    query_data = covid_data_ifn,
+    reference_data = healthy_data_ifn,
     query_cell_type_col = "azimuth_celltype_l1_merged",
     ref_cell_type_col = "author_cell_type_merged",
     cell_types = "CD14 mono",
     pc_subset = 1:5,
+    anomaly_threshold = 0.5,
     detect_anomalies = TRUE,
     anomaly_comparison = TRUE
 )
@@ -159,32 +177,43 @@ gene_shifts <- calculateGeneShifts(
 # Visualize as heatmap
 plot(gene_shifts,
      cell_type = "CD14 mono",
-     plot_type = "heatmap",
-     n_genes = 25)
+     plot_type = "heatmap")
+
+# Visualize as barplot
+plot(gene_shifts,
+     cell_type = "CD14 mono",
+     plot_type = "barplot")
 ```
 
 **What you see:**
 
-- **Rows** = Individual genes
+- **Rows** = Individual interferon-stimulated genes
 - **Columns** = Stratified cell groups (all query, anomalous only, non-anomalous only)
 - **Red/warm colors** = Upregulated genes in query
 - **Blue/cool colors** = Downregulated genes in query
-- **Coordinated suppression** (entire pathway downregulated) = Likely biological dysregulation
-- **Scattered patterns** = May indicate quality issues
+- **Coordinated upregulation** (entire pathway activated) = Likely interferon response to disease
+- **Pattern consistency** between heatmap and barplot validates findings
+
+![Heatmap of log2-fold changes for 25 interferon-stimulated genes. Columns represent cell groups: all query cells (left), non-anomalous query cells (center), anomalous query cells (right). Red indicates upregulation, blue indicates downregulation relative to healthy reference.](figs/overview_gene_shifts_heatmap.png)
+
+![Barplot showing log2-fold changes of interferon genes ranked by statistical significance. Red bars show anomalous cells, light red shows non-anomalous cells, gray shows all query cells. Nearly all interferon genes show significant upregulation in anomalous cells.](figs/overview_gene_shifts_barplot.png)
 
 ### Step 4: Interpret Results
 
 Answer three questions based on diagnostics:
 
 **Q1: Are reference and query aligned?**
+
 - ✓ YES (overlapping PCA distributions) → Proceed with confidence
 - ✗ NO (separated distributions) → Investigate batch effects before downstream analysis
 
 **Q2: Are there anomalous cells?**
+
 - ✓ Few (< 10%) → Data matches reference well
 - ✗ Many (> 30%) → Major transcriptomic shift or reference mismatch
 
 **Q3: What drives anomalies?**
+
 - ✓ Coordinated pathways (gene modules shift together) → Likely biological signal (disease, activation)
 - ✗ Scattered genes → May indicate quality issues or technical artifacts
 
@@ -193,26 +222,31 @@ Answer three questions based on diagnostics:
 This tutorial demonstrates three foundational functions. `scDiagnostics` provides **20+ additional functions** for in-depth analysis:
 
 **Visualization & Exploration**
+
 - `plotCellTypePCA()` — PCA projections with density overlays
 - `plotMarkerExpression()` — Gene expression distributions
 - `plotCellTypeMDS()` — Alternative dimensionality reduction view
 
 **Dataset Alignment Assessment**
+
 - `calculateWassersteinDistance()` — Statistical distance between distributions
 - `comparePCASubspace()` — Compare PC loadings between datasets
 - `calculateAveragePairwiseCorrelation()` — Cell-to-cell similarity scores
 
 **Anomaly & Outlier Detection**
+
 - `detectAnomaly()` — Isolation forest-based anomaly scores
 - `calculateCellDistances()` — Individual cell distances to reference
 - `calculateCellSimilarityPCA()` — Similarity metrics per cell
 
 **Marker Gene Analysis**
-- `calculateGeneShifts()` — Top-loading gene expression changes
+
+- `calculateGeneShifts()` — Gene expression changes
 - `calculateVarImpOverlap()` — Gene importance via random forest
 - `compareMarkers()` — Marker gene agreement between methods
 
 **Statistical Testing**
+
 - `calculateHotellingPValue()` — Hotelling's T² test on PCs
 - `calculateMMDPValue()` — Maximum mean discrepancy test
 - `calculateCramerPValue()` — Cramer test on multivariate distributions
