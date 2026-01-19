@@ -4,7 +4,7 @@ Comprehensive tutorials, analysis code, and reproducible workflows demonstrating
 
 **Manuscript:** Christidis, A., Ghazi, A., Chawla, S., Turaga, N., Gentleman, R., & Geistlinger, L. scDiagnostics: systematic assessment of cell type annotation in single-cell transcriptomics data. *Submitted*.
 
-**Website:** [https://ccb-hms.github.io/scDiagnosticsManuscript/](https://ccb-hms.github.io/scDiagnosticsManuscript/)
+**Website:** [Manuscript Website](https://ccb-hms.github.io/scDiagnosticsManuscript/)
 
 ## Overview
 
@@ -12,17 +12,15 @@ We demonstrate scDiagnostics using two real-world single-cell datasets:
 
 **1. COVID-19 PBMC scRNA-seq**
 
-- COVID-19 PBMC scRNA-seq from Stephenson et al. (2021)
-- 48,148 query cells (severe infection) + 23,201 reference cells (healthy controls)
-- 10x Genomics scRNA-seq technology
-- Demonstration of discovery and characterization of disease-associated CD14+ monocyte state
+- Single-cell RNA-seq data from severe COVID-19 patients and healthy controls
+- Source: [CZI CELLxGENE](https://cellxgene.cziscience.com/) (Stephenson et al., 2021)
+- Use case: Discovery and characterization of disease-associated immune cell states
 
 **2. MERFISH Mouse Colitis**
 
-- Imaging-based spatially-resolved single-cell dataset from Cadinu et al. (2024)
-- 29,040 query cells (DSS day 9) + 27,140 reference cells (healthy)
-- MERFISH spatial transcriptomics technology
-- Demonstration of discovery and characterization of disease-associated fibroblast state in mouse colitis model
+- Spatial transcriptomics from a mouse model of inflammatory bowel disease
+- Source: [MerfishData Bioconductor package](https://bioconductor.org/packages/MerfishData) (Cadinu et al., 2024)
+- Use case: Spatial validation of annotation quality and disease-associated cell states
 
 For each dataset, we predict cell type labels using four popular annotation tools:
 
@@ -49,43 +47,73 @@ source("R/merfish/R Package Installation Pipeline.R")
 
 ### Download Data
 
+All pre-processed datasets with annotations are available on [Zenodo](https://doi.org/10.5281/zenodo.18274941):
+
 ```{r}
 #| eval: false
 source("data/downloadData.R")
 downloadData()
 ```
 
-See documentation for details: [Setup & Installation](docs/setup.qmd), [Accessing Data](docs/data-access.qmd)
+This automated script downloads all four SingleCellExperiment/SpatialExperiment objects into your `data/covid/` and `data/merfish/` directories. For manual download, visit the [Zenodo repository](https://doi.org/10.5281/zenodo.18274941).
+
+See detailed instructions: [Setup & Installation](setup.qmd), [Accessing Data](data-access.qmd)
 
 ## Documentation
 
 Full tutorials and analysis code available at [https://ccb-hms.github.io/scDiagnosticsManuscript/](https://ccb-hms.github.io/scDiagnosticsManuscript/):
 
-- **[Setup & Installation](docs/setup.qmd)** — Install R and Python dependencies (GPU recommended for scVI/scArches)
-- **[Accessing Data](docs/data-access.qmd)** — Download pre-processed datasets from Zenodo
-- **[Cell type annotation](docs/adding-annotations.qmd)** — Apply all four annotation methods
-- **[scDiagnostics Overview](docs/overview-scdiagnostics.qmd)** — Introduction to diagnostic framework
-- **[COVID-19 Analysis](docs/results-covid.qmd)** — Annotation assessment in scRNA-seq
-- **[MERFISH Analysis](docs/results-merfish.qmd)** — Annotation assessment in spatial transcriptomics
-- **[Annotation Tool Diagnostics](docs/annotation-diagnostics.qmd)** — Complementary metrics across tools
+### Setup & Methods
 
-## System Requirements
+Analysis environment setup, data retrieval, and reproducible analysis workflows:
 
-- **R:** Version 4.2 or later
-- **Python:** Version 3.9 (for annotation pipelines)
-- **GPU:** NVIDIA GPU with CUDA 11.8+ (required for scVI/scArches; tested on NVIDIA L40S on HMS O2 cluster)
-- **Memory:** 16+ GB RAM (40+ GB for GPU annotation)
-- **Disk:** ~50 GB for data + outputs
+- **[Setup & Installation](setup.qmd)** — Install R and Python dependencies (GPU recommended for scVI/scArches)
+- **[Accessing Data](data-access.qmd)** — Download pre-processed datasets from Zenodo
+- **[Cell type annotation](adding-annotations.qmd)** — Apply all four annotation methods to query data
 
-### Citation
+### Tutorials & Workflows
 
-If you use the code or data from this repository, we kindly ask that you cite our manuscript (details to be added upon publication).
+Quick start, core functionality, and common analysis workflows:
+
+- **[scDiagnostics Overview](overview-scdiagnostics.qmd)** — Introduction to diagnostic framework and key concepts
+- **[COVID-19 Analysis](results-covid.qmd)** — Annotation assessment and anomaly detection in scRNA-seq data
+- **[MERFISH Analysis](results-merfish.qmd)** — Annotation assessment and anomaly detection in spatial transcriptomics data
+- **[Exploring Annotation Tool Diagnostics](annotation-diagnostics.qmd)** — Complementary aspects of scDiagnostics and built-in quality metrics from major annotation tools
+
+
+
+## Installation
+
+### R Packages
+
+All required R packages are automatically installed by running:
+
+```{r}
+#| eval: false
+source("R/covid/R Package Installation Pipeline.R")
+source("R/merfish/R Package Installation Pipeline.R")
+```
+
+### Python Environment
+
+For GPU-accelerated scVI/scArches annotation:
+
+```bash
+conda env create -f environment-scvi.yml
+conda activate scvi-env
+```
+
+See [Setup & Installation](setup.qmd) for detailed instructions.
+
+## Citation
+
+If you use this code, data, or analyses, please cite:
 
 ```bibtex
 @article{christidis2024scDiagnostics,
   author = {Christidis, A. and Ghazi, A. and Chawla, S. and Turaga, N. and Gentleman, R. and Geistlinger, L.},
   title = {scDiagnostics: systematic assessment of cell type annotation in single-cell transcriptomics data},
-  year = {2024},
+  year = {2026},
   note = {Submitted}
 }
 ```
@@ -99,11 +127,3 @@ If you use the code or data from this repository, we kindly ask that you cite ou
 ## Contact
 
 For questions or feedback, please [open an issue](https://github.com/ccb-hms/scDiagnosticsManuscript/issues) on GitHub.
-
-
-
-
-
-
-
-
