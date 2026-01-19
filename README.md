@@ -4,7 +4,7 @@ Comprehensive tutorials, analysis code, and reproducible workflows demonstrating
 
 **Manuscript:** Christidis, A., Ghazi, A., Chawla, S., Turaga, N., Gentleman, R., & Geistlinger, L. scDiagnostics: systematic assessment of cell type annotation in single-cell transcriptomics data. *Submitted*.
 
-**Website:** [**Manuscript Website**](https://ccb-hms.github.io/scDiagnosticsManuscript/)
+**Analysis and Results:** [**Manuscript Website**](https://ccb-hms.github.io/scDiagnosticsManuscript/)
 
 ## Overview
 
