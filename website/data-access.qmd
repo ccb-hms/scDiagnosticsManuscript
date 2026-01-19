@@ -98,11 +98,11 @@ If using these datasets, please cite:
 
 **COVID-19 data:**
 
-Stephenson, E., et al. (2021). Single-cell multi-omics analysis of the immune response in COVID-19. *Nature Medicine*, 27, 904–916.
+Stephenson, E., et al. (2021). Single-cell multi-omics analysis of the immune response in COVID-19. *Nature Medicine*, 27, 904–16.
 
 **MERFISH data:**
 
-Cadinu, P., et al. (2024). Charting the cellular biogeography in colitis reveals fibroblast trajectories and coordinated spatial remodeling. *Cell*, 187(8), 2010-2028.
+Cadinu, P., et al. (2024). Charting the cellular biogeography in colitis reveals fibroblast trajectories and coordinated spatial remodeling. *Cell*, 187(8), 2010-28.
 
 Geistlinger, L., Moffitt, J., & Gentleman, R. (2024). MerfishData: Collection of public MERFISH datasets. R package version 1.8.0. [Bioconductor](https://bioconductor.org/packages/MerfishData)
 

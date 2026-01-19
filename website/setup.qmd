@@ -8,49 +8,53 @@ This page provides instructions for setting up the computational environment nee
 
 ## Quick Start
 
-If you're primarily intersted in running the tutorials on pre-processed data (fast), you only need the **R dependencies**. If you also want to preprocess the data from scratch (slow), you will need go through the full **R + Python** setup.
+If you're primarily interested in running the tutorials on pre-processed data (fast), you only need the **R dependencies**. If you also want to preprocess the data from scratch (slow), you will need to complete the full **R + Python** setup.
 
 ## Part 1: R Packages
 
-All R dependencies can be installed with a single setup script.
+All R dependencies can be installed with a single setup script. The package requirements are largely identical for both COVID-19 and MERFISH analyses.
 
 ### Installation Script
 
-Run this R script once to install all required packages for the COVID scRNA-seq analysis:
+Run this R script once to install all required packages:
 
 ```{r}
 #| eval: false
+# For COVID-19 scRNA-seq analysis
 source("R/covid/R Package Installation Pipeline.R")
 ```
 
-Or for the MERFISH colitis analysis:
+Or equivalently for MERFISH colitis analysis:
 
 ```{r}
 #| eval: false
+# For MERFISH spatial transcriptomics analysis
 source("R/merfish/R Package Installation Pipeline.R")
 ```
 
-**Note:** Both scripts install largely the same packages. Running either one will set you up for both COVID-19 and MERFISH analyses.
+**Note:** Both scripts install the same core packages with identical versions. Running either one will set you up for both analyses.
 
 ### What Gets Installed
 
-**From CRAN:**
+**From CRAN (15 packages):**
+
 - Data manipulation: `dplyr`, `tidyr`, `tibble`  
 - Matrix operations: `Matrix`  
-- Utilities: `reticulate`, `remotes`, `here`, `ggplot2`, `patchwork`, `viridis`
+- Visualization: `ggplot2`, `cowplot`, `patchwork`, `GGally`, `ggridges`, `pheatmap`, `circlize`, `viridis`
+- Utilities: `reticulate`, `remotes`, `here`
 
-**From Bioconductor:**
+**From Bioconductor (14 packages):**
 
-- Data: `MerfishData`
-- Infrastructure: `SingleCellExperiment`, `SpatialExperiment`, `HDF5Array`, `BiocParallel`
+- Infrastructure: `SingleCellExperiment`, `SpatialExperiment`, `HDF5Array`, `DelayedArray`, `BiocParallel`, `BiocSingular`
 - Analysis: `scran`, `scater`, `SingleR`
-- Utilities: `biomaRt`, `zellkonverter`  
+- Visualization: `ComplexHeatmap`
+- Utilities: `biomaRt`, `zellkonverter`, `MerfishData`  
+- Diagnostics: `scDiagnostics` (devel v1.5.1)
 
-**From GitHub:**
+**From GitHub (2 packages):**
 
 - `Seurat` (v5.3.1.0 - specific version for Azimuth compatibility)
 - `Azimuth` (reference-based annotation)
-- `scDiagnostics` (anomaly detection)
 
 ### Checking Installation
 
@@ -73,9 +77,11 @@ cat("✓ All R packages installed and loaded successfully!\n")
 
 Only needed if you run CellTypist or scVI/scArches annotation from scratch.
 
-### Option A: scVI/scArches via Conda
+### Option A: scVI/scArches via Conda (GPU-Accelerated)
 
-This is the **recommended approach** for the complete pipeline.
+This is the **recommended approach** for the complete preprocessing pipeline.
+
+**Important:** scVI/scArches is computationally intensive and is designed to run on GPU hardware. We performed all analyses on GPU nodes (NVIDIA L40S GPUs on HMS O2 cluster). CPU-only execution will be significantly slower.
 
 **Step 1:** Create the conda environment
 
@@ -92,13 +98,20 @@ conda activate scvi-env
 The `environment-scvi.yml` file is in the repository root and includes:
 
 - Python 3.9
-- `scvi-tools` and `scarches` (annotation tools)
+- `scvi-tools` and `scarches` (GPU-enabled annotation tools)
 - `scanpy` (data analysis)
-- JAX (GPU support, optional)
+- JAX (with GPU support)
+- CUDA Toolkit integration
+
+**GPU Access:** Ensure your compute environment has GPU access. Example SLURM submission on O2:
+
+```bash
+sbatch --gres=gpu:l40s:1 --mem=40G your_script.py
+```
 
 ### Option B: CellTypist Setup
 
-For using CellTypist separately, run the Python environment setup script:
+For using CellTypist separately (CPU-compatible), run the Python environment setup script:
 
 ```{r}
 #| eval: false
@@ -106,24 +119,26 @@ source("R/auxiliary/environmentSetupCellTypist.R")
 environmentSetupCellTypist()
 ```
 
-The `environmentSetupCellTypist()` function
+The `environmentSetupCellTypist()` function:
 
-- detects your Python installation,
-- creates a `celltypist_env` conda environment,
-- installs required packages: `scanpy`, `pandas`, `numpy`, `celltypist`, and
+- detects your Python installation
+- creates a `celltypist_env` conda environment
+- installs required packages: `scanpy`, `pandas`, `numpy`, `celltypist`
 - tests imports and provides manual installation instructions if needed
 
 ### Manual Python Installation
 
-If you prefer a manual setup of the python dependencies:
+If you prefer manual setup:
 
 ```bash
-# For scVI/scArches
+# For scVI/scArches (GPU-enabled)
 conda create -n scvi-env python=3.9
 conda activate scvi-env
-pip install scvi-tools scarches scanpy leidenalg scikit-learn
+pip install scvi-tools scarches scanpy leidenalg scikit-learn jax jaxlib
+```
 
-# For CellTypist
+```bash
+# For CellTypist (CPU-compatible)
 conda create -n celltypist_env python=3.9
 conda activate celltypist_env
 conda install -c conda-forge scanpy pandas numpy
@@ -136,7 +151,8 @@ pip install celltypist
 
 - **R:** Version 4.2 or later
 - **Python:** Version 3.9 (recommended for compatibility)
-- **Memory:** 16+ GB RAM recommended
+- **Memory:** 16+ GB RAM for R, 40+ GB RAM for GPU-enabled scVI/scArches
+- **GPU:** NVIDIA GPU with CUDA 11.8+ (required for scVI/scArches)
 - **Disk:** ~50 GB for raw data + processed outputs
 
 ## Troubleshooting
@@ -152,6 +168,7 @@ pip install celltypist
 - Ensure conda is installed: `conda --version`
 - Clear conda cache: `conda clean --all`
 - Reinstall environment: `conda env remove -n scvi-env && conda env create -f environment-scvi.yml`
+- Verify GPU access: `nvidia-smi` (if running on HPC cluster, check with `module list`)
 
 **reticulate can't find Python:**
 
@@ -162,13 +179,3 @@ In R, explicitly set the Python path:
 library(reticulate)
 use_condaenv("scvi-env")  # or "celltypist_env"
 ```
-
----
-
-## Next Steps
-
-Once installation is complete:
-
-1. **Just want to explore results?** → Go to [Data retrieval](data-access.qmd)
-2. **Want to preprocess data?** → Follow [COVID-19 Processing](processing-covid.qmd) or [MERFISH Processing](processing-merfish.qmd)
-3. **Ready for analysis?** → Start with [scDiagnostics Overview](overview-scdiagnostics.qmd)

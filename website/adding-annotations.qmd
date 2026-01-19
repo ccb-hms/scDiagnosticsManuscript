@@ -4,7 +4,7 @@ title: "Cell type annotation"
 
 ## Overview
 
-This page describes how to predict cell type labels with four popular annotation tools (Azimuth, SingleR, CellTypist, and scArches) for the preprocessed data. The workflow applies these tools to assign cell types to cells in the query dataset based on the cell type categories in the reference data.
+This page describes how to predict cell type labels with four popular annotation tools (`Azimuth`, `SingleR`, `CellTypist`, and `scArches`) for the preprocessed data. The workflow applies these tools to assign cell types to cells in the query dataset based on the cell type categories in the reference data.
 
 
 All four annotation tools are applied to the same query and reference datasets and can be directly assessed with the diagnostic functionality from `scDiagnostics`.
@@ -17,17 +17,17 @@ Irrespective of the annotation tool, the workflow always consists of the followi
 2. **Run Annotation** — Apply the annotation method
 3. **Results Integration** — Add predictions back to your SCE object
 
-For some methods (Azimuth, CellTypist, scArches), a preliminary step creates a reference or sets up the environment.
+For some methods (`Azimuth`, `CellTypist`, `scArches`), a preliminary step creates a reference or sets up the environment.
 
 ---
 
-## Method 1: Azimuth (R-based)
+## Method 1: `Azimuth` (R-based)
 
 **What it does:** Performs reference-based mapping using weighted nearest neighbors after dimensionality reduction.
 
-### Step 1a: Create Azimuth Reference (Run Once)
+### Step 1a: Create `Azimuth` Reference (Run Once)
 
-Before annotating query data, you must create an Azimuth reference from your healthy reference dataset.
+Before annotating query data, you must create an `Azimuth` reference from your healthy reference dataset.
 
 **Script:** `R/covid/Create Azimuth Reference.R`
 
@@ -37,7 +37,7 @@ Before annotating query data, you must create an Azimuth reference from your hea
 - Runs SCTransform (standard normalization)
 - Computes PCA (50 dimensions)
 - Generates UMAP in reference space
-- Creates searchable Azimuth reference index
+- Creates searchable `Azimuth` reference index
 
 **Key parameters:**
 
@@ -74,7 +74,7 @@ Before annotating query data, you must create an Azimuth reference from your hea
 
 ---
 
-## Method 2: SingleR (R-based)
+## Method 2: `SingleR` (R-based)
 
 **What it does:** Correlates cell expression profiles against reference data to assign cell types.
 
@@ -98,7 +98,7 @@ Before annotating query data, you must create an Azimuth reference from your hea
 
 ---
 
-## Method 3: CellTypist (Python-based)
+## Method 3: `CellTypist` (Python-based)
 
 **What it does:** Uses a trained logistic regression classifier to predict cell types.
 
@@ -121,7 +121,7 @@ Step 3: Integrate results (h5ad → R)
 **Key features:**
 
 - Machine learning-based approach
-- Requires Python environment with scanpy and celltypist
+- Requires Python environment with `scanpy` and `celltypist`
 - Memory-efficient data handling (removes non-essential metadata)
 - Produces confidence scores for each prediction
 
@@ -133,13 +133,13 @@ Step 3: Integrate results (h5ad → R)
 
 ---
 
-## Method 4: scArches (Python-based)
+## Method 4: `scArches` (Python-based)
 
 **What it does:** Uses variational autoencoders (VAE) to learn a shared latent space and transfers annotations via weighted k-NN in that space.
 
 **Scripts (in order):**
 
-1. `R/covid/scVI Data Preparation.R` — Selects HVGs, converts to AnnData format
+1. `R/covid/scVI Data Preparation.R` — Selects HVGs, converts to `AnnData` format
 2. `python/covid/scVI_Annotation.py` — Trains VAE on reference, maps query, performs k-NN transfer (Python)
 3. `R/covid/scVI Results Integration.R` — Integrates predictions and UMAP coordinates into SCE
 
@@ -217,10 +217,10 @@ The only difference: uses `tier2` as the reference annotation column instead of 
 
 After running all four annotation tools, the resulting SCE object contains:
 
-- Fine-grained cell type labels (Azimuth L1, Azimuth L2, SingleR, CellTypist, scArches)
+- Fine-grained cell type labels (`Azimuth` L1, `Azimuth` L2, `SingleR`, `CellTypist`, `scArches`)
 - 4 merged annotation columns (collapsed categories)
 - 5 confidence/uncertainty score columns
-- UMAP coordinates from scArches
+- UMAP coordinates from `scArches`
 
 This can be used to:
 

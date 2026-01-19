@@ -45,8 +45,8 @@ Analysis environment setup, data retrival, and reproducible analysis reports wit
 
 - **[Setup & Installation](setup.qmd)** — Install R and Python dependencies and set up the analysis environments
 - **[Data retrieval](data-access.qmd)** — Download pre-processed datasets from Zenodo
-- **[COVID-19 Preprocessing](processing-covid.qmd)** — QC, and preprocessing workflow
-- **[MERFISH Preprocessing](processing-merfish.qmd)** — 
+- **[COVID-19 Preprocessing](processing-covid.qmd)** — QC, and preprocessing workflow for COVID-19 scRNA-seq data
+- **[MERFISH Preprocessing](processing-merfish.qmd)** — QC, and preprocessing workflow for MERFISH colitis spatial transcriptomics data
 - **[Cell type annotation](adding-annotations.qmd)** — Apply all four annotation methods to query data
 
 ### Tutorials & Workflows
@@ -55,8 +55,8 @@ Quick start, core functionality, and common analysis workflows:
 
 - **[scDiagnostics Overview](overview-scdiagnostics.qmd)** — Introduction to diagnostic framework and key concepts
 - **[Simulation Analysis](results-simulation.qmd)** — Demonstration of common challenges in reference-based annotation transfer using synthetic data and controlled perturbations
-- **[COVID-19 Analysis](results-covid.qmd)** — Annotation assessment in COVID scRNA-seq data
-- **[MERFISH Analysis](results-merfish.qmd)** — Annotation assessment in colitis spatial transcriptomics data
+- **[COVID-19 Analysis](results-covid.qmd)** — Annotation assessment in COVID-19 scRNA-seq data
+- **[MERFISH Analysis](results-merfish.qmd)** — Annotation assessment in MERFISH colitis spatial transcriptomics data
 - **[Exploring Annotation Tool Diagnostics](annotation-diagnostics.qmd)** — Demonstrate complementary aspects of scDiagnostics and built-in quality metrics from major annotation tools
 
 ## Citation

@@ -31,7 +31,7 @@ website:
           - href: results-merfish.qmd
             text: "MERFISH"
           - href: annotation-diagnostics.qmd
-            text: "Exploring Tool Diagnostics"
+            text: "Exploring Annotation Tool Diagnostics"
   repo-url: https://github.com/ccb-hms/scDiagnosticsManuscript
   repo-actions: [edit, issue]
 

@@ -13,7 +13,7 @@ This page demonstrates `scDiagnostics` core functionality using controlled simul
 
 ## Simulation Data Generation
 
-We use [**splatter**](https://bioconductor.org/packages/splatter) to generate realistic synthetic scRNA-seq data~\cite{zappia17}. Splatter is a statistical simulation framework that generates single-cell RNA-seq count matrices with user-specified parameters including cell type structure, batch effects, differential expression, and gene-gene correlations. This allows for an evalutation where the true cell type identity of every cell is known - an assumption that typically does not apply for real-world data.
+We use [**splatter**](https://bioconductor.org/packages/splatter) to generate realistic synthetic scRNA-seq data. Splatter is a statistical simulation framework that generates single-cell RNA-seq count matrices with user-specified parameters including cell type structure, batch effects, differential expression, and gene-gene correlations. This allows for an evalutation where the true cell type identity of every cell is known - an assumption that typically does not apply for real-world data.
 
 **Why synthetic data?**
 
@@ -34,7 +34,7 @@ We use [**splatter**](https://bioconductor.org/packages/splatter) to generate re
 
 **Cell type annotation method:**
 
-Query cells are annotated using [**SingleR**](https://bioconductor.org/packages/SingleR)~\cite{aran19}, a reference-based annotation tool that correlates query cell expression against reference pseudobulk profiles. This provides a practical test case for evaluating annotation diagnostics.
+Query cells are annotated using [**SingleR**](https://bioconductor.org/packages/SingleR), a reference-based annotation tool that correlates query cell expression against reference pseudobulk profiles. This provides a practical test case for evaluating annotation diagnostics.
 
 **Scenario 1: Baseline (Identical Cell Types)**
 
