@@ -4,7 +4,7 @@ title: "Accessing Data"
 
 ## Quick Start: Download Data
 
-All processed datasets with cell type annotations are available on Zenodo.
+All processed datasets with precomputed cell type annotations are available on [Zenodo](https://doi.org/10.5281/zenodo.18274941).
 
 ### Automated Download (Recommended)
 
@@ -16,18 +16,18 @@ source("data/downloadData.R")
 downloadData()
 ```
 
-This will download all four SCE/SpatialExperiment objects into your `data/covid/` and `data/merfish/` directories.
+This will download all four SingleCellExperiment/SpatialExperiment objects into your `data/covid/` and `data/merfish/` directories.
 
 ### Manual Download
 
-Visit the [Zenodo repository](https://doi.org/10.5281/zenodo.18274942) and download:
+Visit the [Zenodo repository](https://doi.org/10.5281/zenodo.18274941) and download:
 
 -   `covid_data_sce.rds` — COVID-19 PBMC query (severe infection)
 -   `normal_data_sce.rds` — Healthy PBMC reference
 -   `dss9_data.rds` — MERFISH colitis query (day 9)
 -   `healthy_data.rds` — Healthy colon MERFISH reference
 
-Place files in:
+Place files under:
 
 ```         
 data/
@@ -41,7 +41,7 @@ data/
 
 ## Data Contents
 
-All objects are `SingleCellExperiment` or `SpatialExperiment` format with:
+All objects are in `SingleCellExperiment` or `SpatialExperiment` format with the following components:
 
 -   **Expression data** in `assays()` (counts and logcounts)
 -   **Cell metadata** in `colData()` including:
@@ -52,11 +52,11 @@ All objects are `SingleCellExperiment` or `SpatialExperiment` format with:
     -   scArches predictions (`scvi_prediction_merged`)
     -   Method-specific confidence/uncertainty scores
 -   **Dimensionality reductions** in `reducedDims()` (PCA, UMAP)
--   **Spatial coordinates** (MERFISH only)
+-   **Spatial coordinates** in `spatialCoords()` (MERFISH only)
 
 ## Loading Data
 
-Once downloaded:
+Once the data has been obtained, read into R with:
 
 ```{r}
 #| eval: false
@@ -86,11 +86,11 @@ head(colData(covid_query))
 
 ### MERFISH Mouse Colitis
 
--   **Query**: 29,040 cells from DSS-treated colon (day 9, peak inflammation)
--   **Reference**: 27,140 cells from healthy colon (day 0)
--   **Total genes**: 943 (MERFISH panel)
+-   **Query**: 29,040 cells from DSS-treated mouse colon (day 9, peak inflammation)
+-   **Reference**: 27,140 cells from healthy mouse colon (day 0)
+-   **Total genes**: 943 (MERFISH gene panel)
 -   **Source**: [MerfishData package](https://bioconductor.org/packages/MerfishData) (Geistlinger et al., 2024); original data from [Cadinu et al., Cell 2024](https://doi.org/10.1016/j.cell.2024.02.026)
--   **Technology**: MERFISH spatial transcriptomics
+-   **Technology**: MERFISH imaging-based spatial transcriptomics
 
 ## Citation
 

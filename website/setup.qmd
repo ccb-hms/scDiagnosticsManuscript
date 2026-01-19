@@ -4,11 +4,11 @@ title: "Setup & Installation"
 
 ## Overview
 
-This page provides instructions for setting up the computational environment needed to run the analysis tutorials and preprocessing pipelines. The workflow requires both R and Python packages.
+This page provides instructions for setting up the computational environment needed to run the preprocessing pipelines and analysis tutorials. The workflow requires both R and Python packages.
 
 ## Quick Start
 
-If you're only downloading pre-processed data and running tutorials, you mainly need **R packages**. If you're preprocessing data from scratch, you'll need the full **R + Python** setup.
+If you're primarily intersted in running the tutorials on pre-processed data (fast), you only need the **R dependencies**. If you also want to preprocess the data from scratch (slow), you will need go through the full **R + Python** setup.
 
 ## Part 1: R Packages
 
@@ -16,14 +16,14 @@ All R dependencies can be installed with a single setup script.
 
 ### Installation Script
 
-Run this R script once to install all required packages:
+Run this R script once to install all required packages for the COVID scRNA-seq analysis:
 
 ```{r}
 #| eval: false
 source("R/covid/R Package Installation Pipeline.R")
 ```
 
-Or for MERFISH-specific analysis:
+Or for the MERFISH colitis analysis:
 
 ```{r}
 #| eval: false
@@ -35,16 +35,16 @@ source("R/merfish/R Package Installation Pipeline.R")
 ### What Gets Installed
 
 **From CRAN:**
-- Data manipulation: `dplyr`, `tidyr`, `tibble`
-- Matrix operations: `Matrix`
+- Data manipulation: `dplyr`, `tidyr`, `tibble`  
+- Matrix operations: `Matrix`  
 - Utilities: `reticulate`, `remotes`, `here`, `ggplot2`, `patchwork`, `viridis`
 
 **From Bioconductor:**
 
-- Core: `SingleCellExperiment`, `SpatialExperiment`
-- Analysis: `scran`, `scater`, `SingleR`, `biomaRt`
-- I/O: `zellkonverter`, `HDF5Array`, `MerfishData`
-- Parallel: `BiocParallel`
+- Data: `MerfishData`
+- Infrastructure: `SingleCellExperiment`, `SpatialExperiment`, `HDF5Array`, `BiocParallel`
+- Analysis: `scran`, `scater`, `SingleR`
+- Utilities: `biomaRt`, `zellkonverter`  
 
 **From GitHub:**
 
@@ -54,7 +54,7 @@ source("R/merfish/R Package Installation Pipeline.R")
 
 ### Checking Installation
 
-After running the script, verify everything installed:
+After running the script, verify everything is installed correctly:
 
 ```{r}
 #| eval: false
@@ -64,14 +64,14 @@ library(scran)
 library(Azimuth)
 library(scDiagnostics)
 
-cat("✓ All R packages loaded successfully!\n")
+cat("✓ All R packages installed and loaded successfully!\n")
 ```
 
 ---
 
 ## Part 2: Python Environment (Optional)
 
-Only needed if you're running CellTypist or scVI/scArches annotation from scratch.
+Only needed if you run CellTypist or scVI/scArches annotation from scratch.
 
 ### Option A: scVI/scArches via Conda
 
@@ -93,12 +93,12 @@ The `environment-scvi.yml` file is in the repository root and includes:
 
 - Python 3.9
 - `scvi-tools` and `scarches` (annotation tools)
-- `scanpy` (data handling)
+- `scanpy` (data analysis)
 - JAX (GPU support, optional)
 
 ### Option B: CellTypist Setup
 
-If using CellTypist separately, run the Python environment setup script:
+For using CellTypist separately, run the Python environment setup script:
 
 ```{r}
 #| eval: false
@@ -106,16 +106,16 @@ source("R/auxiliary/environmentSetupCellTypist.R")
 environmentSetupCellTypist()
 ```
 
-This function:
+The `environmentSetupCellTypist()` function
 
-- Detects your Python installation
-- Creates a `celltypist_env` conda environment
-- Installs required packages: `scanpy`, `pandas`, `numpy`, `celltypist`
-- Tests imports and provides manual installation instructions if needed
+- detects your Python installation,
+- creates a `celltypist_env` conda environment,
+- installs required packages: `scanpy`, `pandas`, `numpy`, `celltypist`, and
+- tests imports and provides manual installation instructions if needed
 
 ### Manual Python Installation
 
-If you prefer manual setup:
+If you prefer a manual setup of the python dependencies:
 
 ```bash
 # For scVI/scArches
@@ -141,10 +141,10 @@ pip install celltypist
 
 ## Troubleshooting
 
-**R package installation fails:**
+**R package installation failure:**
 
 - Ensure you have C++ compilers installed (`Rtools` on Windows, `build-essential` on Linux, Xcode on Mac)
-- Update R to the latest stable version
+- Update R to the latest release version
 - Try installing packages individually with `BiocManager::install("package_name")`
 
 **Python environment issues:**
@@ -169,6 +169,6 @@ use_condaenv("scvi-env")  # or "celltypist_env"
 
 Once installation is complete:
 
-1. **Just want to explore results?** → Go to [Getting Data](data-access.qmd)
+1. **Just want to explore results?** → Go to [Data retrieval](data-access.qmd)
 2. **Want to preprocess data?** → Follow [COVID-19 Processing](processing-covid.qmd) or [MERFISH Processing](processing-merfish.qmd)
 3. **Ready for analysis?** → Start with [scDiagnostics Overview](overview-scdiagnostics.qmd)

@@ -4,33 +4,33 @@ title: "scDiagnostics Manuscript"
 
 ## Welcome
 
-This website accompanies the manuscript "*scDiagnostics: systematic assessment of cell type annotation in single-cell transcriptomics data*" (Christidis et al., in review). 
+This website accompanies the manuscript "*scDiagnostics: systematic assessment of cell type annotation in single-cell transcriptomics data*" (Christidis et al., submitted). 
 
-It provides comprehensive tutorials, analysis code, and reproducible workflows demonstrating how [`scDiagnostics`](https://bioconductor.org/packages/scDiagnostics) can evaluate and diagnose automated cell type annotations across different single-cell technologies and biological contexts.
+It provides comprehensive tutorials, analysis code, and reproducible workflows demonstrating how [`scDiagnostics`](https://bioconductor.org/packages/scDiagnostics) can be used to assess automated cell type annotations across different single-cell technologies and experimental conditions.
 
 ## Overview
 
-We demonstrate `scDiagnostics` across three complementary systems:
+We demonstrate the utility of scDiagnostics using a simulated and two different real-world single-cell datasets:
 
-**1. Controlled Simulation With [Splatter](https://www.bioconductor.org/packages/release/bioc/html/splatter.html)**
+**1. Simulated single-cell data with [splatter](https://www.bioconductor.org/packages/splatter)**
 
-- Synthetic data with known cell types and ground truth
-- Controlled introduction of annotation errors
-- Validates core diagnostic functions before real data application
+- Synthetic data with known cell types and ground truth composition
+- Illustration of common challenges of reference-based annotation transfer
+- Demonstration of core diagnostic functionality in a controlled setting
 
-**2. COVID-19 PBMC scRNA-seq** (~48,800 query cells)
+**2. COVID-19 PBMC scRNA-seq**
 
-- Dense, high-cell-count dataset diagnosing annotations from severe COVID-19 infection vs. healthy controls
-- Shows how annotation methods handle disease-driven transcriptomic shifts
-- Real-world application in infectious disease
+- COVID-19 PBMC scRNA-seq atlas from Stephenson et al. (2021)
+- Application to multi-sample multi-condition single-cell RNA sequencing dataset
+- Demonstration of how the package facilitates the discovery and characterization of a disease-associated cell state in COVID-19
 
-**3. MERFISH Mouse Colitis** (~29,000 query cells)
+**3. MERFISH Mouse Colitis**
 
-- Spatial transcriptomics dataset evaluating annotations in DSS-induced inflammatory bowel disease (IBD)
-- Demonstrates performance on targeted gene panels and spatial information
-- Real-world application in chronic inflammation
+- Imaging-based spatially-resolved single-cell dataset of a DSS-induced mouse model of colitis from Cadinu et al. (2024)
+- Demonstration of straightforward application of the diagnostic functionality to spatial transcriptomics data
+- Showcase of how scDiagnostics enables the discovery and characterization of a disease-associated cell state in a mouse model of colitis
 
-For each dataset, we generate annotations using four popular tools and compare their performance:
+For each dataset, we predict cell type labels using four popular annotation tools:
 
 - [**Azimuth**](https://github.com/satijalab/azimuth) — Weighted k-NN mapping
 - [**SingleR**](https://bioconductor.org/packages/SingleR) — Correlation-based assignment
@@ -41,29 +41,29 @@ For each dataset, we generate annotations using four popular tools and compare t
 
 ### Data & Methods
 
-Get started here to set up your environment and understand the data:
+Analysis environment setup, data retrival, and reproducible analysis reports with literate programming outputs:
 
-- **[Setup & Installation](setup.qmd)** — Install R/Python packages and set up environments
-- **[Getting Data](data-access.qmd)** — Download pre-processed datasets from Zenodo
-- **[COVID-19 Processing](processing-covid.qmd)** — Data cleaning, QC, and preprocessing workflow
-- **[MERFISH Processing](processing-merfish.qmd)** — MERFISH-specific processing and biological filtering
-- **[Adding Annotations](adding-annotations.qmd)** — Apply all four annotation methods to query data
+- **[Setup & Installation](setup.qmd)** — Install R and Python dependencies and set up the analysis environments
+- **[Data retrieval](data-access.qmd)** — Download pre-processed datasets from Zenodo
+- **[COVID-19 Preprocessing](processing-covid.qmd)** — QC, and preprocessing workflow
+- **[MERFISH Preprocessing](processing-merfish.qmd)** — 
+- **[Cell type annotation](adding-annotations.qmd)** — Apply all four annotation methods to query data
 
-### Tutorials & Results
+### Tutorials & Workflows
 
-Explore the analysis workflows and results:
+Quick start, core functionality, and common analysis workflows:
 
 - **[scDiagnostics Overview](overview-scdiagnostics.qmd)** — Introduction to diagnostic framework and key concepts
-- **[Simulation Analysis](results-simulation.qmd)** — Validation with synthetic data and controlled perturbations
-- **[COVID-19 Analysis](results-covid.qmd)** — Annotation quality assessment in dense scRNA-seq data
-- **[MERFISH Analysis](results-merfish.qmd)** — Annotation quality assessment in spatial transcriptomics
-- **[Exploring Annotation Tool Diagnostics](annotation-diagnostics.qmd)** — Investigate built-in quality metrics from each annotation method
+- **[Simulation Analysis](results-simulation.qmd)** — Demonstration of common challenges in reference-based annotation transfer using synthetic data and controlled perturbations
+- **[COVID-19 Analysis](results-covid.qmd)** — Annotation assessment in COVID scRNA-seq data
+- **[MERFISH Analysis](results-merfish.qmd)** — Annotation assessment in colitis spatial transcriptomics data
+- **[Exploring Annotation Tool Diagnostics](annotation-diagnostics.qmd)** — Demonstrate complementary aspects of scDiagnostics and built-in quality metrics from major annotation tools
 
 ## Citation
 
-If you use this code or data, please cite:
+If you use this code or data in published research, please cite:
 
-Christidis, A., Ghazi, A., Chawla, S., Turaga, N., Gentleman, R., & Geistlinger, L. (2026). scDiagnostics: diagnostic tools for assessing cell type annotation quality in single-cell RNA-seq data. *In Review*
+Christidis, A., Ghazi, A., Chawla, S., Turaga, N., Gentleman, R., & Geistlinger, L. (2026). scDiagnostics: systematic assessment of cell type annotation in single-cell transcriptomics data. *Submitted*.
 
 **Preprint:** Available at bioRxiv (link pending)
 
@@ -74,7 +74,7 @@ Christidis, A., Ghazi, A., Chawla, S., Turaga, N., Gentleman, R., & Geistlinger,
 - Stephenson, E., et al. (2021). Single-cell multi-omics analysis of the immune response in COVID-19. *Nature Medicine*, 27, 904–16.
 - Cadinu, P., et al. (2024). Charting the cellular biogeography in colitis reveals fibroblast trajectories and coordinated spatial remodeling. *Cell*, 187(8), 2010-28.
 
-**Annotation Methods:**
+**Annotation Tools:**
 
 - Butler, A. et al. (2023). Azimuth: a Shiny app demonstrating a query-reference mapping algorithm for single-cell data. URL [https://github.com/satijalab/azimuth](https://github.com/satijalab/azimuth). R package version 0.5.0.
 - Aran, D., et al. (2019). SingleR: Rapid immunoglobulin and T-cell receptor annotation from single cells. *Nat Immunol*, 20(2), 163–72.
@@ -83,7 +83,7 @@ Christidis, A., Ghazi, A., Chawla, S., Turaga, N., Gentleman, R., & Geistlinger,
 
 ## Repository
 
-**Code and scripts:** [github.com/ccb-hms/scDiagnosticsManuscript](https://github.com/ccb-hms/scDiagnosticsManuscript)
+**Code and Scripts (GitHub):** [github.com/ccb-hms/scDiagnosticsManuscript](https://github.com/ccb-hms/scDiagnosticsManuscript)
 
 **Data (Zenodo):** [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.18274942.svg)](https://doi.org/10.5281/zenodo.18274942)
 

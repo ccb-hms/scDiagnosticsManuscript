@@ -4,11 +4,11 @@ title: "COVID-19 PBMC Processing"
 
 ## Overview
 
-This page describes the data processing workflow for the COVID-19 PBMC dataset. The raw data originates from [CZI CELLxGENE](https://cellxgene.cziscience.com/collections/ddfad306-714d-4cc0-9985-d9072820c530) and undergoes two processing steps to generate the final reference and query datasets used in the analysis.
+This page describes the data processing workflow for the COVID-19 PBMC dataset. The raw data has been obtained from [CZI CELLxGENE](https://cellxgene.cziscience.com/collections/ddfad306-714d-4cc0-9985-d9072820c530) and undergoes two processing steps to generate the final reference and query datasets used in the analysis.
 
 ## Data Source
 
-The raw dataset is downloaded from CZI CELLxGENE:
+The raw dataset can be obtained from CZI CELLxGENE:
 
 **Collection:** [COVID-19 PBMC Single-Cell Data](https://cellxgene.cziscience.com/collections/ddfad306-714d-4cc0-9985-d9072820c530)
 
@@ -18,7 +18,7 @@ The dataset contains monocytes from both healthy controls and severe COVID-19 pa
 
 ## Processing Pipeline
 
-The workflow consists of two sequential R scripts:
+The workflow consists of serial execution of two R scripts:
 
 ### Step 1: Data Cleaning and Subsetting
 
@@ -51,7 +51,7 @@ This script applies QC filters, normalizes data, and prepares reference/query sp
 
 1. **QC filtering:**
 
-   - Cells: Keep those with ≥1000 total UMI counts
+   - Cells: Keep cells with ≥1000 total UMI counts
    - Genes: Keep genes expressed in ≥10 cells
 
 2. **Assay naming and pseudo-count generation:**
@@ -89,25 +89,23 @@ This script applies QC filters, normalizes data, and prepares reference/query sp
 
 ## Final Datasets
 
-Both output objects are `SingleCellExperiment` format with:
+Both output objects are in `SingleCellExperiment` format with the following components:
 
 - **Assays:** `counts` (pseudo-counts) and `logcounts` (log-normalized)
 - **Metadata:** Cell-level annotations including:
   - Disease status (normal vs. COVID-19)
   - Sample ID, cell type, and other clinical metadata
-- **Reduced dimensions:** PCA (50 components) computed on diagnostic HVGs
+- **Reduced dimensions:** PCA (50 components) computed on selected HVGs
 - **Row data:** Gene symbols and metadata
 
 **Dimensions:**
 
-- Reference: 23,201 cells, 18,472  genes
-- Query: 48,148 cells, 18,472 genes
+- Reference: 23,201 cells; 18,472 genes
+- Query: 48,148 cells; 18,472 genes
 
 ## Downloading Pre-processed Data
 
-Rather than running this pipeline yourself, you can download the final processed datasets directly:
-
-See [Getting Data](data-access.qmd) for download instructions.
+Rather than running this pipeline from scratch (slow), fully processed datasets can be obtained directly following the instructions on the [Data retrieval](data-access.qmd) page (fast).
 
 ## Full Scripts
 

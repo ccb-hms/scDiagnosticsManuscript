@@ -4,7 +4,8 @@ title: "MERFISH Colitis Analysis"
 
 ## Overview
 
-This page explores annotation quality and disease mechanisms in spatially-resolved MERFISH data from DSS-induced colitis. We examine fibroblasts across healthy and inflamed tissue, combining cell type annotations, anomaly detection, gene expression analysis, and spatial interaction patterns to understand inflammatory remodeling.
+This page demonstrates the application of `scDiagnostics` to the spatially-resolved MERFISH data from DSS-induced colitis timecourse, comparing imaging-based single-cell measurements from Day 9 (peak induction) to the healthy baseline at Day0. We use a combination of project mapping in reduced dimensional space, anomaly detection, neighborhood enrichment analysis, and cell-cell interaction analysis to illustrate how scDiagnostics can facilitate the detection and characterization of a disease-associate cell state that would be missed by standard reference-based annotation tools.
+
 
 ## Dataset Context
 
@@ -212,12 +213,12 @@ Maps functional fibroblast-immune interactions via six curated ligand-receptor p
 3. **Positional logic (Fig C)** — Enriched at epithelial damage and immune infiltrate
 4. **Functional role (Fig D)** — Enhanced inflammatory and regenerative signaling
 
-**Why these are not misclassified cells:**
+**Why these are likely not misclassified cells:**
 
 - Spatial clustering indicates coordinated response to local signals
-- ECM suppression is biological adaptation to chronic inflammation (reduced structural protein production)
-- Proximity to damage suggests active participation in wound response
-- Ligand-receptor network shows functional engagement with inflammatory milieu
+- ECM suppression is an established signal of adaptation to chronic inflammation (reduced structural protein production)
+- Proximity to damaged tissue suggests active participation in wound response
+- Inferred cell-cell interaction network shows increased interaction with inflammatory milieu
 
 ## Figures Generated
 
