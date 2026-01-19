@@ -4,7 +4,7 @@ Comprehensive tutorials, analysis code, and reproducible workflows demonstrating
 
 **Manuscript:** Christidis, A., Ghazi, A., Chawla, S., Turaga, N., Gentleman, R., & Geistlinger, L. scDiagnostics: systematic assessment of cell type annotation in single-cell transcriptomics data. *Submitted*.
 
-**Website:** [Manuscript Website](https://ccb-hms.github.io/scDiagnosticsManuscript/)
+**Website:** [**Manuscript Website**](https://ccb-hms.github.io/scDiagnosticsManuscript/)
 
 ## Overview
 
@@ -13,7 +13,7 @@ We demonstrate scDiagnostics using two real-world single-cell datasets:
 **1. COVID-19 PBMC scRNA-seq**
 
 - Single-cell RNA-seq data from severe COVID-19 patients and healthy controls
-- Source: [CZI CELLxGENE](https://cellxgene.cziscience.com/) (Stephenson et al., 2021)
+- Source: [CZI CELLxGENE](https://cellxgene.cziscience.com/collections/ddfad306-714d-4cc0-9985-d9072820c530) (Stephenson et al., 2021)
 - Use case: Discovery and characterization of disease-associated immune cell states
 
 **2. MERFISH Mouse Colitis**
