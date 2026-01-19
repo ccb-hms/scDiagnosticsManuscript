@@ -1,5 +1,5 @@
 # -------------------------------------------------------
-# MERFISH Mouse Colon IBD - Supplementary Figure 5
+# MERFISH Mouse Colon IBD - Supplementary Figure 4
 # -------------------------------------------------------
 
 library(SingleCellExperiment)
@@ -87,7 +87,8 @@ ridge_fn <- function(data, mapping, ...) {
             panel.border = element_rect(color = "black", fill = NA, linewidth = 0.5),
             axis.title = element_blank(),
             axis.text.y = element_blank(),
-            axis.ticks.y = element_blank()
+            axis.ticks.y = element_blank(),
+            axis.text.x = element_text(size = 8)
         )
 }
 
@@ -154,7 +155,9 @@ process_annotation_method <- function(method_name,
             oob = scales::squish
         ) +
         theme(legend.position = "right", legend.box = "vertical", 
-              legend.key = element_rect(fill = NA, color = NA))
+              legend.key = element_rect(fill = NA, color = NA),
+              legend.title = element_text(size = 10, face = "bold"),
+              legend.text = element_text(size = 9))
     
     plot_legend <- GGally::grab_legend(legend_plot)
     
@@ -180,8 +183,8 @@ process_annotation_method <- function(method_name,
     ) + 
     theme(
         strip.background = element_rect(fill = "white", color = "black", linewidth = 0.5),
-        strip.text = element_text(color = "black", face = "bold", size = 9),
-        plot.title = element_text(hjust = 0.5, face = "bold", size = 11, color = "#1F2937")
+        strip.text = element_text(color = "black", face = "bold", size = 10),
+        plot.title = element_text(hjust = 0.5, face = "bold", size = 12, color = "#1F2937")
     )
     
     # ===== RIGHT: Anomaly Detection =====
@@ -215,9 +218,9 @@ process_annotation_method <- function(method_name,
     ) + 
         ggtitle(paste0(method_name, " - Anomaly Detection")) +
         theme(
-            plot.title = element_text(hjust = 0.5, face = "bold", size = 11, color = "#1F2937"),
+            plot.title = element_text(hjust = 0.5, face = "bold", size = 12, color = "#1F2937"),
             strip.background = element_rect(fill = "white", color = "black", linewidth = 0.5),
-            strip.text = element_text(color = "black", face = "bold", size = 9)
+            strip.text = element_text(color = "black", face = "bold", size = 10)
         )
     
     return(list(pca_plot = pca_ecm_plot, anomaly_plot = anomaly_plot))
@@ -227,8 +230,8 @@ process_annotation_method <- function(method_name,
 # Process All Methods
 # ____________________
 
-result_singler <- process_annotation_method("SingleR", "singler_annotations_merged")
 result_azimuth <- process_annotation_method("Azimuth", "azimuth_celltype_l1_merged")
+result_singler <- process_annotation_method("SingleR", "singler_annotations_merged")
 result_celltypist <- process_annotation_method("CellTypist", "celltypist_predicted_labels_merged")
 result_scarches <- process_annotation_method("scArches", "scvi_prediction_merged")
 
@@ -237,8 +240,8 @@ result_scarches <- process_annotation_method("scArches", "scvi_prediction_merged
 # ______________________
 
 fig_s4_combined <- plot_grid(
-    ggmatrix_gtable(result_singler$pca_plot), ggmatrix_gtable(result_singler$anomaly_plot),
     ggmatrix_gtable(result_azimuth$pca_plot), ggmatrix_gtable(result_azimuth$anomaly_plot),
+    ggmatrix_gtable(result_singler$pca_plot), ggmatrix_gtable(result_singler$anomaly_plot),
     ggmatrix_gtable(result_celltypist$pca_plot), ggmatrix_gtable(result_celltypist$anomaly_plot),
     ggmatrix_gtable(result_scarches$pca_plot), ggmatrix_gtable(result_scarches$anomaly_plot),
     nrow = 4, ncol = 2, labels = "AUTO",

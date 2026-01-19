@@ -22,17 +22,17 @@ dss9_data <- readRDS("data/merfish/dss9_data.rds")
 
 set.seed(0)
 
-# _________________________________________________________________
+# _______________________________________________________
 # Function to Create Heatmaps for Each Annotation Method
-# _________________________________________________________________
+# _______________________________________________________
 
 create_annotation_heatmaps <- function(method_name, query_annot_col) {
     
     cat(sprintf("\n=== Processing %s ===\n", method_name))
     
-    # ____________________________________
+    # _______________________________
     # Get cell groups for comparison
-    # ____________________________________
+    # _______________________________
     
     cat("\nIdentifying cell groups...\n")
     
@@ -63,9 +63,9 @@ create_annotation_heatmaps <- function(method_name, query_annot_col) {
     cat(sprintf("Reference SMC: %d cells\n", ncol(ref_smc)))
     cat(sprintf("Reference Fibro: %d cells\n", ncol(ref_fibro)))
     
-    # ____________________________________
-    # Find SMC vs Fibroblast markers in REFERENCE
-    # ____________________________________
+    # _____________________________________________
+    # Find SMC vs Fibroblast markers in Reference
+    # _____________________________________________
     
     cat("\n--- Finding SMC vs Fibroblast markers in healthy reference ---\n")
     
@@ -96,9 +96,9 @@ create_annotation_heatmaps <- function(method_name, query_annot_col) {
     cat(sprintf("✓ SMC markers found: %d\n", length(all_smc_genes)))
     cat(sprintf("✓ Fibroblast markers found: %d\n", length(all_fib_genes)))
     
-    # ____________________________________
+    # _________________________
     # Make colData compatible
-    # ____________________________________
+    # _________________________
     
     cat("\nMaking colData compatible across datasets...\n")
     
@@ -149,9 +149,9 @@ create_annotation_heatmaps <- function(method_name, query_annot_col) {
     cat(sprintf("Pseudobulk matrix dimensions: %d genes x %d groups\n", 
                 nrow(pb_matrix_all), ncol(pb_matrix_all)))
     
-    # ________________________________________
+    # _______________________________
     # Find top discriminating genes
-    # ________________________________________
+    # _______________________________
     
     cat("\n--- Finding top genes separating Inflamed to SMC from Inflamed to Fibro ---\n")
     
@@ -172,9 +172,9 @@ create_annotation_heatmaps <- function(method_name, query_annot_col) {
     pb_smc <- pb_matrix_all[selected_genes_smc, ]
     pb_fibro <- pb_matrix_all[selected_genes_fib, ]
     
-    # ____________________________
+    # _______________________
     # Create ComplexHeatmap
-    # ____________________________
+    # _______________________
     
     cat("\n--- Creating ComplexHeatmap ---\n")
     
@@ -189,13 +189,16 @@ create_annotation_heatmaps <- function(method_name, query_annot_col) {
     col_anno <- HeatmapAnnotation(
         `Cell Group` = factor(colnames(pb_matrix_all), levels = colnames(pb_matrix_all)),
         col = list(`Cell Group` = col_colors),
-        annotation_height = unit(0.6, "cm")
+        annotation_height = unit(0.6, "cm"),
+        annotation_legend_param = list(
+            title_gp = gpar(fontsize = 10, fontface = "bold"),
+            labels_gp = gpar(fontsize = 9)
+        )
     )
     
-    # Determine color scale limits
+    # Determine color scale limits (white to red, one-directional)
     color_min <- min(pb_matrix_all, na.rm = TRUE)
     color_max <- max(pb_matrix_all, na.rm = TRUE)
-    color_median <- median(pb_matrix_all, na.rm = TRUE)
     
     # Create SMC marker heatmap
     ht_smc <- Heatmap(
@@ -215,13 +218,15 @@ create_annotation_heatmaps <- function(method_name, query_annot_col) {
                            gp = grid::gpar(fontsize = 8, col = "black", fontface = "bold"))
         },
         col = colorRamp2(
-            c(color_min, color_median, color_max),
-            c("#2166ac", "white", "#b2182b")
+            c(color_min, color_max),
+            c("white", "#b2182b")
         ),
         height = unit(4, "cm"),
         width = unit(5, "cm"),
         heatmap_legend_param = list(
             title = "Mean\nlogcounts",
+            title_gp = gpar(fontsize = 10, fontface = "bold"),
+            labels_gp = gpar(fontsize = 9),
             direction = "v",
             legend_height = unit(2, "cm")
         ),
@@ -245,13 +250,15 @@ create_annotation_heatmaps <- function(method_name, query_annot_col) {
                            gp = grid::gpar(fontsize = 8, col = "black", fontface = "bold"))
         },
         col = colorRamp2(
-            c(color_min, color_median, color_max),
-            c("#2166ac", "white", "#b2182b")
+            c(color_min, color_max),
+            c("white", "#b2182b")
         ),
         height = unit(4, "cm"),
         width = unit(5, "cm"),
         heatmap_legend_param = list(
             title = "Mean\nlogcounts",
+            title_gp = gpar(fontsize = 10, fontface = "bold"),
+            labels_gp = gpar(fontsize = 9),
             direction = "v",
             legend_height = unit(2, "cm")
         ),
@@ -265,25 +272,26 @@ create_annotation_heatmaps <- function(method_name, query_annot_col) {
     return(ht_combined)
 }
 
-# _________________________________________________________________
+# _____________________________________
 # Process All Four Annotation Methods
-# _________________________________________________________________
+# _____________________________________
 
 cat("\n=== CREATING HEATMAPS FOR ALL METHODS ===\n")
 
-ht_singler <- create_annotation_heatmaps("SingleR", "singler_annotations_merged")
 ht_azimuth <- create_annotation_heatmaps("Azimuth", "azimuth_celltype_l1_merged")
+ht_singler <- create_annotation_heatmaps("SingleR", "singler_annotations_merged")
 ht_celltypist <- create_annotation_heatmaps("CellTypist", "celltypist_predicted_labels_merged")
 ht_scarches <- create_annotation_heatmaps("scArches", "scvi_prediction_merged")
 
-# _________________________________________________________________
-# Save Individual Method (Azimuth as main figure)
-# _________________________________________________________________
+# _______________________
+# Save Individual Method 
+# _______________________
 
 cat("\n--- Saving individual heatmaps ---\n")
 
 # Save Azimuth as main Figure S6
 cat("Saving Azimuth heatmap as Fig_S6...\n")
+dir.create("figures/supp/merfish", showWarnings = FALSE, recursive = TRUE)
 png("figures/supp/merfish/Fig_S6_Annotation_Patterns_Heatmap_Azimuth.png", 
     width = 5.5, height = 4, res = 300, units = "in")
 draw(ht_azimuth, padding = unit(c(1, 1, 1, 1), "mm"))

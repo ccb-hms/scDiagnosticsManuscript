@@ -18,23 +18,26 @@ library(Matrix)
 cat("\nLoading DSS9 dataset for annotation validation...\n")
 dss9_data <- readRDS("data/merfish/dss9_data.rds")
 
-# Helper function to find UMAP coordinates
-get_umap_coords <- function(sce_obj, obj_name) {
-  possible_names <- c("UMAP_scVI", "X_umap", "UMAP")
-  found_name <- intersect(possible_names, reducedDimNames(sce_obj))[1]
-  
-  if (is.na(found_name)) {
-    stop(paste("Error: No UMAP coordinates found in", obj_name))
-  }
-  
-  cat(paste("✓ Found UMAP coordinates in", obj_name, "under slot:", found_name, "\n"))
-  coords <- as.data.frame(reducedDim(sce_obj, found_name))
-  colnames(coords)[1:2] <- c("UMAP1", "UMAP2")
-  return(coords)
+# Helper function to find spatial coordinates
+get_spatial_coords <- function(sce_obj, obj_name) {
+  tryCatch({
+    coords <- as.data.frame(spatialCoords(sce_obj))
+    if (nrow(coords) == 0) {
+      stop("No spatial coordinates found")
+    }
+    cat(paste("✓ Found spatial coordinates in", obj_name, "\n"))
+    colnames(coords)[1:2] <- c("x", "y")
+    return(coords)
+  }, error = function(e) {
+    stop(paste("Error: No spatial coordinates found in", obj_name, ". Details:", e$message))
+  })
 }
 
-# Extract UMAP coordinates
-umap_coords <- get_umap_coords(dss9_data, "DSS9 Data")
+# Extract spatial coordinates
+spatial_coords <- get_spatial_coords(dss9_data, "DSS9 Data")
+
+# Extract spatial coordinates
+spatial_coords <- get_spatial_coords(dss9_data, "DSS9 Data")
 
 # _________________
 # Extract Metadata
@@ -46,12 +49,12 @@ metadata <- colData(dss9_data)
 
 # Create plotting dataframe
 plot_df <- data.frame(
-    UMAP1 = umap_coords$UMAP1,
-    UMAP2 = umap_coords$UMAP2,
-    singler_annot = metadata$singler_annotations_merged,
-    singler_score = NA,
+    x = spatial_coords$x,
+    y = spatial_coords$y,
     azimuth_annot = metadata$azimuth_celltype_l1_merged,
     azimuth_score = metadata$azimuth_mapping_score,
+    singler_annot = metadata$singler_annotations_merged,
+    singler_score = NA,
     celltypist_annot = metadata$celltypist_predicted_labels_merged,
     celltypist_score = metadata$celltypist_conf_score,
     scarches_annot = metadata$scvi_prediction_merged,
@@ -76,20 +79,14 @@ cat(sprintf("✓ Metadata extracted for %d cells.\n", nrow(plot_df)))
 # Setup Theme 
 # ____________
 
-merfish_theme <- theme_minimal() +
+merfish_theme <- theme_void() +
     theme(
         plot.title = element_text(hjust = 0.5, face = "bold", size = 11, color = "#1F2937", family = "sans"),
-        axis.title = element_text(size = 9, face = "bold", color = "#374151", family = "sans"),
-        axis.text = element_text(size = 8, color = "#4B5563", family = "sans"),
         legend.position = "right",
-        legend.title = element_text(size = 7, face = "bold"),
-        legend.text = element_text(size = 6),
-        legend.key.size = unit(0.25, "cm"),
-        panel.grid.major = element_line(color = "#E5E7EB", linewidth = 0.2),
-        panel.grid.minor = element_blank(),
-        panel.border = element_rect(color = "#D1D5DB", linewidth = 0.5, fill = NA),
+        legend.title = element_text(size = 9, face = "bold"),
+        legend.text = element_text(size = 8),
+        legend.key.size = unit(0.35, "cm"),
         plot.margin = margin(2, 2, 2, 2, "pt"),
-        panel.background = element_rect(fill = "#FAFBFC", color = NA),
         aspect.ratio = 1
     )
 
@@ -119,55 +116,55 @@ point_size <- 0.3
 point_alpha <- 0.6
 
 # ___________________
-# UMAP Visualizations
+# Spatial Visualizations
 # ___________________
 
-cat("\nCreating UMAP visualizations for annotation methods...\n")
+cat("\nCreating spatial visualizations for annotation methods...\n")
 
 # ________________
-# Row 1: SingleR
-# ________________
-
-cat("Creating SingleR plots...\n")
-
-p_s1a <- ggplot(plot_df, aes(x = UMAP1, y = UMAP2, color = singler_annot)) +
-    geom_point(size = point_size, alpha = point_alpha) +
-    scale_color_manual(values = merfish_colors, name = "Cell Type", na.value = "grey80") + 
-    xlab("UMAP 1") +
-    ylab("UMAP 2") +
-    ggtitle("SingleR - Cell Type") +
-    merfish_theme +
-    guides(color = guide_legend(override.aes = list(size = 2), ncol = 1))
-
-p_s1b <- ggplot(plot_df, aes(x = UMAP1, y = UMAP2, color = singler_score)) +
-    geom_point(size = point_size, alpha = 0.8) + 
-    scale_color_viridis_c(name = "Delta Score", option = "magma") + 
-    xlab("UMAP 1") +
-    ylab("UMAP 2") +
-    ggtitle("SingleR - Delta Score") +
-    merfish_theme
-
-# ________________
-# Row 2: Azimuth
+# Row 1: Azimuth
 # ________________
 
 cat("Creating Azimuth plots...\n")
 
-p_s2a <- ggplot(plot_df, aes(x = UMAP1, y = UMAP2, color = azimuth_annot)) +
+p_s1a <- ggplot(plot_df, aes(x = x, y = y, color = azimuth_annot)) +
     geom_point(size = point_size, alpha = point_alpha) +
     scale_color_manual(values = merfish_colors, name = "Cell Type", na.value = "grey80") + 
-    xlab("UMAP 1") +
-    ylab("UMAP 2") +
+    xlab("X") +
+    ylab("Y") +
     ggtitle("Azimuth - Cell Type") +
     merfish_theme +
     guides(color = guide_legend(override.aes = list(size = 2), ncol = 1))
 
-p_s2b <- ggplot(plot_df, aes(x = UMAP1, y = UMAP2, color = azimuth_score)) +
+p_s1b <- ggplot(plot_df, aes(x = x, y = y, color = azimuth_score)) +
     geom_point(size = point_size, alpha = 0.8) + 
     scale_color_viridis_c(name = "Prediction Score", option = "magma") + 
-    xlab("UMAP 1") +
-    ylab("UMAP 2") +
+    xlab("X") +
+    ylab("Y") +
     ggtitle("Azimuth - Prediction Score") +
+    merfish_theme
+
+# ________________
+# Row 2: SingleR
+# ________________
+
+cat("Creating SingleR plots...\n")
+
+p_s2a <- ggplot(plot_df, aes(x = x, y = y, color = singler_annot)) +
+    geom_point(size = point_size, alpha = point_alpha) +
+    scale_color_manual(values = merfish_colors, name = "Cell Type", na.value = "grey80") + 
+    xlab("X") +
+    ylab("Y") +
+    ggtitle("SingleR - Cell Type") +
+    merfish_theme +
+    guides(color = guide_legend(override.aes = list(size = 2), ncol = 1))
+
+p_s2b <- ggplot(plot_df, aes(x = x, y = y, color = singler_score)) +
+    geom_point(size = point_size, alpha = 0.8) + 
+    scale_color_viridis_c(name = "Delta Score", option = "magma") + 
+    xlab("X") +
+    ylab("Y") +
+    ggtitle("SingleR - Delta Score") +
     merfish_theme
 
 # ________________
@@ -176,20 +173,20 @@ p_s2b <- ggplot(plot_df, aes(x = UMAP1, y = UMAP2, color = azimuth_score)) +
 
 cat("Creating CellTypist plots...\n")
 
-p_s3a <- ggplot(plot_df, aes(x = UMAP1, y = UMAP2, color = celltypist_annot)) +
+p_s3a <- ggplot(plot_df, aes(x = x, y = y, color = celltypist_annot)) +
     geom_point(size = point_size, alpha = point_alpha) +
     scale_color_manual(values = merfish_colors, name = "Cell Type", na.value = "grey80") + 
-    xlab("UMAP 1") +
-    ylab("UMAP 2") +
+    xlab("X") +
+    ylab("Y") +
     ggtitle("CellTypist - Cell Type") +
     merfish_theme +
     guides(color = guide_legend(override.aes = list(size = 2), ncol = 1))
 
-p_s3b <- ggplot(plot_df, aes(x = UMAP1, y = UMAP2, color = celltypist_score)) +
+p_s3b <- ggplot(plot_df, aes(x = x, y = y, color = celltypist_score)) +
     geom_point(size = point_size, alpha = 0.8) + 
     scale_color_viridis_c(name = "Confidence Score", option = "magma") + 
-    xlab("UMAP 1") +
-    ylab("UMAP 2") +
+    xlab("X") +
+    ylab("Y") +
     ggtitle("CellTypist - Confidence Score") +
     merfish_theme
 
@@ -199,24 +196,24 @@ p_s3b <- ggplot(plot_df, aes(x = UMAP1, y = UMAP2, color = celltypist_score)) +
 
 cat("Creating scArches plots...\n")
 
-p_s4a <- ggplot(plot_df, aes(x = UMAP1, y = UMAP2, color = scarches_annot)) +
+p_s4a <- ggplot(plot_df, aes(x = x, y = y, color = scarches_annot)) +
     geom_point(size = point_size, alpha = point_alpha) +
     scale_color_manual(values = merfish_colors, name = "Cell Type", na.value = "grey80") + 
-    xlab("UMAP 1") +
-    ylab("UMAP 2") +
+    xlab("X") +
+    ylab("Y") +
     ggtitle("scArches - Cell Type") +
     merfish_theme +
     guides(color = guide_legend(override.aes = list(size = 2), ncol = 1))
 
-p_s4b <- ggplot(plot_df, aes(x = UMAP1, y = UMAP2, color = scarches_score)) +
+p_s4b <- ggplot(plot_df, aes(x = x, y = y, color = scarches_score)) +
     geom_point(size = point_size, alpha = 0.8) + 
     scale_color_viridis_c(name = "Uncertainty Score", option = "magma") + 
-    xlab("UMAP 1") +
-    ylab("UMAP 2") +
+    xlab("X") +
+    ylab("Y") +
     ggtitle("scArches - Uncertainty Score") +
     merfish_theme
 
-cat("✓ All UMAP plots created.\n")
+cat("✓ All spatial plots created.\n")
 
 # _______________________
 # Combine into 4x2 Grid

@@ -26,7 +26,12 @@ cran_packages <- c(
     "Matrix",       # Handling sparse matrices (often base, but good to check)
     "reticulate",   # R interface to Python
     "remotes",      # Needed to install packages from GitHub
-    "here"          # For robust file paths
+    "here",         # For robust file paths
+    "ggplot2",      # Data visualization (supplementary figures)
+    "cowplot",      # Combining multiple plots (supplementary figures)
+    "GGally",       # Extensions for ggplot2, including ggpairs (supplementary Fig S3)
+    "ggridges",     # Ridge plots for distributions (supplementary Fig S3, S4)
+    "viridis"       # Color palettes for plots (supplementary figures)
     # NOTE: Seurat moved to GitHub section for version 5.3.1.0
 )
 
@@ -47,8 +52,9 @@ bioc_packages <- c(
 
 # Packages to be installed from GitHub
 github_packages <- list(
-    "Seurat" = "satijalab/seurat@v5.3.1.0",  # Specific version from GitHub
-    "Azimuth" = "satijalab/azimuth"           # Latest from GitHub
+    "Seurat" = "satijalab/seurat@v5.3.1.0",     # Specific version from GitHub
+    "Azimuth" = "satijalab/azimuth",            # Latest from GitHub
+    "scDiagnostics" = "ccb-hms/scDiagnostics"   # Latest from GitHub (Also available on Bioconductor)
 )
 
 
@@ -133,7 +139,7 @@ for (pkg_name in names(github_packages)) {
 message("\n-------------------------------------------------")
 message("All package checks are complete.")
 
-# Verify specific versions
+# Verify specific versions and key packages
 message("\nVersion verification:")
 tryCatch({
     seurat_version <- packageVersion("Seurat")
@@ -143,9 +149,26 @@ tryCatch({
         azimuth_version <- packageVersion("Azimuth")
         message("✓ Azimuth version: ", azimuth_version)
     }
+    
+    if (requireNamespace("scDiagnostics", quietly = TRUE)) {
+        message("✓ scDiagnostics is installed")
+    }
+    
+    # Verify visualization packages
+    viz_packages <- c("ggplot2", "cowplot", "GGally", "ggridges", "viridis")
+    for (pkg in viz_packages) {
+        if (requireNamespace(pkg, quietly = TRUE)) {
+            message("✓ ", pkg, " is installed")
+        }
+    }
 }, error = function(e) {
     message("Could not verify package versions: ", e$message)
 })
 
-message("The R environment should now be ready for the pipeline.")
+message("\nThe R environment should now be ready for the pipeline.")
+message("Packages installed for:")
+message("  • Main analysis pipeline (Seurat, SingleR, Azimuth)")
+message("  • Spatial analysis (SpatialExperiment, MerfishData)")
+message("  • Quality diagnostics (scDiagnostics)")
+message("  • Supplementary figures (ggplot2, cowplot, GGally, ggridges, viridis)")
 message("-------------------------------------------------")

@@ -38,22 +38,6 @@ theme_set(theme_minimal() + theme(
 # Run Anomaly Detection
 # ______________________
 
-# SingleR
-anomaly_singler <- detectAnomaly(
-    reference_data = normal_data,
-    query_data = covid_data,
-    ref_cell_type_col = "author_cell_type_merged",
-    query_cell_type_col = "singler_annotations_merged",
-    cell_types = "CD14 mono",
-    pc_subset = 1:3,
-    n_tree = 500,
-    anomaly_threshold = 0.5,
-    assay_name = "logcounts", 
-    max_cells_ref = NULL, 
-    max_cells_query = NULL
-)
-singler_anomaly_logical <- anomaly_singler[["CD14 mono"]][["query_anomaly"]]
-
 # Azimuth
 anomaly_azimuth <- detectAnomaly(
     reference_data = normal_data,
@@ -69,6 +53,22 @@ anomaly_azimuth <- detectAnomaly(
     max_cells_query = NULL
 )
 azimuth_anomaly_logical <- anomaly_azimuth[["CD14 mono"]][["query_anomaly"]]
+
+# SingleR
+anomaly_singler <- detectAnomaly(
+    reference_data = normal_data,
+    query_data = covid_data,
+    ref_cell_type_col = "author_cell_type_merged",
+    query_cell_type_col = "singler_annotations_merged",
+    cell_types = "CD14 mono",
+    pc_subset = 1:3,
+    n_tree = 500,
+    anomaly_threshold = 0.5,
+    assay_name = "logcounts", 
+    max_cells_ref = NULL, 
+    max_cells_query = NULL
+)
+singler_anomaly_logical <- anomaly_singler[["CD14 mono"]][["query_anomaly"]]
 
 # CellTypist
 anomaly_celltypist <- detectAnomaly(
@@ -103,55 +103,7 @@ anomaly_scarches <- detectAnomaly(
 scarches_anomaly_logical <- anomaly_scarches[["CD14 mono"]][["query_anomaly"]]
 
 # ______________________________________
-# Figure S4A: SingleR Delta Distribution
-# ______________________________________
-
-cd14_singler <- covid_data[, covid_data$singler_annotations_merged == "CD14 mono"]
-
-scores_cd14 <- covid_data$singler_scores
-rownames(scores_cd14) <- colnames(covid_data)
-scores_cd14 <- scores_cd14[colnames(cd14_singler), ]
-
-deltas <- apply(scores_cd14, 1, function(x) max(x) - median(x))
-
-delta_data <- data.frame(
-    Delta = deltas,
-    Anomaly = factor(ifelse(singler_anomaly_logical[colnames(cd14_singler) %in% colnames(covid_data)], 
-                     "Anomalous", "Non-anomalous"),
-                     levels = c("Non-anomalous", "Anomalous"))
-)
-
-fig_s4a <- ggplot(delta_data, aes(x = Delta, fill = Anomaly)) +
-    geom_density(alpha = 0.8, linewidth = 1, color = "white") +
-    facet_wrap(~Anomaly, ncol = 1, labeller = labeller(Anomaly = c(
-        "Anomalous" = "Anomalous CD14+ Monocytes",
-        "Non-anomalous" = "Non-Anomalous CD14+ Monocytes"
-    ))) +
-    scale_fill_manual(
-        values = c("Non-anomalous" = "#5B7C99", "Anomalous" = "#C1666B"),
-        name = "Cell Status"
-    ) +
-    xlab("Delta Score") +
-    ylab("Density") +
-    ggtitle("SingleR") +
-    theme_minimal() +
-    theme(
-        plot.title = element_text(hjust = 0.5, face = "bold", size = 14, color = "#1F2937", family = "sans"),
-        axis.title = element_text(size = 11, face = "bold", color = "#374151", family = "sans"),
-        axis.text = element_text(size = 10, color = "#4B5563", family = "sans"),
-        strip.text = element_text(size = 11, face = "bold", color = "#1F2937", family = "sans"),
-        legend.position = "right",
-        legend.title = element_text(size = 9, face = "bold"),
-        legend.text = element_text(size = 9),
-        panel.grid.major = element_line(color = "#E5E7EB", linewidth = 0.35),
-        panel.grid.minor = element_blank(),
-        panel.border = element_rect(color = "#D1D5DB", linewidth = 0.6, fill = NA),
-        plot.margin = margin(10, 10, 10, 10, "pt"),
-        panel.background = element_rect(fill = "#FAFBFC", color = NA)
-    )
-
-# ______________________________________
-# Figure S4B: Azimuth Confidence Scores
+# Figure S4A: Azimuth Confidence Scores
 # ______________________________________
 
 cd14_azimuth <- covid_data[, covid_data$azimuth_celltype_l1_merged == "CD14 mono"]
@@ -163,7 +115,7 @@ plot_data_azimuth <- data.frame(
                      levels = c("Non-anomalous", "Anomalous"))
 )
 
-fig_s4b <- ggplot(plot_data_azimuth, aes(x = ConfidenceScore, fill = Anomaly)) +
+fig_s4a <- ggplot(plot_data_azimuth, aes(x = ConfidenceScore, fill = Anomaly)) +
     geom_density(alpha = 0.8, linewidth = 1, color = "white") +
     facet_wrap(~Anomaly, ncol = 1, labeller = labeller(Anomaly = c(
         "Anomalous" = "Anomalous CD14+ Monocytes",
@@ -184,8 +136,56 @@ fig_s4b <- ggplot(plot_data_azimuth, aes(x = ConfidenceScore, fill = Anomaly)) +
         axis.text = element_text(size = 10, color = "#4B5563", family = "sans"),
         strip.text = element_text(size = 11, face = "bold", color = "#1F2937", family = "sans"),
         legend.position = "right",
-        legend.title = element_text(size = 9, face = "bold"),
-        legend.text = element_text(size = 9),
+        legend.title = element_text(size = 11, face = "bold"),
+        legend.text = element_text(size = 10),
+        panel.grid.major = element_line(color = "#E5E7EB", linewidth = 0.35),
+        panel.grid.minor = element_blank(),
+        panel.border = element_rect(color = "#D1D5DB", linewidth = 0.6, fill = NA),
+        plot.margin = margin(10, 10, 10, 10, "pt"),
+        panel.background = element_rect(fill = "#FAFBFC", color = NA)
+    )
+
+# ______________________________________
+# Figure S4B: SingleR Delta Distribution
+# ______________________________________
+
+cd14_singler <- covid_data[, covid_data$singler_annotations_merged == "CD14 mono"]
+
+scores_cd14 <- covid_data$singler_scores
+rownames(scores_cd14) <- colnames(covid_data)
+scores_cd14 <- scores_cd14[colnames(cd14_singler), ]
+
+deltas <- apply(scores_cd14, 1, function(x) max(x) - median(x))
+
+delta_data <- data.frame(
+    Delta = deltas,
+    Anomaly = factor(ifelse(singler_anomaly_logical[colnames(cd14_singler) %in% colnames(covid_data)], 
+                     "Anomalous", "Non-anomalous"),
+                     levels = c("Non-anomalous", "Anomalous"))
+)
+
+fig_s4b <- ggplot(delta_data, aes(x = Delta, fill = Anomaly)) +
+    geom_density(alpha = 0.8, linewidth = 1, color = "white") +
+    facet_wrap(~Anomaly, ncol = 1, labeller = labeller(Anomaly = c(
+        "Anomalous" = "Anomalous CD14+ Monocytes",
+        "Non-anomalous" = "Non-Anomalous CD14+ Monocytes"
+    ))) +
+    scale_fill_manual(
+        values = c("Non-anomalous" = "#5B7C99", "Anomalous" = "#C1666B"),
+        name = "Cell Status"
+    ) +
+    xlab("Delta Score") +
+    ylab("Density") +
+    ggtitle("SingleR") +
+    theme_minimal() +
+    theme(
+        plot.title = element_text(hjust = 0.5, face = "bold", size = 14, color = "#1F2937", family = "sans"),
+        axis.title = element_text(size = 11, face = "bold", color = "#374151", family = "sans"),
+        axis.text = element_text(size = 10, color = "#4B5563", family = "sans"),
+        strip.text = element_text(size = 11, face = "bold", color = "#1F2937", family = "sans"),
+        legend.position = "right",
+        legend.title = element_text(size = 11, face = "bold"),
+        legend.text = element_text(size = 10),
         panel.grid.major = element_line(color = "#E5E7EB", linewidth = 0.35),
         panel.grid.minor = element_blank(),
         panel.border = element_rect(color = "#D1D5DB", linewidth = 0.6, fill = NA),
@@ -226,8 +226,8 @@ fig_s4c <- ggplot(plot_data_celltypist, aes(x = ConfidenceScore, fill = Anomaly)
         axis.text = element_text(size = 10, color = "#4B5563", family = "sans"),
         strip.text = element_text(size = 11, face = "bold", color = "#1F2937", family = "sans"),
         legend.position = "right",
-        legend.title = element_text(size = 9, face = "bold"),
-        legend.text = element_text(size = 9),
+        legend.title = element_text(size = 11, face = "bold"),
+        legend.text = element_text(size = 10),
         panel.grid.major = element_line(color = "#E5E7EB", linewidth = 0.35),
         panel.grid.minor = element_blank(),
         panel.border = element_rect(color = "#D1D5DB", linewidth = 0.6, fill = NA),
@@ -269,8 +269,8 @@ fig_s4d <- ggplot(plot_data_scarches, aes(x = ConfidenceScore, fill = Anomaly)) 
         axis.text = element_text(size = 10, color = "#4B5563", family = "sans"),
         strip.text = element_text(size = 11, face = "bold", color = "#1F2937", family = "sans"),
         legend.position = "right",
-        legend.title = element_text(size = 9, face = "bold"),
-        legend.text = element_text(size = 9),
+        legend.title = element_text(size = 11, face = "bold"),
+        legend.text = element_text(size = 10),
         panel.grid.major = element_line(color = "#E5E7EB", linewidth = 0.35),
         panel.grid.minor = element_blank(),
         panel.border = element_rect(color = "#D1D5DB", linewidth = 0.6, fill = NA),
@@ -306,7 +306,7 @@ create_method_row <- function(covid_data, method_name, annotation_col,
     
     # Get CD14+ cells by name
     cd14_mask <- covid_data[[annotation_col]] == annotation_cell_type
-    cd14_cell_names <- colnames(covid_data)[cd14_mask]  # ← FIXED: was cd14_indices
+    cd14_cell_names <- colnames(covid_data)[cd14_mask]
     
     # Extract scores by name
     scores <- covid_data[[score_col]]
@@ -364,13 +364,13 @@ create_method_row <- function(covid_data, method_name, annotation_col,
 
 # Generate table data
 table_s4_list <- list(
-    # SingleR (uses CD14_mono with underscore)
-    create_method_row(covid_data, "SingleR", "singler_annotations_merged", "singler_scores", 
-                     singler_anomaly_logical, "CD14 mono"),
-    
     # Azimuth
     create_method_row(covid_data, "Azimuth", "azimuth_celltype_l1_merged", "azimuth_mapping_score", 
                      azimuth_anomaly_logical, "CD14 mono"),
+    
+    # SingleR
+    create_method_row(covid_data, "SingleR", "singler_annotations_merged", "singler_scores", 
+                     singler_anomaly_logical, "CD14 mono"),
     
     # CellTypist
     create_method_row(covid_data, "CellTypist", "celltypist_predicted_labels_merged", "celltypist_conf_score", 

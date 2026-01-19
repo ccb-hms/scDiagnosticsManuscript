@@ -24,9 +24,14 @@ cran_packages <- c(
     "reticulate",   # R interface to Python
     "remotes",      # Needed to install packages from GitHub
     "here",         # For robust file paths
-    "ggplot2",      # Core plotting
-    "patchwork",    # Combining plots
-    "viridis"       # Color palettes (used for ECM scores)
+    "ggplot2",      # Core plotting (main + supp figures)
+    "cowplot",      # Combining plots into grids (main + supp figures)
+    "patchwork",    # Combining plots (main figures)
+    "viridis",      # Color palettes (ECM scores, supplementary figures)
+    "GGally",       # ggpairs for PCA comparisons (supplementary Fig S4)
+    "ggridges",     # Ridge plots for distributions (supplementary Fig S4)
+    "pheatmap",     # Simple heatmaps (supplementary Fig S3)
+    "circlize"      # Color mapping functions (supplementary Fig S6)
 )
 
 # Packages to be installed from Bioconductor
@@ -35,22 +40,24 @@ bioc_packages <- c(
     "SingleCellExperiment",   # Core object for scRNA-seq data
     "HDF5Array",              # On-disk data representation
     "DelayedArray",           # Handling large, on-disk arrays
-    "scran",                  # Single-cell analysis tools
-    "scater",                 # Single-cell analysis tools (PCA, UMAP)
+    "scran",                  # Single-cell analysis tools (supplementary Fig S6)
+    "scater",                 # Single-cell analysis tools (PCA, UMAP) (supplementary Fig S5)
     "BiocParallel",           # Parallel processing
+    "BiocSingular",           # Singular Value Decomposition (supplementary Fig S5)
     "SingleR",                # Reference-based annotation
     "biomaRt",                # Gene ID conversion
     "SpatialExperiment",      # Core object for Spatial data
-    "MerfishData"             # MERFISH specific data structures
+    "MerfishData",            # MERFISH specific data structures
+    "ComplexHeatmap"          # Advanced heatmap visualization (supplementary Fig S6)
 )
 
 # Packages to be installed from GitHub
 github_packages <- list(
-    "Seurat" = "satijalab/seurat@v5.3.1.0",   # Specific version required for Azimuth
-    "Azimuth" = "satijalab/azimuth",          # Reference mapping
+    "Seurat" = "satijalab/seurat@v5.3.1.0",     # Specific version required for Azimuth
+    "Azimuth" = "satijalab/azimuth",            # Reference mapping
     
-    # --- Anomaly Detection ---
-    "scDiagnostics" = "ccb-hms/scDiagnostics" 
+    # --- Anomaly Detection & Diagnostics ---
+    "scDiagnostics" = "ccb-hms/scDiagnostics"   # Anomaly detection (main + supplementary)
 )
 
 # _______________________
@@ -130,7 +137,7 @@ for (pkg_name in names(github_packages)) {
 message("\n-------------------------------------------------")
 message("All package checks are complete.")
 
-# Verify specific critical versions
+# Verify specific critical versions and key packages
 message("\nVersion verification:")
 tryCatch({
     seurat_version <- packageVersion("Seurat")
@@ -146,9 +153,26 @@ tryCatch({
         message("✓ scDiagnostics version: ", diag_version)
     }
     
+    # Verify visualization packages for supplementary figures
+    viz_packages <- c("ggplot2", "cowplot", "GGally", "ggridges", "pheatmap", "ComplexHeatmap", "circlize")
+    for (pkg in viz_packages) {
+        if (requireNamespace(pkg, quietly = TRUE)) {
+            message("✓ ", pkg, " is installed")
+        }
+    }
+    
 }, error = function(e) {
     message("Could not verify some package versions: ", e$message)
 })
 
-message("The R environment should now be ready for the MERFISH pipeline.")
+message("\nThe R environment should now be ready for the MERFISH pipeline.")
+message("Packages installed for:")
+message("  • Main analysis pipeline (Seurat, SingleR, Azimuth)")
+message("  • Spatial analysis (SpatialExperiment, MerfishData)")
+message("  • Quality diagnostics (scDiagnostics)")
+message("  • Supplementary figures visualization:")
+message("    - PCA comparisons (GGally, ggridges)")
+message("    - Heatmaps (pheatmap, ComplexHeatmap, circlize)")
+message("    - Plot composition (cowplot, patchwork)")
+message("    - Color schemes (viridis)")
 message("-------------------------------------------------")

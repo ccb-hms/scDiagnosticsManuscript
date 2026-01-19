@@ -118,7 +118,7 @@ create_geneshifts_barplot <- function(gene_shifts_obj, cell_type, genes_order, m
       gene = rep(genes_avail, 3),
       log2fc = c(lfc_all[genes_avail], lfc_normal[genes_avail], lfc_anom[genes_avail]),
       group = factor(rep(c("all_query", "normal", "anomaly"), each = length(genes_avail)),
-                     levels = c("anomaly", "normal", "all_query")),  # REVERSED
+                     levels = c("anomaly", "normal", "all_query")),
       stringsAsFactors = FALSE
 )
     
@@ -150,8 +150,8 @@ create_geneshifts_barplot <- function(gene_shifts_obj, cell_type, genes_order, m
             axis.text.y = element_text(size = 9, color = "#4B5563", family = "sans", face = "bold"),
             axis.text.x = element_text(size = 9, color = "#4B5563", family = "sans"),
             legend.position = "right",
-            legend.title = element_text(size = 8, face = "bold"),
-            legend.text = element_text(size = 8),
+            legend.title = element_text(size = 10, face = "bold"),
+            legend.text = element_text(size = 9),
             panel.grid.major.x = element_line(color = "#E5E7EB", linewidth = 0.2),
             panel.border = element_rect(color = "#D1D5DB", linewidth = 0.5, fill = NA),
             plot.margin = margin(5, 5, 5, 5, "pt"),
@@ -234,7 +234,7 @@ create_quantile_gene_plot <- function(covid_cd14, normal_cd14, genes, method_nam
     # Use gene_order if provided, otherwise order by lfc
     if (!is.null(gene_order)) {
         genes_in_order <- intersect(gene_order, genes_available)
-        y_order <- rev(genes_in_order)  # Reverse for bottom-up display
+        y_order <- rev(genes_in_order)
         plot_data$gene <- factor(plot_data$gene, levels = genes_in_order)
     } else {
         y_order <- NULL  
@@ -274,8 +274,8 @@ create_quantile_gene_plot <- function(covid_cd14, normal_cd14, genes, method_nam
             axis.text.y = element_text(size = 9, color = "#4B5563", family = "sans"),
             axis.text.x = element_text(size = 9, color = "#4B5563", family = "sans"),
             legend.position = "right",
-            legend.title = element_text(size = 8, face = "bold"),
-            legend.text = element_text(size = 8),
+            legend.title = element_text(size = 10, face = "bold"),
+            legend.text = element_text(size = 9),
             panel.grid.major.x = element_line(color = "#E5E7EB", linewidth = 0.2),
             panel.border = element_rect(color = "#D1D5DB", linewidth = 0.5, fill = NA),
             plot.margin = margin(5, 5, 5, 5, "pt"),
@@ -286,47 +286,11 @@ create_quantile_gene_plot <- function(covid_cd14, normal_cd14, genes, method_nam
 }
 
 # _________________
-# SingleR - Row 1
-# _________________
-
-cd14_singler <- covid_data[, covid_data$singler_annotations_merged == "CD14 mono"]
-normal_cd14_singler <- normal_data[, normal_data$author_cell_type_merged == "CD14 mono"]
-
-# Calculate gene shifts
-gene_shifts_singler <- calculateGeneShifts(
-    query_data = covid_data[yoshida_ifn_signature,],
-    reference_data = normal_data[yoshida_ifn_signature,],
-    query_cell_type_col = "singler_annotations",
-    ref_cell_type_col = "author_cell_type",
-    cell_types = "CD14_mono",
-    pc_subset = 1:5,
-    p_value_threshold = 0,
-    detect_anomalies = TRUE,
-    anomaly_comparison = TRUE,
-    anomaly_threshold = 0.5,
-    assay_name = "logcounts",
-    max_cells_query = 5000,
-    max_cells_ref = 5000
-)
-
-# Extract gene order
-gene_order_singler <- extract_geneshifts_order(gene_shifts_singler, pc_subset = 1:5)
-
-# Left: Quantile plot with gene order
-fig_s5_1a <- create_quantile_gene_plot(cd14_singler, normal_cd14_singler, yoshida_ifn_signature, 
-                                        "SingleR", "singler_scores", 
-                                        cell_type_for_scores = "CD14_mono",
-                                        score_direction = "higher_is_better",
-                                        gene_order = rev(gene_order_singler))
-
-# Right: Barplot with same gene order
-fig_s5_1b <- create_geneshifts_barplot(gene_shifts_singler, "CD14_mono", gene_order_singler, "SingleR")
-
-# _________________
-# Azimuth - Row 2
+# Azimuth - Row 1
 # _________________
 
 cd14_azimuth <- covid_data[, covid_data$azimuth_celltype_l1_merged == "CD14 mono"]
+normal_cd14_singler <- normal_data[, normal_data$author_cell_type_merged == "CD14 mono"]
 
 gene_shifts_azimuth <- calculateGeneShifts(
     query_data = covid_data[yoshida_ifn_signature,],
@@ -347,12 +311,44 @@ gene_shifts_azimuth <- calculateGeneShifts(
 
 gene_order_azimuth <- extract_geneshifts_order(gene_shifts_azimuth, pc_subset = 1:5)
 
-fig_s5_2a <- create_quantile_gene_plot(cd14_azimuth, normal_cd14_singler, yoshida_ifn_signature, 
+fig_s5_1a <- create_quantile_gene_plot(cd14_azimuth, normal_cd14_singler, yoshida_ifn_signature, 
                                         "Azimuth", "azimuth_mapping_score",
                                         score_direction = "higher_is_better",
                                         gene_order = rev(gene_order_azimuth))
 
-fig_s5_2b <- create_geneshifts_barplot(gene_shifts_azimuth, "CD14_mono", gene_order_azimuth, "Azimuth")
+fig_s5_1b <- create_geneshifts_barplot(gene_shifts_azimuth, "CD14_mono", gene_order_azimuth, "Azimuth")
+
+# _________________
+# SingleR - Row 2
+# _________________
+
+cd14_singler <- covid_data[, covid_data$singler_annotations_merged == "CD14 mono"]
+
+gene_shifts_singler <- calculateGeneShifts(
+    query_data = covid_data[yoshida_ifn_signature,],
+    reference_data = normal_data[yoshida_ifn_signature,],
+    query_cell_type_col = "singler_annotations",
+    ref_cell_type_col = "author_cell_type",
+    cell_types = "CD14_mono",
+    pc_subset = 1:5,
+    p_value_threshold = 0,
+    detect_anomalies = TRUE,
+    anomaly_comparison = TRUE,
+    anomaly_threshold = 0.5,
+    assay_name = "logcounts",
+    max_cells_query = 5000,
+    max_cells_ref = 5000
+)
+
+gene_order_singler <- extract_geneshifts_order(gene_shifts_singler, pc_subset = 1:5)
+
+fig_s5_2a <- create_quantile_gene_plot(cd14_singler, normal_cd14_singler, yoshida_ifn_signature, 
+                                        "SingleR", "singler_scores", 
+                                        cell_type_for_scores = "CD14_mono",
+                                        score_direction = "higher_is_better",
+                                        gene_order = rev(gene_order_singler))
+
+fig_s5_2b <- create_geneshifts_barplot(gene_shifts_singler, "CD14_mono", gene_order_singler, "SingleR")
 
 # ____________________
 # CellTypist - Row 3
@@ -487,7 +483,7 @@ create_correlation_row <- function(gene_order, cd14_data, normal_cd14_data,
     low_conf_mean <- rowMeans(assay(cd14_data[genes_avail, low_conf_cells]), na.rm = TRUE)
     high_conf_mean <- rowMeans(assay(cd14_data[genes_avail, high_conf_cells]), na.rm = TRUE)
     
-    lfc_annot <- high_conf_mean - low_conf_mean  # High vs Low confidence
+    lfc_annot <- high_conf_mean - low_conf_mean
     
     # ===== RIGHT PLOT: scDiagnostics Anomaly =====
     
@@ -505,7 +501,7 @@ create_correlation_row <- function(gene_order, cd14_data, normal_cd14_data,
     query_normal_mean_anom <- rowMeans(expr_data[, query_normal_cells], na.rm = TRUE)
     query_anom_mean_anom <- rowMeans(expr_data[, query_anom_cells], na.rm = TRUE)
     
-    lfc_anom_vs_normal <- query_anom_mean_anom - query_normal_mean_anom  # Anom vs Normal
+    lfc_anom_vs_normal <- query_anom_mean_anom - query_normal_mean_anom
     
     # ===== CORRELATION =====
     
@@ -539,13 +535,13 @@ create_correlation_row <- function(gene_order, cd14_data, normal_cd14_data,
 
 # Generate table S5
 table_s5_list <- list(
+    create_correlation_row(gene_order_azimuth, cd14_azimuth, normal_cd14_singler,
+                          gene_shifts_azimuth, "Azimuth", "azimuth_mapping_score",
+                          score_direction = "higher_is_better"),
+    
     create_correlation_row(gene_order_singler, cd14_singler, normal_cd14_singler,
                           gene_shifts_singler, "SingleR", "singler_scores",
                           cell_type_for_scores = "CD14_mono",
-                          score_direction = "higher_is_better"),
-    
-    create_correlation_row(gene_order_azimuth, cd14_azimuth, normal_cd14_singler,
-                          gene_shifts_azimuth, "Azimuth", "azimuth_mapping_score",
                           score_direction = "higher_is_better"),
     
     create_correlation_row(gene_order_celltypist, cd14_celltypist, normal_cd14_singler,

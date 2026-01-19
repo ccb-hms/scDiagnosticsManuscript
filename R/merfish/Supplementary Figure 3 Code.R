@@ -91,12 +91,12 @@ cat("\n" %+% paste(rep("=", 60), collapse = "") %+% "\n")
 cat("ANOMALY DETECTION\n")
 cat(paste(rep("=", 60), collapse = "") %+% "\n")
 
-cat("\nDetecting anomalies for SingleR...\n")
-anomaly_singler <- detectAnomaly(
+cat("\nDetecting anomalies for Azimuth...\n")
+anomaly_azimuth <- detectAnomaly(
     reference_data = normal_data,
     query_data = dss9_data,
     ref_cell_type_col = "tier2_merged",
-    query_cell_type_col = "singler_annotations_merged",
+    query_cell_type_col = "azimuth_celltype_l1_merged",
     cell_types = all_cell_types,
     pc_subset = 1:3,
     n_tree = 500,
@@ -106,12 +106,12 @@ anomaly_singler <- detectAnomaly(
     max_cells_ref = NULL
 )
 
-cat("\nDetecting anomalies for Azimuth...\n")
-anomaly_azimuth <- detectAnomaly(
+cat("\nDetecting anomalies for SingleR...\n")
+anomaly_singler <- detectAnomaly(
     reference_data = normal_data,
     query_data = dss9_data,
     ref_cell_type_col = "tier2_merged",
-    query_cell_type_col = "azimuth_celltype_l1_merged",
+    query_cell_type_col = "singler_annotations_merged",
     cell_types = all_cell_types,
     pc_subset = 1:3,
     n_tree = 500,
@@ -161,8 +161,8 @@ cat("\n" %+% paste(rep("=", 60), collapse = "") %+% "\n")
 cat("ANALYSIS RESULTS\n")
 cat(paste(rep("=", 60), collapse = "") %+% "\n")
 
-singler_row <- analyze_method("SingleR", anomaly_singler, "singler_annotations_merged")
 azimuth_row <- analyze_method("Azimuth", anomaly_azimuth, "azimuth_celltype_l1_merged")
+singler_row <- analyze_method("SingleR", anomaly_singler, "singler_annotations_merged")
 celltypist_row <- analyze_method("CellTypist", anomaly_celltypist, "celltypist_predicted_labels_merged")
 scarches_row <- analyze_method("scArches", anomaly_scarches, "scvi_prediction_merged")
 
@@ -171,42 +171,23 @@ scarches_row <- analyze_method("scArches", anomaly_scarches, "scvi_prediction_me
 # _____________________________
 
 cat("\n" %+% paste(rep("=", 60), collapse = "") %+% "\n")
-cat("CREATING COMBINED HEATMAP (Fig 3 + Fig 4)\n")
+cat("CREATING COMBINED HEATMAP\n")
 cat(paste(rep("=", 60), collapse = "") %+% "\n\n")
 
 # Get all unique predicted types across all methods
-all_pred_types <- unique(c(names(singler_row), names(azimuth_row), 
+all_pred_types <- unique(c(names(azimuth_row), names(singler_row), 
                             names(celltypist_row), names(scarches_row)))
 all_pred_types <- sort(all_pred_types)
 
 # ===== Matrix 1: Total counts (for coloring by sample size) =====
 heatmap_counts <- matrix(NA, nrow = 4, ncol = length(all_pred_types))
-rownames(heatmap_counts) <- c("SingleR", "Azimuth", "CellTypist", "scArches")
+rownames(heatmap_counts) <- c("Azimuth", "SingleR", "CellTypist", "scArches")
 colnames(heatmap_counts) <- all_pred_types
 
 # ===== Matrix 2: Display text (x / y format) =====
 heatmap_display <- matrix(NA, nrow = 4, ncol = length(all_pred_types))
-rownames(heatmap_display) <- c("SingleR", "Azimuth", "CellTypist", "scArches")
+rownames(heatmap_display) <- c("Azimuth", "SingleR", "CellTypist", "scArches")
 colnames(heatmap_display) <- all_pred_types
-
-# ===== SingleR =====
-cat("Processing SingleR...\n")
-names(dss9_data$singler_annotations_merged) <- colnames(dss9_data)
-pred_inflamed_singler <- dss9_data$singler_annotations_merged[inflamed_fb_mask]
-for (pred_type in all_pred_types) {
-    mask_inflamed <- pred_inflamed_singler == pred_type
-    if (sum(mask_inflamed) > 0) {
-        inflamed_cells_of_type <- inflamed_fb_cellnames[mask_inflamed]
-        anomaly_for_type <- anomaly_singler[[pred_type]][["query_anomaly"]]
-        names(anomaly_for_type) <- gsub("Query_", "", names(anomaly_for_type))
-        inflamed_cells_clean <- gsub("Query_", "", inflamed_cells_of_type)
-        inflamed_anomaly <- anomaly_for_type[inflamed_cells_clean]
-        n_anom <- sum(inflamed_anomaly, na.rm = TRUE)
-        n_total <- sum(mask_inflamed)
-        heatmap_display["SingleR", pred_type] <- sprintf("%d/%d", n_anom, n_total)
-        heatmap_counts["SingleR", pred_type] <- n_total
-    }
-}
 
 # ===== Azimuth =====
 cat("Processing Azimuth...\n")
@@ -224,6 +205,25 @@ for (pred_type in all_pred_types) {
         n_total <- sum(mask_inflamed)
         heatmap_display["Azimuth", pred_type] <- sprintf("%d/%d", n_anom, n_total)
         heatmap_counts["Azimuth", pred_type] <- n_total
+    }
+}
+
+# ===== SingleR =====
+cat("Processing SingleR...\n")
+names(dss9_data$singler_annotations_merged) <- colnames(dss9_data)
+pred_inflamed_singler <- dss9_data$singler_annotations_merged[inflamed_fb_mask]
+for (pred_type in all_pred_types) {
+    mask_inflamed <- pred_inflamed_singler == pred_type
+    if (sum(mask_inflamed) > 0) {
+        inflamed_cells_of_type <- inflamed_fb_cellnames[mask_inflamed]
+        anomaly_for_type <- anomaly_singler[[pred_type]][["query_anomaly"]]
+        names(anomaly_for_type) <- gsub("Query_", "", names(anomaly_for_type))
+        inflamed_cells_clean <- gsub("Query_", "", inflamed_cells_of_type)
+        inflamed_anomaly <- anomaly_for_type[inflamed_cells_clean]
+        n_anom <- sum(inflamed_anomaly, na.rm = TRUE)
+        n_total <- sum(mask_inflamed)
+        heatmap_display["SingleR", pred_type] <- sprintf("%d/%d", n_anom, n_total)
+        heatmap_counts["SingleR", pred_type] <- n_total
     }
 }
 
@@ -280,9 +280,9 @@ heatmap_counts[is.na(heatmap_counts)] <- 0
 cat("\nCombined heatmap data (colored by sample size, text shows anomalous/total):\n")
 print(heatmap_display)
 
-# ________________________
-# Create Combined Heatmap
-# ________________________
+# ________________
+# Create Heatmap
+# ________________
 
 cat("\nCreating combined heatmap...\n")
 

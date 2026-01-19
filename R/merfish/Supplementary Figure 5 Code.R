@@ -131,7 +131,10 @@ process_annotation_method <- function(method_name,
     ) +
         ggtitle(paste0(method_name, " - Fibroblasts (ECM Genes)")) +
         theme(
-            plot.title = element_text(hjust = 0.5, face = "bold", size = 12, color = "#1F2937")
+            plot.title = element_text(hjust = 0.5, face = "bold", size = 12, color = "#1F2937"),
+            legend.title = element_text(size = 10, face = "bold"),
+            legend.text = element_text(size = 9),
+            legend.key.size = unit(0.4, "cm")
         )
     
     # ===== REORDER GENES ALPHABETICALLY =====
@@ -145,8 +148,8 @@ process_annotation_method <- function(method_name,
 # Process All Methods
 # ____________________
 
-result_singler <- process_annotation_method("SingleR", "singler_annotations_merged")
 result_azimuth <- process_annotation_method("Azimuth", "azimuth_celltype_l1_merged")
+result_singler <- process_annotation_method("SingleR", "singler_annotations_merged")
 result_celltypist <- process_annotation_method("CellTypist", "celltypist_predicted_labels_merged")
 result_scarches <- process_annotation_method("scArches", "scvi_prediction_merged")
 
@@ -155,7 +158,7 @@ result_scarches <- process_annotation_method("scArches", "scvi_prediction_merged
 # ______________________
 
 fig_s5_combined <- plot_grid(
-    result_singler, result_azimuth,
+    result_azimuth, result_singler,
     result_celltypist, result_scarches,
     nrow = 2, ncol = 2, labels = "AUTO",
     label_size = 12, label_fontface = "bold"
@@ -246,18 +249,17 @@ analyze_col1a2_by_anomaly <- function(query_data, query_annot_col,
 }
 
 # Calculate for all methods
-table_singler <- analyze_col1a2_by_anomaly(dss9_data_ecm, "singler_annotations_merged", 
-                                            healthy_data_ecm, "tier2_merged", "SingleR")
 table_azimuth <- analyze_col1a2_by_anomaly(dss9_data_ecm, "azimuth_celltype_l1_merged", 
                                             healthy_data_ecm, "tier2_merged", "Azimuth")
+table_singler <- analyze_col1a2_by_anomaly(dss9_data_ecm, "singler_annotations_merged", 
+                                            healthy_data_ecm, "tier2_merged", "SingleR")
 table_celltypist <- analyze_col1a2_by_anomaly(dss9_data_ecm, "celltypist_predicted_labels_merged", 
                                                healthy_data_ecm, "tier2_merged", "CellTypist")
 table_scarches <- analyze_col1a2_by_anomaly(dss9_data_ecm, "scvi_prediction_merged", 
                                              healthy_data_ecm, "tier2_merged", "scArches")
 
 # Combine into table
-supp_table_5 <- rbind(table_singler, table_azimuth, table_celltypist, table_scarches)
+supp_table_5 <- rbind(table_azimuth, table_singler, table_celltypist, table_scarches)
 
 cat("\n\nSupplementary Table 5: Col1a2 Expression - Anomalous vs. Normal Cells\n")
 print(supp_table_5)
-

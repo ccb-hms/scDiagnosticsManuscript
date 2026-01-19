@@ -51,11 +51,11 @@ pc_plot_names <- paste0(
 # Run Anomaly Detection
 # ______________________
 
-# SingleR
-anomaly_singler <- detectAnomaly(
+# Azimuth
+anomaly_azimuth <- detectAnomaly(
     query_data = covid_data,
     reference_data = normal_data,
-    query_cell_type_col = "singler_annotations_merged",
+    query_cell_type_col = "azimuth_celltype_l1_merged",
     ref_cell_type_col = "author_cell_type_merged",
     cell_types = CELL_TYPES_TO_PLOT,
     pc_subset = PC_SUBSET,
@@ -65,11 +65,11 @@ anomaly_singler <- detectAnomaly(
     max_cells_ref = MAX_CELLS
 )
 
-# Azimuth
-anomaly_azimuth <- detectAnomaly(
+# SingleR
+anomaly_singler <- detectAnomaly(
     query_data = covid_data,
     reference_data = normal_data,
-    query_cell_type_col = "azimuth_celltype_l1_merged",
+    query_cell_type_col = "singler_annotations_merged",
     ref_cell_type_col = "author_cell_type_merged",
     cell_types = CELL_TYPES_TO_PLOT,
     pc_subset = PC_SUBSET,
@@ -108,11 +108,11 @@ anomaly_scarches <- detectAnomaly(
 )
 
 # Extract anomaly logical vectors
-singler_anomaly_logical <- anomaly_singler[["CD14 mono"]][["query_anomaly"]]
-names(singler_anomaly_logical) <- gsub("Query_", "", names(singler_anomaly_logical))
-
 azimuth_anomaly_logical <- anomaly_azimuth[["CD14 mono"]][["query_anomaly"]]
 names(azimuth_anomaly_logical) <- gsub("Query_", "", names(azimuth_anomaly_logical))
+
+singler_anomaly_logical <- anomaly_singler[["CD14 mono"]][["query_anomaly"]]
+names(singler_anomaly_logical) <- gsub("Query_", "", names(singler_anomaly_logical))
 
 celltypist_anomaly_logical <- anomaly_celltypist[["CD14 mono"]][["query_anomaly"]]
 names(celltypist_anomaly_logical) <- gsub("Query_", "", names(celltypist_anomaly_logical))
@@ -126,8 +126,8 @@ names(scarches_anomaly_logical) <- gsub("Query_", "", names(scarches_anomaly_log
 
 scatter_fn <- function(data, mapping, ...) {
     ggplot(data = data, mapping = mapping) +
-        geom_point(data = ~subset(., dataset == "Query"), alpha = 0.5, size = 1.5, show.legend = FALSE) +
-        geom_point(data = ~subset(., dataset == "Reference"), alpha = 0.7, size = 1.5, show.legend = FALSE) +
+        geom_point(data = ~subset(., dataset == "Reference"), alpha = 0.2, size = 1.5, show.legend = FALSE) +
+        geom_point(data = ~subset(., dataset == "Query"), alpha = 0.7, size = 1.5, show.legend = FALSE) +
         scale_shape_manual(values = c("Reference" = 1, "Query" = 16)) +
         viridis::scale_color_viridis(option = "B") +
         theme_minimal() +
@@ -144,7 +144,8 @@ ridge_fn <- function(data, mapping, ...) {
             panel.border = element_rect(color = "black", fill = NA, linewidth = 0.5),
             axis.title = element_blank(),
             axis.text.y = element_blank(),
-            axis.ticks.y = element_blank()
+            axis.ticks.y = element_blank(),
+            axis.text.x = element_text(size = 8)
         )
 }
 
@@ -167,7 +168,9 @@ create_pca_plot_grid <- function(pca_data, color_var, title, method_name) {
         theme(
             legend.position = "right", 
             legend.box = "vertical",
-            legend.key = element_rect(fill = "white", color = NA)
+            legend.key = element_rect(fill = "white", color = NA),
+            legend.title = element_text(size = 10, face = "bold"),
+            legend.text = element_text(size = 9)
         )
     
     plot_legend <- GGally::grab_legend(legend_plot)
@@ -187,8 +190,8 @@ create_pca_plot_grid <- function(pca_data, color_var, title, method_name) {
     ) +
     theme(
         strip.background = element_rect(fill = "white", color = "black", linewidth = 0.5),
-        strip.text = element_text(color = "black", size = 8),
-        plot.title = element_text(hjust = 0.5, face = "bold", size = 11, color = "#1F2937")
+        strip.text = element_text(color = "black", size = 9, face = "bold"),
+        plot.title = element_text(hjust = 0.5, face = "bold", size = 12, color = "#1F2937")
     )
     
     return(pca_plot)
@@ -222,7 +225,55 @@ add_scores_to_pca <- function(pca_data, covid_data, normal_data, score_col_name,
 }
 
 # _________________
-# SingleR - Row 1
+# Azimuth - Row 1
+# _________________
+
+pca_azimuth <- projectPCA(
+    query_data = covid_data,
+    reference_data = normal_data,
+    query_cell_type_col = "azimuth_celltype_l1_merged",
+    ref_cell_type_col = "author_cell_type_merged",
+    cell_types = CELL_TYPES_TO_PLOT,
+    pc_subset = PC_SUBSET,
+    assay_name = ASSAY_NAME,
+    max_cells_query = MAX_CELLS,
+    max_cells_ref = MAX_CELLS
+)
+
+pca_azimuth$original_cell_id <- gsub("Reference_|Query_", "", rownames(pca_azimuth))
+pca_azimuth$dataset <- factor(pca_azimuth$dataset, levels = c("Query", "Reference"))
+
+# Add scores
+query_mask <- pca_azimuth$dataset == "Query"
+query_ids <- pca_azimuth$original_cell_id[query_mask]
+pca_azimuth$score <- NA
+names(covid_data$azimuth_mapping_score) <- colnames(covid_data)
+pca_azimuth$score[query_mask] <- covid_data$azimuth_mapping_score[query_ids]
+
+# Add IFN score
+ref_cells <- pca_azimuth$original_cell_id[pca_azimuth$dataset == "Reference"]
+query_cells <- pca_azimuth$original_cell_id[pca_azimuth$dataset == "Query"]
+full_expr <- cbind(
+    assay(normal_data, ASSAY_NAME)[signature_genes_avail, ref_cells, drop = FALSE],
+    assay(covid_data, ASSAY_NAME)[signature_genes_avail, query_cells, drop = FALSE]
+)
+pca_azimuth$ifn_score <- colMeans(full_expr, na.rm = TRUE)[pca_azimuth$original_cell_id]
+
+fig_s3_1a <- create_pca_plot_grid(pca_azimuth, "score", "Prediction Score", "Azimuth")
+fig_s3_1b <- create_pca_plot_grid(pca_azimuth, "ifn_score", "IFN Score", "Azimuth")
+fig_s3_1c <- plot(anomaly_azimuth,
+                  cell_type = CELL_TYPES_TO_PLOT,
+                  pc_subset = PC_SUBSET,
+                  data_type = "query",
+                  n_tree = 500,
+                  diagonal_facet = "ridge",
+                  upper_facet = "blank",
+                  max_cells_query = MAX_CELLS) + 
+    ggtitle("Azimuth: Anomaly Detection (CD14+ Monocytes)") +
+    theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 12, color = "#1F2937"))
+
+# _________________
+# SingleR - Row 2
 # _________________
 
 pca_singler <- projectPCA(
@@ -265,9 +316,9 @@ full_expr <- cbind(
 )
 pca_singler$ifn_score <- colMeans(full_expr, na.rm = TRUE)[pca_singler$original_cell_id]
 
-fig_s3_1a <- create_pca_plot_grid(pca_singler, "score", "Delta Score", "SingleR")
-fig_s3_1b <- create_pca_plot_grid(pca_singler, "ifn_score", "IFN Score", "SingleR")
-fig_s3_1c <- plot(anomaly_singler,
+fig_s3_2a <- create_pca_plot_grid(pca_singler, "score", "Delta Score", "SingleR")
+fig_s3_2b <- create_pca_plot_grid(pca_singler, "ifn_score", "IFN Score", "SingleR")
+fig_s3_2c <- plot(anomaly_singler,
                   cell_type = CELL_TYPES_TO_PLOT,
                   pc_subset = PC_SUBSET,
                   data_type = "query",
@@ -276,55 +327,7 @@ fig_s3_1c <- plot(anomaly_singler,
                   upper_facet = "blank",
                   max_cells_query = MAX_CELLS) + 
     ggtitle("SingleR: Anomaly Detection (CD14+ Monocytes)") +
-    theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 11, color = "#1F2937"))
-
-# _________________
-# Azimuth - Row 2
-# _________________
-
-pca_azimuth <- projectPCA(
-    query_data = covid_data,
-    reference_data = normal_data,
-    query_cell_type_col = "azimuth_celltype_l1_merged",
-    ref_cell_type_col = "author_cell_type_merged",
-    cell_types = CELL_TYPES_TO_PLOT,
-    pc_subset = PC_SUBSET,
-    assay_name = ASSAY_NAME,
-    max_cells_query = MAX_CELLS,
-    max_cells_ref = MAX_CELLS
-)
-
-pca_azimuth$original_cell_id <- gsub("Reference_|Query_", "", rownames(pca_azimuth))
-pca_azimuth$dataset <- factor(pca_azimuth$dataset, levels = c("Query", "Reference"))
-
-# Add scores
-query_mask <- pca_azimuth$dataset == "Query"
-query_ids <- pca_azimuth$original_cell_id[query_mask]
-pca_azimuth$score <- NA
-names(covid_data$azimuth_mapping_score) <- colnames(covid_data)
-pca_azimuth$score[query_mask] <- covid_data$azimuth_mapping_score[query_ids]
-
-# Add IFN score
-ref_cells <- pca_azimuth$original_cell_id[pca_azimuth$dataset == "Reference"]
-query_cells <- pca_azimuth$original_cell_id[pca_azimuth$dataset == "Query"]
-full_expr <- cbind(
-    assay(normal_data, ASSAY_NAME)[signature_genes_avail, ref_cells, drop = FALSE],
-    assay(covid_data, ASSAY_NAME)[signature_genes_avail, query_cells, drop = FALSE]
-)
-pca_azimuth$ifn_score <- colMeans(full_expr, na.rm = TRUE)[pca_azimuth$original_cell_id]
-
-fig_s3_2a <- create_pca_plot_grid(pca_azimuth, "score", "Prediction Score", "Azimuth")
-fig_s3_2b <- create_pca_plot_grid(pca_azimuth, "ifn_score", "IFN Score", "Azimuth")
-fig_s3_2c <- plot(anomaly_azimuth,
-                  cell_type = CELL_TYPES_TO_PLOT,
-                  pc_subset = PC_SUBSET,
-                  data_type = "query",
-                  n_tree = 500,
-                  diagonal_facet = "ridge",
-                  upper_facet = "blank",
-                  max_cells_query = MAX_CELLS) + 
-    ggtitle("Azimuth: Anomaly Detection (CD14+ Monocytes)") +
-    theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 11, color = "#1F2937"))
+    theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 12, color = "#1F2937"))
 
 # ____________________
 # CellTypist - Row 3
@@ -372,7 +375,7 @@ fig_s3_3c <- plot(anomaly_celltypist,
                   upper_facet = "blank",
                   max_cells_query = MAX_CELLS) + 
     ggtitle("CellTypist: Anomaly Detection (CD14+ Monocytes)") +
-    theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 11, color = "#1F2937"))
+    theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 12, color = "#1F2937"))
 
 # _________________
 # scArches - Row 4
@@ -420,7 +423,7 @@ fig_s3_4c <- plot(anomaly_scarches,
                   upper_facet = "blank",
                   max_cells_query = MAX_CELLS) + 
     ggtitle("scArches: Anomaly Detection (CD14+ Monocytes)") +
-    theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 11, color = "#1F2937"))
+    theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 12, color = "#1F2937"))
 
 # _________________
 # Combine 4x3 Grid
@@ -450,17 +453,17 @@ print("Saved in: figures/supp/covid/")
 
 # Pre-calculate IFN scores for ALL CD14+ cells in each annotation method
 
-# SingleR
-cd14_singler_all <- covid_data[, covid_data$singler_annotations_merged == "CD14 mono"]
-ifn_expr_singler <- assay(cd14_singler_all, "logcounts")[signature_genes_avail, ]
-ifn_score_singler_all <- colMeans(ifn_expr_singler, na.rm = TRUE)
-names(ifn_score_singler_all) <- colnames(cd14_singler_all)
-
 # Azimuth
 cd14_azimuth_all <- covid_data[, covid_data$azimuth_celltype_l1_merged == "CD14 mono"]
 ifn_expr_azimuth <- assay(cd14_azimuth_all, "logcounts")[signature_genes_avail, ]
 ifn_score_azimuth_all <- colMeans(ifn_expr_azimuth, na.rm = TRUE)
 names(ifn_score_azimuth_all) <- colnames(cd14_azimuth_all)
+
+# SingleR
+cd14_singler_all <- covid_data[, covid_data$singler_annotations_merged == "CD14 mono"]
+ifn_expr_singler <- assay(cd14_singler_all, "logcounts")[signature_genes_avail, ]
+ifn_score_singler_all <- colMeans(ifn_expr_singler, na.rm = TRUE)
+names(ifn_score_singler_all) <- colnames(cd14_singler_all)
 
 # CellTypist
 cd14_celltypist_all <- covid_data[, covid_data$celltypist_predicted_labels_merged == "CD14 mono"]
@@ -521,10 +524,10 @@ calc_ifn_wilcox <- function(method_name, annotation_col, annotation_cell_type,
 
 table_s3_list <- list()
 
-table_s3_list[[1]] <- calc_ifn_wilcox("SingleR", "singler_annotations_merged", "CD14 mono", 
-                                       singler_anomaly_logical, ifn_score_singler_all)
-table_s3_list[[2]] <- calc_ifn_wilcox("Azimuth", "azimuth_celltype_l1_merged", "CD14 mono", 
+table_s3_list[[1]] <- calc_ifn_wilcox("Azimuth", "azimuth_celltype_l1_merged", "CD14 mono", 
                                        azimuth_anomaly_logical, ifn_score_azimuth_all)
+table_s3_list[[2]] <- calc_ifn_wilcox("SingleR", "singler_annotations_merged", "CD14 mono", 
+                                       singler_anomaly_logical, ifn_score_singler_all)
 table_s3_list[[3]] <- calc_ifn_wilcox("CellTypist", "celltypist_predicted_labels_merged", "CD14 mono", 
                                        celltypist_anomaly_logical, ifn_score_celltypist_all)
 table_s3_list[[4]] <- calc_ifn_wilcox("scArches", "scvi_prediction_merged", "CD14 mono", 

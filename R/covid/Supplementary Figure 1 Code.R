@@ -74,82 +74,7 @@ theme_set(theme_minimal() + theme(
 umap_coords <- reducedDim(covid_data, "UMAP_scVI")
 
 # _________________________________________
-# Figure S1A: SingleR - Cell Type (Merged)
-# _________________________________________
-
-umap_data_singler_anno <- data.frame(
-    UMAP1 = umap_coords[, 1],
-    UMAP2 = umap_coords[, 2],
-    CellType = covid_data$singler_annotations_merged
-)
-
-fig_s1a <- ggplot(umap_data_singler_anno, aes(x = UMAP1, y = UMAP2, color = CellType)) +
-    geom_point(size = 0.1, alpha = 0.6) +
-    scale_color_manual(values = cell_type_colors, na.value = "grey50") +
-    guides(color = guide_legend(ncol = 1)) +
-    xlab("UMAP 1") +
-    ylab("UMAP 2") +
-    ggtitle("SingleR - Cell Type") +
-    theme_minimal() +
-    theme(
-        plot.title = element_text(hjust = 0.5, face = "bold", size = 12, color = "#1F2937", family = "sans"),
-        axis.title = element_text(size = 9, face = "bold", color = "#374151", family = "sans"),
-        axis.text = element_text(size = 8, color = "#4B5563", family = "sans"),
-        legend.position = "right",
-        legend.title = element_blank(),
-        legend.text = element_text(size = 6),
-        legend.key.size = unit(0.25, "cm"),
-        panel.grid.major = element_line(color = "#E5E7EB", linewidth = 0.2),
-        panel.grid.minor = element_blank(),
-        panel.border = element_rect(color = "#D1D5DB", linewidth = 0.5, fill = NA),
-        plot.margin = margin(2, 0.5, 2, 0.5, "pt"),
-        panel.background = element_rect(fill = "#FAFBFC", color = NA),
-        aspect.ratio = 1
-    )
-
-# ________________________________________
-# Figure S1B: SingleR - Confidence Score
-# ________________________________________
-
-singler_scores_matrix <- covid_data$singler_scores
-singler_assigned <- covid_data$singler_annotations
-
-singler_conf <- sapply(1:ncol(covid_data), function(i) {
-    cell_type <- singler_assigned[i]
-    singler_scores_matrix[i, cell_type]
-})
-
-umap_data_singler_score <- data.frame(
-    UMAP1 = umap_coords[, 1],
-    UMAP2 = umap_coords[, 2],
-    ConfidenceScore = singler_conf
-)
-
-fig_s1b <- ggplot(umap_data_singler_score, aes(x = UMAP1, y = UMAP2, color = ConfidenceScore)) +
-    geom_point(size = 0.1, alpha = 0.6) +
-    scale_color_gradient(low = "#C1666B", high = "#5B7C99", name = "Delta Score") +
-    xlab("UMAP 1") +
-    ylab("UMAP 2") +
-    ggtitle("SingleR - Delta Score") +
-    theme_minimal() +
-    theme(
-        plot.title = element_text(hjust = 0.5, face = "bold", size = 12, color = "#1F2937", family = "sans"),
-        axis.title = element_text(size = 9, face = "bold", color = "#374151", family = "sans"),
-        axis.text = element_text(size = 8, color = "#4B5563", family = "sans"),
-        legend.position = "right",
-        legend.title = element_text(size = 8, face = "bold"),
-        legend.text = element_text(size = 7),
-        legend.key.size = unit(0.3, "cm"),
-        panel.grid.major = element_line(color = "#E5E7EB", linewidth = 0.2),
-        panel.grid.minor = element_blank(),
-        panel.border = element_rect(color = "#D1D5DB", linewidth = 0.5, fill = NA),
-        plot.margin = margin(2, 0.5, 2, 0.5, "pt"),
-        panel.background = element_rect(fill = "#FAFBFC", color = NA),
-        aspect.ratio = 1
-    )
-
-# _________________________________________
-# Figure S1C: Azimuth - Cell Type (Merged)
+# Figure S1A: Azimuth - Cell Type (Merged)
 # _________________________________________
 
 umap_data_azimuth_anno <- data.frame(
@@ -158,7 +83,7 @@ umap_data_azimuth_anno <- data.frame(
     CellType = covid_data$azimuth_celltype_l1_merged
 )
 
-fig_s1c <- ggplot(umap_data_azimuth_anno, aes(x = UMAP1, y = UMAP2, color = CellType)) +
+fig_s1a <- ggplot(umap_data_azimuth_anno, aes(x = UMAP1, y = UMAP2, color = CellType)) +
     geom_point(size = 0.1, alpha = 0.6) +
     scale_color_manual(values = cell_type_colors, na.value = "grey50") +
     guides(color = guide_legend(ncol = 1)) +
@@ -172,8 +97,8 @@ fig_s1c <- ggplot(umap_data_azimuth_anno, aes(x = UMAP1, y = UMAP2, color = Cell
         axis.text = element_text(size = 8, color = "#4B5563", family = "sans"),
         legend.position = "right",
         legend.title = element_blank(),
-        legend.text = element_text(size = 6),
-        legend.key.size = unit(0.25, "cm"),
+        legend.text = element_text(size = 8),
+        legend.key.size = unit(0.3, "cm"),
         panel.grid.major = element_line(color = "#E5E7EB", linewidth = 0.2),
         panel.grid.minor = element_blank(),
         panel.border = element_rect(color = "#D1D5DB", linewidth = 0.5, fill = NA),
@@ -183,7 +108,7 @@ fig_s1c <- ggplot(umap_data_azimuth_anno, aes(x = UMAP1, y = UMAP2, color = Cell
     )
 
 # _______________________________________
-# Figure S1D: Azimuth - Prediction Score
+# Figure S1B: Azimuth - Prediction Score
 # _______________________________________
 
 umap_data_azimuth_score <- data.frame(
@@ -192,9 +117,9 @@ umap_data_azimuth_score <- data.frame(
     PredictionScore = covid_data$azimuth_mapping_score
 )
 
-fig_s1d <- ggplot(umap_data_azimuth_score, aes(x = UMAP1, y = UMAP2, color = PredictionScore)) +
+fig_s1b <- ggplot(umap_data_azimuth_score, aes(x = UMAP1, y = UMAP2, color = PredictionScore)) +
     geom_point(size = 0.1, alpha = 0.6) +
-    scale_color_gradient(low = "#C1666B", high = "#5B7C99", name = "Prediction Score") +
+    scale_color_gradient(low = "#5B7C99", high = "#C1666B", name = "Prediction Score") +
     xlab("UMAP 1") +
     ylab("UMAP 2") +
     ggtitle("Azimuth - Prediction Score") +
@@ -204,9 +129,84 @@ fig_s1d <- ggplot(umap_data_azimuth_score, aes(x = UMAP1, y = UMAP2, color = Pre
         axis.title = element_text(size = 9, face = "bold", color = "#374151", family = "sans"),
         axis.text = element_text(size = 8, color = "#4B5563", family = "sans"),
         legend.position = "right",
-        legend.title = element_text(size = 8, face = "bold"),
-        legend.text = element_text(size = 7),
+        legend.title = element_text(size = 9, face = "bold"),
+        legend.text = element_text(size = 8),
+        legend.key.size = unit(0.35, "cm"),
+        panel.grid.major = element_line(color = "#E5E7EB", linewidth = 0.2),
+        panel.grid.minor = element_blank(),
+        panel.border = element_rect(color = "#D1D5DB", linewidth = 0.5, fill = NA),
+        plot.margin = margin(2, 0.5, 2, 0.5, "pt"),
+        panel.background = element_rect(fill = "#FAFBFC", color = NA),
+        aspect.ratio = 1
+    )
+
+# _________________________________________
+# Figure S1C: SingleR - Cell Type (Merged)
+# _________________________________________
+
+umap_data_singler_anno <- data.frame(
+    UMAP1 = umap_coords[, 1],
+    UMAP2 = umap_coords[, 2],
+    CellType = covid_data$singler_annotations_merged
+)
+
+fig_s1c <- ggplot(umap_data_singler_anno, aes(x = UMAP1, y = UMAP2, color = CellType)) +
+    geom_point(size = 0.1, alpha = 0.6) +
+    scale_color_manual(values = cell_type_colors, na.value = "grey50") +
+    guides(color = guide_legend(ncol = 1)) +
+    xlab("UMAP 1") +
+    ylab("UMAP 2") +
+    ggtitle("SingleR - Cell Type") +
+    theme_minimal() +
+    theme(
+        plot.title = element_text(hjust = 0.5, face = "bold", size = 12, color = "#1F2937", family = "sans"),
+        axis.title = element_text(size = 9, face = "bold", color = "#374151", family = "sans"),
+        axis.text = element_text(size = 8, color = "#4B5563", family = "sans"),
+        legend.position = "right",
+        legend.title = element_blank(),
+        legend.text = element_text(size = 8),
         legend.key.size = unit(0.3, "cm"),
+        panel.grid.major = element_line(color = "#E5E7EB", linewidth = 0.2),
+        panel.grid.minor = element_blank(),
+        panel.border = element_rect(color = "#D1D5DB", linewidth = 0.5, fill = NA),
+        plot.margin = margin(2, 0.5, 2, 0.5, "pt"),
+        panel.background = element_rect(fill = "#FAFBFC", color = NA),
+        aspect.ratio = 1
+    )
+
+# ________________________________________
+# Figure S1D: SingleR - Delta Score
+# ________________________________________
+
+singler_scores_matrix <- covid_data$singler_scores
+singler_assigned <- covid_data$singler_annotations
+
+singler_conf <- sapply(1:ncol(covid_data), function(i) {
+    cell_type <- singler_assigned[i]
+    singler_scores_matrix[i, cell_type]
+})
+
+umap_data_singler_score <- data.frame(
+    UMAP1 = umap_coords[, 1],
+    UMAP2 = umap_coords[, 2],
+    DeltaScore = singler_conf
+)
+
+fig_s1d <- ggplot(umap_data_singler_score, aes(x = UMAP1, y = UMAP2, color = DeltaScore)) +
+    geom_point(size = 0.1, alpha = 0.6) +
+    scale_color_gradient(low = "#5B7C99", high = "#C1666B", name = "Delta Score") +
+    xlab("UMAP 1") +
+    ylab("UMAP 2") +
+    ggtitle("SingleR - Delta Score") +
+    theme_minimal() +
+    theme(
+        plot.title = element_text(hjust = 0.5, face = "bold", size = 12, color = "#1F2937", family = "sans"),
+        axis.title = element_text(size = 9, face = "bold", color = "#374151", family = "sans"),
+        axis.text = element_text(size = 8, color = "#4B5563", family = "sans"),
+        legend.position = "right",
+        legend.title = element_text(size = 9, face = "bold"),
+        legend.text = element_text(size = 8),
+        legend.key.size = unit(0.35, "cm"),
         panel.grid.major = element_line(color = "#E5E7EB", linewidth = 0.2),
         panel.grid.minor = element_blank(),
         panel.border = element_rect(color = "#D1D5DB", linewidth = 0.5, fill = NA),
@@ -239,8 +239,8 @@ fig_s1e <- ggplot(umap_data_celltypist_anno, aes(x = UMAP1, y = UMAP2, color = C
         axis.text = element_text(size = 8, color = "#4B5563", family = "sans"),
         legend.position = "right",
         legend.title = element_blank(),
-        legend.text = element_text(size = 6),
-        legend.key.size = unit(0.25, "cm"),
+        legend.text = element_text(size = 8),
+        legend.key.size = unit(0.3, "cm"),
         panel.grid.major = element_line(color = "#E5E7EB", linewidth = 0.2),
         panel.grid.minor = element_blank(),
         panel.border = element_rect(color = "#D1D5DB", linewidth = 0.5, fill = NA),
@@ -261,7 +261,7 @@ umap_data_celltypist_score <- data.frame(
 
 fig_s1f <- ggplot(umap_data_celltypist_score, aes(x = UMAP1, y = UMAP2, color = ConfidenceScore)) +
     geom_point(size = 0.1, alpha = 0.6) +
-    scale_color_gradient(low = "#C1666B", high = "#5B7C99", name = "Confidence Score") +
+    scale_color_gradient(low = "#5B7C99", high = "#C1666B", name = "Confidence Score") +
     xlab("UMAP 1") +
     ylab("UMAP 2") +
     ggtitle("CellTypist - Confidence Score") +
@@ -271,9 +271,9 @@ fig_s1f <- ggplot(umap_data_celltypist_score, aes(x = UMAP1, y = UMAP2, color = 
         axis.title = element_text(size = 9, face = "bold", color = "#374151", family = "sans"),
         axis.text = element_text(size = 8, color = "#4B5563", family = "sans"),
         legend.position = "right",
-        legend.title = element_text(size = 8, face = "bold"),
-        legend.text = element_text(size = 7),
-        legend.key.size = unit(0.3, "cm"),
+        legend.title = element_text(size = 9, face = "bold"),
+        legend.text = element_text(size = 8),
+        legend.key.size = unit(0.35, "cm"),
         panel.grid.major = element_line(color = "#E5E7EB", linewidth = 0.2),
         panel.grid.minor = element_blank(),
         panel.border = element_rect(color = "#D1D5DB", linewidth = 0.5, fill = NA),
@@ -306,8 +306,8 @@ fig_s1g <- ggplot(umap_data_scarches_anno, aes(x = UMAP1, y = UMAP2, color = Cel
         axis.text = element_text(size = 8, color = "#4B5563", family = "sans"),
         legend.position = "right",
         legend.title = element_blank(),
-        legend.text = element_text(size = 6),
-        legend.key.size = unit(0.25, "cm"),
+        legend.text = element_text(size = 8),
+        legend.key.size = unit(0.3, "cm"),
         panel.grid.major = element_line(color = "#E5E7EB", linewidth = 0.2),
         panel.grid.minor = element_blank(),
         panel.border = element_rect(color = "#D1D5DB", linewidth = 0.5, fill = NA),
@@ -328,7 +328,7 @@ umap_data_scarches_score <- data.frame(
 
 fig_s1h <- ggplot(umap_data_scarches_score, aes(x = UMAP1, y = UMAP2, color = UncertaintyScore)) +
     geom_point(size = 0.1, alpha = 0.6) +
-    scale_color_gradient(low = "#C1666B", high = "#5B7C99", name = "Uncertainty Score") +
+    scale_color_gradient(low = "#5B7C99", high = "#C1666B", name = "Uncertainty Score") +
     xlab("UMAP 1") +
     ylab("UMAP 2") +
     ggtitle("scArches - Uncertainty Score") +
@@ -338,9 +338,9 @@ fig_s1h <- ggplot(umap_data_scarches_score, aes(x = UMAP1, y = UMAP2, color = Un
         axis.title = element_text(size = 9, face = "bold", color = "#374151", family = "sans"),
         axis.text = element_text(size = 8, color = "#4B5563", family = "sans"),
         legend.position = "right",
-        legend.title = element_text(size = 8, face = "bold"),
-        legend.text = element_text(size = 7),
-        legend.key.size = unit(0.3, "cm"),
+        legend.title = element_text(size = 9, face = "bold"),
+        legend.text = element_text(size = 8),
+        legend.key.size = unit(0.35, "cm"),
         panel.grid.major = element_line(color = "#E5E7EB", linewidth = 0.2),
         panel.grid.minor = element_blank(),
         panel.border = element_rect(color = "#D1D5DB", linewidth = 0.5, fill = NA),
