@@ -16,7 +16,7 @@ This page demonstrates complementary aspects of `scDiagnostics` anomaly detectio
 
 The first visualization provides a comprehensive overview of how each annotation method assigns cell types and confidence scores across the entire dataset.
 
-**Script:** `R/covid/COVID Supplementary Figure 1.R`
+**Script:** `R/covid/COVID_Supplementary_Figure_1.R`
 
 **What it does:**
 
@@ -32,10 +32,7 @@ The first visualization provides a comprehensive overview of how each annotation
 - **Fig S1E-F:** CellTypist cell types and confidence scores
 - **Fig S1G-H:** scArches cell types and uncertainty scores
 
-```{r}
-#| eval: false
-knitr::include_graphics("figs/supp/covid/Fig_S1_umaps.png")
-```
+![Figure S1: Cell type annotations and confidence scores across annotation methods](figs/supp/covid/Fig_S1_umaps.png)
 
 ---
 
@@ -43,7 +40,7 @@ knitr::include_graphics("figs/supp/covid/Fig_S1_umaps.png")
 
 The interferon (IFN) signature provides a biological marker of disease state independent of annotation method.
 
-**Script:** `R/covid/COVID Supplementary Figure 2.R`
+**Script:** `R/covid/COVID_Supplementary_Figure_2.R`
 
 **What it does:**
 
@@ -55,10 +52,7 @@ The interferon (IFN) signature provides a biological marker of disease state ind
 
 - **Fig S2:** IFN signature score across all query cells
 
-```{r}
-#| eval: false
-knitr::include_graphics("figs/supp/covid/Fig_S2_ifn_signature.png")
-```
+![Figure S2: Interferon signature score across all query cells](figs/supp/covid/Fig_S2_ifn_signature.png)
 
 ---
 
@@ -68,7 +62,7 @@ knitr::include_graphics("figs/supp/covid/Fig_S2_ifn_signature.png")
 
 This analysis projects both reference and query cells into shared PCA space and examines how annotation confidence relates to position in this space.
 
-**Script:** `R/covid/COVID Supplementary Figure 3.R`
+**Script:** `R/covid/COVID_Supplementary_Figure_3.R`
 
 **What it does:**
 
@@ -94,10 +88,7 @@ This analysis projects both reference and query cells into shared PCA space and 
 - **Fig S3G-I:** CellTypist (confidence score, IFN score, anomalies)
 - **Fig S3J-L:** scArches (uncertainty score, IFN score, anomalies)
 
-```{r}
-#| eval: false
-knitr::include_graphics("figs/supp/covid/Fig_S3_pca_comparison.png")
-```
+![Figure S3: PCA and anomaly detection across annotation methods](figs/supp/covid/Fig_S3_pca_comparison.png)
 
 **Table S3:** Wilcoxon test comparing IFN signature expression between anomalous and non-anomalous CD14+ monocytes for each method.
 
@@ -107,7 +98,7 @@ knitr::include_graphics("figs/supp/covid/Fig_S3_pca_comparison.png")
 
 This analysis directly examines whether annotation confidence scores differ between cells detected as anomalous versus typical.
 
-**Script:** `R/covid/COVID Supplementary Figure 4.R`
+**Script:** `R/covid/COVID_Supplementary_Figure_4.R`
 
 **What it does:**
 
@@ -131,10 +122,7 @@ This analysis directly examines whether annotation confidence scores differ betw
 - **Fig S4C:** CellTypist confidence scores
 - **Fig S4D:** scArches uncertainty scores
 
-```{r}
-#| eval: false
-knitr::include_graphics("figs/supp/covid/Fig_S4_confidence_scores.png")
-```
+![Figure S4: Confidence score distributions by anomaly status](figs/supp/covid/Fig_S4_confidence_scores.png)
 
 **Table S4:** Wilcoxon test results showing median confidence scores for anomalous vs. non-anomalous cells and statistical significance.
 
@@ -146,7 +134,7 @@ knitr::include_graphics("figs/supp/covid/Fig_S4_confidence_scores.png")
 
 This comprehensive analysis examines how interferon-responsive genes are dysregulated in anomalous cells.
 
-**Script:** `R/covid/COVID Supplementary Figure 5.R`
+**Script:** `R/covid/COVID_Supplementary_Figure_5.R`
 
 **What it does:**
 
@@ -173,10 +161,7 @@ This comprehensive analysis examines how interferon-responsive genes are dysregu
 - **Fig S5E-F:** CellTypist (confidence quantiles, anomaly detection)
 - **Fig S5G-H:** scArches (confidence quantiles, anomaly detection)
 
-```{r}
-#| eval: false
-knitr::include_graphics("figs/supp/covid/Fig_S5_gene_expression_shifts.png")
-```
+![Figure S5: Gene expression shifts in interferon signature genes](figs/supp/covid/Fig_S5_gene_expression_shifts.png)
 
 **Table S5:** Spearman correlation between annotation confidence-based and anomaly-based gene expression shifts, showing high agreement across methods.
 
@@ -188,7 +173,7 @@ knitr::include_graphics("figs/supp/covid/Fig_S5_gene_expression_shifts.png")
 
 This analysis provides an overview of the spatial landscape in healthy versus inflamed colon tissue.
 
-**Script:** `R/merfish/MERFISH Supplementary Figure 1.R`
+**Script:** `R/merfish/MERFISH_Supplementary_Figure_1.R`
 
 **What it does:**
 
@@ -203,10 +188,7 @@ This analysis provides an overview of the spatial landscape in healthy versus in
 - **Fig S6B:** Cell type annotations across combined UMAP
 - **Fig S6C:** ECM homeostasis score distribution
 
-```{r}
-#| eval: false
-knitr::include_graphics("figs/supp/merfish/Fig_S1_umaps_exploratory.png")
-```
+![Figure S6: UMAP visualization of healthy and DSS9-induced colitis samples](figs/supp/merfish/Fig_S1_umaps_exploratory.png)
 
 ---
 
@@ -214,7 +196,7 @@ knitr::include_graphics("figs/supp/merfish/Fig_S1_umaps_exploratory.png")
 
 This analysis examines how each annotation method assigns cell types and confidence scores across the spatial tissue organization.
 
-**Script:** `R/merfish/MERFISH Supplementary Figure 2.R`
+**Script:** `R/merfish/MERFISH_Supplementary_Figure_2.R`
 
 **What it does:**
 
@@ -236,10 +218,7 @@ This analysis examines how each annotation method assigns cell types and confide
 - **Fig S7E-F:** CellTypist cell types and confidence scores (spatial)
 - **Fig S7G-H:** scArches cell types and uncertainty scores (spatial)
 
-```{r}
-#| eval: false
-knitr::include_graphics("figs/supp/merfish/Fig_S2_annotations_scores.png")
-```
+![Figure S7: Spatial cell type annotations and confidence scores](figs/supp/merfish/Fig_S2_annotations_scores.png)
 
 ---
 
@@ -249,7 +228,7 @@ knitr::include_graphics("figs/supp/merfish/Fig_S2_annotations_scores.png")
 
 This analysis focuses on a key disease-associated cell state: inflamed fibroblasts (IAFs), which are expanded in DSS-induced colitis.
 
-**Script:** `R/merfish/MERFISH Supplementary Figure 3.R`
+**Script:** `R/merfish/MERFISH_Supplementary_Figure_3.R`
 
 **What it does:**
 
@@ -268,12 +247,10 @@ This analysis focuses on a key disease-associated cell state: inflamed fibroblas
 - scDiagnostics anomaly detection flags many IAFs as outliers, even when correctly classified
 
 **Output:**
+
 - **Fig S8:** Heatmap of IAF predictions and anomaly detection across methods
 
-```{r}
-#| eval: false
-knitr::include_graphics("figs/supp/merfish/Fig_S3_annotation_heatmap.png")
-```
+![Figure S8: Annotation tool predictions and anomaly detection in inflamed fibroblasts](figs/supp/merfish/Fig_S3_annotation_heatmap.png)
 
 ---
 
@@ -281,7 +258,7 @@ knitr::include_graphics("figs/supp/merfish/Fig_S3_annotation_heatmap.png")
 
 This comprehensive analysis projects healthy reference and inflamed query fibroblasts into shared PCA space and examines ECM gene expression patterns.
 
-**Script:** `R/merfish/MERFISH Supplementary Figure 4.R`
+**Script:** `R/merfish/MERFISH_Supplementary_Figure_4.R`
 
 **What it does:**
 
@@ -305,10 +282,7 @@ This comprehensive analysis projects healthy reference and inflamed query fibrob
 - **Fig S9E-F:** CellTypist (PCA + ECM, anomaly detection)
 - **Fig S9G-H:** scArches (PCA + ECM, anomaly detection)
 
-```{r}
-#| eval: false
-knitr::include_graphics("figs/supp/merfish/Fig_S4_pca_ecm_anomaly.png")
-```
+![Figure S9: PCA projection and anomaly detection in DSS9 fibroblasts](figs/supp/merfish/Fig_S4_pca_ecm_anomaly.png)
 
 ---
 
@@ -316,7 +290,7 @@ knitr::include_graphics("figs/supp/merfish/Fig_S4_pca_ecm_anomaly.png")
 
 This final analysis focuses specifically on the five ECM homeostasis genes and how their expression differs between anomalous and typical cells.
 
-**Script:** `R/merfish/MERFISH Supplementary Figure 5.R`
+**Script:** `R/merfish/MERFISH_Supplementary_Figure_5.R`
 
 **What it does:**
 
@@ -337,10 +311,7 @@ This final analysis focuses specifically on the five ECM homeostasis genes and h
 
 - **Fig S10:** ECM gene expression shifts across all four methods
 
-```{r}
-#| eval: false
-knitr::include_graphics("figs/supp/merfish/Fig_S5_ecm_barplot.png")
-```
+![Figure S10: ECM gene expression shifts across annotation methods](figs/supp/merfish/Fig_S5_ecm_barplot.png)
 
 **Table S6:** Col1a2 expression comparison between anomalous and non-anomalous fibroblasts, with t-test statistics showing significant upregulation in anomalous cells across all annotation methods.
 
@@ -351,19 +322,16 @@ knitr::include_graphics("figs/supp/merfish/Fig_S5_ecm_barplot.png")
 These comprehensive supplementary analyses demonstrate that:
 
 1. **COVID-19 scRNA-seq:**
-
    - Annotation confidence and anomaly detection are concordant
    - Anomalies have distinct molecular signatures (elevated interferon response)
    - Patterns are consistent across all four annotation methods
 
 2. **MERFISH Spatial Data:**
-
    - Spatial context reveals how anomalies organize within tissue
    - Disease-associated fibroblasts show elevated ECM expression
    - Anomaly detection identifies biologically relevant cell states
 
 3. **Cross-Dataset Findings:**
-
    - Annotation confidence scores reliably predict anomaly status
    - Gene expression patterns align between confidence-based and anomaly-based stratifications
    - `scDiagnostics` complements rather than replaces annotation tool scores
@@ -374,21 +342,20 @@ These comprehensive supplementary analyses demonstrate that:
 
 To reproduce all supplementary analyses:
 
-```{r}
-#| eval: false
+```r
 # COVID-19 analyses
-source("R/covid/COVID Supplementary Figure 1.R")
-source("R/covid/COVID Supplementary Figure 2.R")
-source("R/covid/COVID Supplementary Figure 3.R")
-source("R/covid/COVID Supplementary Figure 4.R")
-source("R/covid/COVID Supplementary Figure 5.R")
+source("R/covid/COVID_Supplementary_Figure_1.R")
+source("R/covid/COVID_Supplementary_Figure_2.R")
+source("R/covid/COVID_Supplementary_Figure_3.R")
+source("R/covid/COVID_Supplementary_Figure_4.R")
+source("R/covid/COVID_Supplementary_Figure_5.R")
 
 # MERFISH analyses
-source("R/merfish/MERFISH Supplementary_Figure 1.R")
-source("R/merfish/MERFISH Supplementary_Figure 2.R")
-source("R/merfish/MERFISH Supplementary_Figure 3.R")
-source("R/merfish/MERFISH Supplementary_Figure 4.R")
-source("R/merfish/MERFISH Supplementary_Figure 5.R")
-```
+source("R/merfish/MERFISH_Supplementary_Figure_1.R")
+source("R/merfish/MERFISH_Supplementary_Figure_2.R")
+source("R/merfish/MERFISH_Supplementary_Figure_3.R")
+source("R/merfish/MERFISH_Supplementary_Figure_4.R")
+source("R/merfish/MERFISH_Supplementary_Figure_5.R")
+```[end]
 
 All figures and tables are saved to `figures/supp/covid/` and `figures/supp/merfish/`.
