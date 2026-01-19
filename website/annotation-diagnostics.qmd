@@ -90,8 +90,6 @@ This analysis projects both reference and query cells into shared PCA space and 
 
 ![Figure S3: PCA and anomaly detection across annotation methods](figs/supp/covid/Fig_S3_pca_comparison.png)
 
-**Table S3:** Wilcoxon test comparing IFN signature expression between anomalous and non-anomalous CD14+ monocytes for each method.
-
 ---
 
 ### Confidence Score Distributions by Anomaly Status
@@ -124,7 +122,6 @@ This analysis directly examines whether annotation confidence scores differ betw
 
 ![Figure S4: Confidence score distributions by anomaly status](figs/supp/covid/Fig_S4_confidence_scores.png)
 
-**Table S4:** Wilcoxon test results showing median confidence scores for anomalous vs. non-anomalous cells and statistical significance.
 
 ---
 
@@ -162,8 +159,6 @@ This comprehensive analysis examines how interferon-responsive genes are dysregu
 - **Fig S5G-H:** scArches (confidence quantiles, anomaly detection)
 
 ![Figure S5: Gene expression shifts in interferon signature genes](figs/supp/covid/Fig_S5_gene_expression_shifts.png)
-
-**Table S5:** Spearman correlation between annotation confidence-based and anomaly-based gene expression shifts, showing high agreement across methods.
 
 ---
 
@@ -305,15 +300,13 @@ This final analysis focuses specifically on the five ECM homeostasis genes and h
 
 - Anomalous fibroblasts show elevated ECM gene expression across all methods
 - Elevation is consistent and robust across the four annotation approaches
-- Col1a2 shows particularly strong upregulation in anomalous cells (Table S6)
+- Col1a2 shows particularly strong upregulation in anomalous cells
 
 **Outputs:**
 
 - **Fig S10:** ECM gene expression shifts across all four methods
 
 ![Figure S10: ECM gene expression shifts across annotation methods](figs/supp/merfish/Fig_S5_ecm_barplot.png)
-
-**Table S6:** Col1a2 expression comparison between anomalous and non-anomalous fibroblasts, with t-test statistics showing significant upregulation in anomalous cells across all annotation methods.
 
 ---
 
