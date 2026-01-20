@@ -167,7 +167,8 @@ create_geneshifts_barplot <- function(gene_shifts_obj, cell_type, genes_order, m
 
 create_quantile_gene_plot <- function(covid_cd14, normal_cd14, genes, method_name, confidence_col, 
                                       cell_type_for_scores = NULL, score_direction = "higher_is_better",
-                                      gene_order = NULL) {
+                                      gene_order = NULL,
+                                      assay_name = "logcounts") {
     
     # Get confidence scores for query cells
     if (!is.null(cell_type_for_scores)) {
@@ -202,10 +203,10 @@ create_quantile_gene_plot <- function(covid_cd14, normal_cd14, genes, method_nam
     genes_available <- genes[genes %in% rownames(covid_cd14) & genes %in% rownames(normal_cd14)]
     
     # Calculate mean expression for each group and each gene
-    ref_mean <- rowMeans(assay(normal_cd14[genes_available, ]), na.rm = TRUE)
-    all_query_mean <- rowMeans(assay(covid_cd14[genes_available, all_query_cells]), na.rm = TRUE)
-    low_conf_mean <- rowMeans(assay(covid_cd14[genes_available, low_conf_cells]), na.rm = TRUE)
-    high_conf_mean <- rowMeans(assay(covid_cd14[genes_available, high_conf_cells]), na.rm = TRUE)
+    ref_mean <- rowMeans(assay(normal_cd14[genes_available, ], assay_name), na.rm = TRUE)
+    all_query_mean <- rowMeans(assay(covid_cd14[genes_available, all_query_cells], assay_name), na.rm = TRUE)
+    low_conf_mean <- rowMeans(assay(covid_cd14[genes_available, low_conf_cells], assay_name), na.rm = TRUE)
+    high_conf_mean <- rowMeans(assay(covid_cd14[genes_available, high_conf_cells], assay_name), na.rm = TRUE)
     
     # Calculate log2 fold changes
     lfc_all <- all_query_mean - ref_mean
@@ -289,8 +290,8 @@ create_quantile_gene_plot <- function(covid_cd14, normal_cd14, genes, method_nam
 # Azimuth - Row 1
 # _________________
 
-cd14_azimuth <- covid_data[, covid_data$azimuth_celltype_l1_merged == "CD14 mono"]
-normal_cd14_singler <- normal_data[, normal_data$author_cell_type_merged == "CD14 mono"]
+cd14_azimuth <- covid_data[, covid_data$azimuth_celltype_l1 == "CD14_mono"]
+normal_cd14 <- normal_data[, normal_data$author_cell_type == "CD14_mono"]
 
 gene_shifts_azimuth <- calculateGeneShifts(
     query_data = covid_data[yoshida_ifn_signature,],
@@ -305,16 +306,17 @@ gene_shifts_azimuth <- calculateGeneShifts(
     anomaly_comparison = TRUE,
     anomaly_threshold = 0.5,
     assay_name = "logcounts",
-    max_cells_query = 5000,
-    max_cells_ref = 5000
+    max_cells_query = NULL,
+    max_cells_ref = NULL
 )
 
 gene_order_azimuth <- extract_geneshifts_order(gene_shifts_azimuth, pc_subset = 1:5)
 
-fig_s5_1a <- create_quantile_gene_plot(cd14_azimuth, normal_cd14_singler, yoshida_ifn_signature, 
-                                        "Azimuth", "azimuth_mapping_score",
-                                        score_direction = "higher_is_better",
-                                        gene_order = rev(gene_order_azimuth))
+fig_s5_1a <- create_quantile_gene_plot(cd14_azimuth, normal_cd14, yoshida_ifn_signature, 
+                                       "Azimuth", "azimuth_mapping_score",
+                                       score_direction = "higher_is_better",
+                                       gene_order = NULL,
+                                       assay_name = "logcounts")
 
 fig_s5_1b <- create_geneshifts_barplot(gene_shifts_azimuth, "CD14_mono", gene_order_azimuth, "Azimuth")
 
@@ -336,8 +338,8 @@ gene_shifts_singler <- calculateGeneShifts(
     anomaly_comparison = TRUE,
     anomaly_threshold = 0.5,
     assay_name = "logcounts",
-    max_cells_query = 5000,
-    max_cells_ref = 5000
+    max_cells_query = NULL,
+    max_cells_ref = NULL
 )
 
 gene_order_singler <- extract_geneshifts_order(gene_shifts_singler, pc_subset = 1:5)

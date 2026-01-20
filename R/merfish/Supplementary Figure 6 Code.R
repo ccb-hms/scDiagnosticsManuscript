@@ -58,8 +58,8 @@ create_annotation_heatmaps <- function(method_name, query_annot_col) {
         healthy_data$tier2_merged == "Fibroblast"
     ]
     
-    cat(sprintf("Inflamed to SMC: %d cells\n", ncol(inflamed_to_smc)))
-    cat(sprintf("Inflamed to Fibro: %d cells\n", ncol(inflamed_to_fibro)))
+    cat(sprintf("Inflamed Fibro to SMC: %d cells\n", ncol(inflamed_to_smc)))
+    cat(sprintf("Inflamed Fibro to Fibro: %d cells\n", ncol(inflamed_to_fibro)))
     cat(sprintf("Reference SMC: %d cells\n", ncol(ref_smc)))
     cat(sprintf("Reference Fibro: %d cells\n", ncol(ref_fibro)))
     
@@ -125,8 +125,8 @@ create_annotation_heatmaps <- function(method_name, query_annot_col) {
     combined_all <- cbind(inflamed_to_smc, inflamed_to_fibro, ref_smc, ref_fibro)
     
     combined_all$group <- c(
-        rep("Inflamed to SMC", ncol(inflamed_to_smc)),
-        rep("Inflamed to Fibro", ncol(inflamed_to_fibro)),
+        rep("Inflamed Fibro to SMC", ncol(inflamed_to_smc)),
+        rep("Inflamed Fibro to Fibro", ncol(inflamed_to_fibro)),
         rep("Reference SMC", ncol(ref_smc)),
         rep("Reference Fibro", ncol(ref_fibro))
     )
@@ -153,9 +153,9 @@ create_annotation_heatmaps <- function(method_name, query_annot_col) {
     # Find top discriminating genes
     # _______________________________
     
-    cat("\n--- Finding top genes separating Inflamed to SMC from Inflamed to Fibro ---\n")
+    cat("\n--- Finding top genes separating Inflamed Fibro to SMC from Inflamed Fibro to Fibro ---\n")
     
-    expr_diff <- pb_matrix_all[, "Inflamed to SMC"] - pb_matrix_all[, "Inflamed to Fibro"]
+    expr_diff <- pb_matrix_all[, "Inflamed Fibro to SMC"] - pb_matrix_all[, "Inflamed Fibro to Fibro"]
     top_diff_genes <- names(sort(abs(expr_diff), decreasing = TRUE)[1:50])
     
     # Separate by marker type and get top 10 from each
@@ -180,8 +180,8 @@ create_annotation_heatmaps <- function(method_name, query_annot_col) {
     
     # Create column annotation (same for both heatmaps)
     col_colors <- c(
-        "Inflamed to SMC" = "#A23B72",
-        "Inflamed to Fibro" = "#2E86AB",
+        "Inflamed Fibro to SMC" = "#A23B72",
+        "Inflamed Fibro to Fibro" = "#2E86AB",
         "Reference SMC" = "#C73E1D",
         "Reference Fibro" = "#F18F01"
     )

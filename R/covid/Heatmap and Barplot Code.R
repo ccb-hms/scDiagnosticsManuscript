@@ -51,8 +51,8 @@ gene_shifts <- calculateGeneShifts(
      detect_anomalies = TRUE,
      anomaly_comparison = TRUE,
      anomaly_threshold = 0.5, 
-     max_cells_query = 5000, 
-     max_cells_ref = 5000)
+     max_cells_query = NULL, 
+     max_cells_ref = NULL)
 
 # Heatmap of IFN genes
 heatmap_object <- plot(gene_shifts,
@@ -63,10 +63,10 @@ heatmap_object <- plot(gene_shifts,
      n_genes = 25,
      significance_threshold = 0.05,
      show_anomalies = TRUE,
-     pseudo_bulk = TRUE,
-     cluster_cols = TRUE,
-     max_cells_ref = 5000,
-     max_cells_query = 5000,
+     pseudo_bulk = F,
+     cluster_cols = F,
+     max_cells_ref = NULL,
+     max_cells_query = NULL,
     draw_plot = FALSE)
 
 # Save the heatmap plot
@@ -85,8 +85,8 @@ plot(gene_shifts,
      show_anomalies = TRUE,
      pseudo_bulk = TRUE,
      cluster_cols = TRUE,
-     max_cells_ref = 5000,
-     max_cells_query = 5000)
+     max_cells_ref = NULL,
+     max_cells_query = NULL)
 
 # Save the barplot
 ggsave("figures/covid/gene_shifts_barplot.png")
