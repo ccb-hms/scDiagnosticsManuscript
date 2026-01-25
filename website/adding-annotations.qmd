@@ -29,7 +29,7 @@ For some methods (`Azimuth`, `CellTypist`, `scArches`), a preliminary step creat
 
 Before annotating query data, you must create an `Azimuth` reference from your healthy reference dataset.
 
-**Script:** `R/covid/Create Azimuth Reference.R`
+**Script:** `R/covid/Create_Azimuth_Reference.R`
 
 **Key steps:**
 
@@ -55,7 +55,7 @@ Before annotating query data, you must create an `Azimuth` reference from your h
 **Scripts:**
 
 - `R/auxiliary/performAzimuthAnnotation.R` — Core annotation functionality
-- `R/covid/Add R (Azimuth and SingleR) Annotations.R` — Main execution script
+- `R/covid/Add_R_Annotations.R` — Main execution script
 
 **Key features:**
 
@@ -81,7 +81,7 @@ Before annotating query data, you must create an `Azimuth` reference from your h
 **Scripts:**
 
 - `R/auxiliary/performSingleRWithSubsampling.R` — Core annotation function with smart subsampling
-- `R/covid/Add R (Azimuth and SingleR) Annotations.R` — Main execution script (also runs SingleR)
+- `R/covid/Add_R_Annotations.R` — Main execution script (also runs SingleR)
 
 **Key features:**
 
@@ -105,9 +105,9 @@ Before annotating query data, you must create an `Azimuth` reference from your h
 **Scripts (in order):**
 
 1. `R/auxiliary/environmentSetupCellTypist.R` — Sets up Python environment (conda)
-2. `R/covid/CellTypist Data Preparation.R` — Converts SCE to AnnData format (.h5ad)
+2. `R/covid/CellTypist_Data_Preparation.R` — Converts SCE to AnnData format (.h5ad)
 3. `python/covid/CellTypist_Annotation.py` — Trains classifier and annotates query cells (Python)
-4. `R/covid/CellTypist Results Integration.R` — Integrates predictions back into SCE
+4. `R/covid/CellTypist_Results_Integration.R` — Integrates predictions back into SCE
 
 **Workflow:**
 
@@ -139,9 +139,9 @@ Step 3: Integrate results (h5ad → R)
 
 **Scripts (in order):**
 
-1. `R/covid/scVI Data Preparation.R` — Selects HVGs, converts to `AnnData` format
+1. `R/covid/scVI_Data_Preparation.R` — Selects HVGs, converts to `AnnData` format
 2. `python/covid/scVI_Annotation.py` — Trains VAE on reference, maps query, performs k-NN transfer (Python)
-3. `R/covid/scVI Results Integration.R` — Integrates predictions and UMAP coordinates into SCE
+3. `R/covid/scVI_Results_Integration.R` — Integrates predictions and UMAP coordinates into SCE
 
 **Workflow:**
 

@@ -28,7 +28,7 @@ We consistently observe the same patterns of anomaly detection, ECM dysregulatio
 
 ### 1. UMAP Visualization (Figure A)
 
-**Script:** `R/covid/UMAP Code (scVI).R`
+**Script:** `R/covid/UMAP_Code_scVI.R`
 
 Three complementary UMAP visualizations of the joint reference-query space:
 
@@ -51,11 +51,11 @@ Three complementary UMAP visualizations of the joint reference-query space:
 - Query cells: predominantly high IFN scores (yellow/orange)
 - This uniform, elevated IFN activation marks COVID-19 cells as a distinct transcriptomic state
 
-**Note:** Alternative dimensionality reduction methods (Fast MNN and Harmony) are also available in `UMAP Code (Fast MNN).R` and `UMAP Code (Harmony).R`.
+**Note:** Alternative dimensionality reduction methods (Fast MNN and Harmony) are also available in `UMAP_Code_FastMNN.R` and `UMAP_Code_Harmony.R`.
 
 ### 2. PCA with IFN Signature (Figure B)
 
-**Script:** `R/covid/PCA IFN Plot.R`
+**Script:** `R/covid/PCA_IFN_Plot.R`
 
 Pairwise scatterplot matrix of first 3 PCs with:
 
@@ -71,7 +71,7 @@ Pairwise scatterplot matrix of first 3 PCs with:
 
 ### 3. Anomaly Detection (Figure B, Right)
 
-**Script:** `R/covid/PCA Anomaly Plot.R`
+**Script:** `R/covid/PCA_Anomaly_Plot.R`
 
 Identifies cells with transcriptomic profiles substantially different from the reference:
 
@@ -128,7 +128,7 @@ We observe consistent anomaly detection patterns across all four annotation meth
 
 ### 4. Gene Expression Shifts (Figure C)
 
-**Script:** `R/covid/Heatmap and Barplot Code.R`
+**Script:** `R/covid/Heatmap_and_Barplot_Code.R`
 
 Analyzes 25 interferon-stimulated genes to quantify transcriptomic shifts:
 

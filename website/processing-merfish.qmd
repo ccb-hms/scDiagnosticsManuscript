@@ -22,7 +22,7 @@ The raw dataset is available through `MerfishData` R/Bioconductor package:
 
 The workflow is executed through a single R script:
 
-**File:** `R/merfish/Data QC and Processing.R`
+**File:** `R/merfish/Data_QC_and_Processing.R`
 
 ### Step 1: Data Loading and Sample Selection
 
@@ -112,7 +112,7 @@ Rather than running this pipeline from scratch (slow), fully processed datasets 
 
 For complete implementation details, see:
 
-- Main script: `R/merfish/Data QC and Processing.R`
+- Main script: `R/merfish/Data_QC_and_Processing.R`
 
 Supporting functions:
 

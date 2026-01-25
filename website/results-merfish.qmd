@@ -38,7 +38,7 @@ This consistency across independent annotation methods confirms that spatial and
 
 ### 1. Spatial Cell Type and Fibroblast State Maps (Figure A)
 
-**Script:** `R/merfish/Spatial Plots.R`
+**Script:** `R/merfish/Spatial_Plots.R`
 
 Three complementary spatial visualizations of the DSS9 inflamed colon tissue:
 
@@ -71,7 +71,7 @@ Three complementary spatial visualizations of the DSS9 inflamed colon tissue:
 
 ### 2. PCA with ECM Score and Anomaly Mapping (Figure B)
 
-**Script:** `R/merfish/PCA ECM Plot.R` and `R/merfish/PCA Anomaly Plot.R`
+**Script:** `R/merfish/PCA_ECM_Plot.R` and `R/merfish/PCA_Anomaly_Plot.R`
 
 Left panels: PCA pairs plot projecting fibroblasts into healthy reference PC space with ECM score overlay:
 
@@ -144,7 +144,7 @@ We observe consistent anomaly detection patterns across methods, confirming resu
 
 ### 3. Spatial Enrichment Analysis (Figure C)
 
-**Script:** `R/merfish/Spatial Enrichment Plot.R`
+**Script:** `R/merfish/Spatial_Enrichment_Plot.R`
 
 Tests whether anomalous fibroblasts preferentially locate near inflammatory signals by measuring distance to three target populations:
 
@@ -174,7 +174,7 @@ Tests whether anomalous fibroblasts preferentially locate near inflammatory sign
 
 ### 4. Ligand-Receptor Interaction Networks (Figure D)
 
-**Script:** `R/merfish/Network Plot.R`
+**Script:** `R/merfish/Network_Plot.R`
 
 Maps functional fibroblast-immune interactions via six curated ligand-receptor pairs:
 

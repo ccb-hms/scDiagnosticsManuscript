@@ -8,7 +8,7 @@
 
 message("\n--- Step 1: Preparing data for scVI (R -> Python) ---")
 # Ensure you save the script below as "scVI_Data_Preparation.R" in R/merfish/
-source("R/merfish/scVI Data Preparation.R")
+source("R/merfish/scVI_Data_Preparation.R")
 
 # ________________________________
 # Step 2: Run Annotation (Python)
@@ -41,7 +41,7 @@ message("--- Python script finished ---")
 
 message("\n--- Step 3: Integrating results back into R (Python -> R) ---")
 # Ensure you save the integration script in R/merfish/
-source("R/merfish/scVI Results Integration.R")
+source("R/merfish/scVI_Results_Integration.R")
 
 # ____________________________________
 # Step 4: Clean Up Intermediate Files

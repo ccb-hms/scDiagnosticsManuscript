@@ -39,7 +39,7 @@ environmentSetupCellTypist()
 # _______________________________________
 
 cat("\n--- Step 2: Preparing data for Python annotation ---\n")
-source("R/covid/CellTypist Data Preparation.R")
+source("R/covid/CellTypist_Data_Preparation.R")
 
 # ___________________________________________
 # Step 3: Run CellTypist Annotation (Python)
@@ -55,7 +55,7 @@ cat("✓ Python script execution complete.\n")
 # ____________________________________
 
 cat("\n--- Step 4: Integrating annotations with original R object ---\n") 
-source("R/covid/CellTypist Results Integration.R")
+source("R/covid/CellTypist_Results_Integration.R")
 
 # _____________________________________
 # Step 5: Clean Up Intermediate Files

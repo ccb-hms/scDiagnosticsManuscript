@@ -16,7 +16,7 @@ This page demonstrates complementary aspects of `scDiagnostics` anomaly detectio
 
 The first visualization provides a comprehensive overview of how each annotation method assigns cell types and confidence scores across the entire dataset.
 
-**Script:** `R/covid/COVID_Supplementary_Figure_1.R`
+**Script:** `R/covid/Supplementary_Figure_Code_1.R`
 
 **What it does:**
 
@@ -40,7 +40,7 @@ The first visualization provides a comprehensive overview of how each annotation
 
 The interferon (IFN) signature provides a biological marker of disease state independent of annotation method.
 
-**Script:** `R/covid/COVID_Supplementary_Figure_2.R`
+**Script:** `R/covid/Supplementary_Figure_Code_2.R`
 
 **What it does:**
 
@@ -62,7 +62,7 @@ The interferon (IFN) signature provides a biological marker of disease state ind
 
 This analysis projects both reference and query cells into shared PCA space and examines how annotation confidence relates to position in this space.
 
-**Script:** `R/covid/COVID_Supplementary_Figure_3.R`
+**Script:** `R/covid/Supplementary_Figure_Code_3.R`
 
 **What it does:**
 
@@ -96,7 +96,7 @@ This analysis projects both reference and query cells into shared PCA space and 
 
 This analysis directly examines whether annotation confidence scores differ between cells detected as anomalous versus typical.
 
-**Script:** `R/covid/COVID_Supplementary_Figure_4.R`
+**Script:** `R/covid/Supplementary_Figure_Code_4.R`
 
 **What it does:**
 
@@ -131,7 +131,7 @@ This analysis directly examines whether annotation confidence scores differ betw
 
 This comprehensive analysis examines how interferon-responsive genes are dysregulated in anomalous cells.
 
-**Script:** `R/covid/COVID_Supplementary_Figure_5.R`
+**Script:** `R/covid/Supplementary_Figure_Code_5.R`
 
 **What it does:**
 
@@ -168,7 +168,7 @@ This comprehensive analysis examines how interferon-responsive genes are dysregu
 
 This analysis provides an overview of the spatial landscape in healthy versus inflamed colon tissue.
 
-**Script:** `R/merfish/MERFISH_Supplementary_Figure_1.R`
+**Script:** `R/merfish/Supplementary_Figure_Code_1.R`
 
 **What it does:**
 
@@ -191,7 +191,7 @@ This analysis provides an overview of the spatial landscape in healthy versus in
 
 This analysis examines how each annotation method assigns cell types and confidence scores across the spatial tissue organization.
 
-**Script:** `R/merfish/MERFISH_Supplementary_Figure_2.R`
+**Script:** `R/merfish/Supplementary_Figure_Code_2.R`
 
 **What it does:**
 
@@ -223,7 +223,7 @@ This analysis examines how each annotation method assigns cell types and confide
 
 This analysis focuses on a key disease-associated cell state: inflamed fibroblasts (IAFs), which are expanded in DSS-induced colitis.
 
-**Script:** `R/merfish/MERFISH_Supplementary_Figure_3.R`
+**Script:** `R/merfish/Supplementary_Figure_Code_3.R`
 
 **What it does:**
 
@@ -253,7 +253,7 @@ This analysis focuses on a key disease-associated cell state: inflamed fibroblas
 
 This comprehensive analysis projects healthy reference and inflamed query fibroblasts into shared PCA space and examines ECM gene expression patterns.
 
-**Script:** `R/merfish/MERFISH_Supplementary_Figure_4.R`
+**Script:** `R/merfish/Supplementary_Figure_Code_4.R`
 
 **What it does:**
 
@@ -285,7 +285,7 @@ This comprehensive analysis projects healthy reference and inflamed query fibrob
 
 This final analysis focuses specifically on the five ECM homeostasis genes and how their expression differs between anomalous and typical cells.
 
-**Script:** `R/merfish/MERFISH_Supplementary_Figure_5.R`
+**Script:** `R/merfish/Supplementary_Figure_Code_5.R`
 
 **What it does:**
 
@@ -337,18 +337,18 @@ To reproduce all supplementary analyses:
 
 ```r
 # COVID-19 analyses
-source("R/covid/COVID_Supplementary_Figure_1.R")
-source("R/covid/COVID_Supplementary_Figure_2.R")
-source("R/covid/COVID_Supplementary_Figure_3.R")
-source("R/covid/COVID_Supplementary_Figure_4.R")
-source("R/covid/COVID_Supplementary_Figure_5.R")
+source("R/covid/Supplementary_Figure_Code_1.R")
+source("R/covid/Supplementary_Figure_Code_2.R")
+source("R/covid/Supplementary_Figure_Code_3.R")
+source("R/covid/Supplementary_Figure_Code_4.R")
+source("R/covid/Supplementary_Figure_Code_5.R")
 
 # MERFISH analyses
-source("R/merfish/MERFISH_Supplementary_Figure_1.R")
-source("R/merfish/MERFISH_Supplementary_Figure_2.R")
-source("R/merfish/MERFISH_Supplementary_Figure_3.R")
-source("R/merfish/MERFISH_Supplementary_Figure_4.R")
-source("R/merfish/MERFISH_Supplementary_Figure_5.R")
+source("R/merfish/Supplementary_Figure_Code_1.R")
+source("R/merfish/Supplementary_Figure_Code_2.R")
+source("R/merfish/Supplementary_Figure_Code_3.R")
+source("R/merfish/Supplementary_Figure_Code_4.R")
+source("R/merfish/Supplementary_Figure_Code_5.R")
 ```[end]
 
 All figures and tables are saved to `figures/supp/covid/` and `figures/supp/merfish/`.

@@ -21,7 +21,7 @@ Run this R script once to install all required packages:
 ```{r}
 #| eval: false
 # For COVID-19 scRNA-seq analysis
-source("R/covid/R Package Installation Pipeline.R")
+source("R/covid/R_Package_Installation_Pipeline.R")
 ```
 
 Or equivalently for MERFISH colitis analysis:
@@ -29,7 +29,7 @@ Or equivalently for MERFISH colitis analysis:
 ```{r}
 #| eval: false
 # For MERFISH spatial transcriptomics analysis
-source("R/merfish/R Package Installation Pipeline.R")
+source("R/merfish/R_Package_Installation_Pipeline.R")
 ```
 
 **Note:** Both scripts install the same core packages with identical versions. Running either one will set you up for both analyses.

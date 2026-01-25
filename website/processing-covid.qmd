@@ -22,7 +22,7 @@ The workflow consists of serial execution of two R scripts:
 
 ### Step 1: Data Cleaning and Subsetting
 
-**File:** `R/covid/Data Cleaning and Metadata Removal.R`
+**File:** `R/covid/Data_Cleaning_and_Metadata_Removal.R`
 
 This script performs initial data cleaning and filtering:
 
@@ -45,7 +45,7 @@ This script performs initial data cleaning and filtering:
 
 ### Step 2: Quality Control, Processing, and Splitting
 
-**File:** `R/covid/Data QC and Processing.R`
+**File:** `R/covid/Data_QC_and_Processing.R`
 
 This script applies QC filters, normalizes data, and prepares reference/query splits:
 
@@ -111,8 +111,8 @@ Rather than running this pipeline from scratch (slow), fully processed datasets 
 
 For complete implementation details, see:
 
-- Step 1: `R/covid/Data Cleaning and Metadata Removal.R`
-- Step 2: `R/covid/Data QC and Processing.R`
+- Step 1: `R/covid/Data_Cleaning_and_Metadata_Removal.R`
+- Step 2: `R/covid/Data_QC_and_Processing.R`
 
 Supporting functions:
 

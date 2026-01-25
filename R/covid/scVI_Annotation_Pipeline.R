@@ -7,7 +7,7 @@
 # ___________________________________
 
 message("\n--- Step 1: Preparing data for scVI (R -> Python) ---")
-source("R/covid/scVI Data Preparation.R")
+source("R/covid/scVI_Data_Preparation.R")
 
 # _________________________________
 # Step 2: Run Annotation (Python)
@@ -39,7 +39,7 @@ message("--- Python script finished ---")
 # _________________________________________
 
 message("\n--- Step 3: Integrating results back into R (Python -> R) ---")
-source("R/covid/scVI Results Integration.R")
+source("R/covid/scVI_Results_Integration.R")
 
 # ____________________________________
 # Step 4: Clean Up Intermediate Files
