@@ -35,14 +35,14 @@ For each dataset, we predict cell type labels using four popular annotation tool
 
 ```{r}
 #| eval: false
-source("R/covid/R Package Installation Pipeline.R")
+source("R/covid/R_Package_Installation_Pipeline.R")
 ```
 
 Or for MERFISH:
 
 ```{r}
 #| eval: false
-source("R/merfish/R Package Installation Pipeline.R")
+source("R/merfish/R_Package_Installation_Pipeline.R")
 ```
 
 ### Download Data
@@ -90,8 +90,8 @@ All required R packages are automatically installed by running:
 
 ```{r}
 #| eval: false
-source("R/covid/R Package Installation Pipeline.R")
-source("R/merfish/R Package Installation Pipeline.R")
+source("R/covid/R_Package_Installation_Pipeline.R")
+source("R/merfish/R_Package_Installation_Pipeline.R")
 ```
 
 ### Python Environment
