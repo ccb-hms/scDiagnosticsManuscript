@@ -34,14 +34,12 @@ For each dataset, we predict cell type labels using four popular annotation tool
 ### Installation
 
 ```{r}
-#| eval: false
 source("R/covid/R_Package_Installation_Pipeline.R")
 ```
 
 Or for MERFISH:
 
 ```{r}
-#| eval: false
 source("R/merfish/R_Package_Installation_Pipeline.R")
 ```
 
@@ -50,7 +48,6 @@ source("R/merfish/R_Package_Installation_Pipeline.R")
 All pre-processed datasets with annotations are available on [Zenodo](https://doi.org/10.5281/zenodo.18274941):
 
 ```{r}
-#| eval: false
 source("data/downloadData.R")
 downloadData()
 ```
@@ -89,7 +86,6 @@ Quick start, core functionality, and common analysis workflows:
 All required R packages are automatically installed by running:
 
 ```{r}
-#| eval: false
 source("R/covid/R_Package_Installation_Pipeline.R")
 source("R/merfish/R_Package_Installation_Pipeline.R")
 ```
