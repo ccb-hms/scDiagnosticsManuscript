@@ -1,5 +1,5 @@
 # ---------------------------------------------
-# ZEISEL BRAIN - Supplementary Figures 1-3
+# ZEISEL BRAIN - Supplementary Figures 1-4
 # ---------------------------------------------
 
 library(scDiagnostics)
@@ -133,9 +133,11 @@ run_test <- function(ref_sce, query_sce, target_hidden_cluster) {
     ss_if <- calc_sens_spec(if_preds, truth_logical)
     ss_re <- calc_sens_spec(re_preds, truth_logical)
     
+    # ADDED AUPRC TO THE RETURNED DATAFRAME
     return(data.frame(
         Method = c("Isolation_Forest", "Reconstruction_Error"), 
         AUROC = c(m_if["AUROC"], m_re["AUROC"]),
+        AUPRC = c(m_if["AUPRC"], m_re["AUPRC"]),
         Sensitivity = c(ss_if["Sensitivity"], ss_re["Sensitivity"]),
         Specificity = c(ss_if["Specificity"], ss_re["Specificity"])
     ))
@@ -162,7 +164,7 @@ res_A_rare <- run_test(base_ref[, base_ref$true_cell_type != "microglia"], base_
 res_A_rare$Test <- "Rare\n(Microglia)"; res_A_rare$TestGroup <- "Baseline"; all_results[[length(all_results)+1]] <- res_A_rare
 
 # Helper to run gradients dynamically
-run_gradient_suite <- function(hidden_cluster, group_name) {
+run_gradient_suite <- function(hidden_cluster, group_name, imb_levels = c(300, 100, 50, 20, 10)) {
     message(paste("Running Gradients for:", group_name))
     ref_grad <- base_ref[, base_ref$true_cell_type != hidden_cluster]
     
@@ -184,15 +186,23 @@ run_gradient_suite <- function(hidden_cluster, group_name) {
     }
     
     # Imbalance
-    for(cl in c(300, 100, 50, 20, 10)) {
+    target_ref_idx <- which(ref_grad$true_cell_type == target_ref)
+    actual_size <- length(target_ref_idx)
+    max_clean_size <- floor(actual_size / 10) * 10
+    valid_levels <- unique(sapply(imb_levels, function(x) min(x, max_clean_size)))
+    valid_levels <- sort(valid_levels, decreasing = TRUE)
+    
+    for(cl in valid_levels) {
         ref_tmp <- ref_grad
         ca1_idx <- which(ref_tmp$true_cell_type == target_ref)
-        if(length(ca1_idx) > cl) {
-            keep_ca1 <- sample(ca1_idx, size = cl)
-            ref_tmp <- ref_tmp[, -setdiff(ca1_idx, keep_ca1)]
-        }
+        
+        keep_ca1 <- sample(ca1_idx, size = cl)
+        ref_tmp <- ref_tmp[, -setdiff(ca1_idx, keep_ca1)]
+        
         res_tmp <- run_test(ref_tmp, base_query, hidden_cluster)
-        res_tmp$Test <- "Imbalance"; res_tmp$X_Value <- as.character(cl); res_tmp$TestGroup <- group_name
+        res_tmp$Test <- "Imbalance"
+        res_tmp$X_Value <- as.character(cl)
+        res_tmp$TestGroup <- group_name
         all_results[[length(all_results)+1]] <<- res_tmp
     }
     
@@ -211,8 +221,8 @@ run_gradient_suite <- function(hidden_cluster, group_name) {
     }
 }
 
-run_gradient_suite("pyramidal SS", "Related")
-run_gradient_suite("microglia", "Rare")
+run_gradient_suite("pyramidal SS", "Related", imb_levels = c(300, 100, 50, 20, 10))
+run_gradient_suite("microglia", "Rare", imb_levels = c(300, 100, 50, 20, 10))
 
 plot_data <- bind_rows(all_results)
 
@@ -229,8 +239,8 @@ my_theme <- theme_bw(base_size = 12) + theme(
     legend.margin = margin(t = 0, b = 0)
 )
 
-# Plot Generator Function
-generate_benchmark_figure <- function(df_plot, metric_col, metric_label, y_lims, pal_colors, pt_shape) {
+# Plot Generator Function (Updated to conditionally handle hline_y for AUPRC)
+generate_benchmark_figure <- function(df_plot, metric_col, metric_label, y_lims, pal_colors, pt_shape, hline_y = 0.5) {
     
     method_labels <- c("Isolation_Forest" = "Isolation Forest", "Reconstruction_Error" = "Reconstruction Error")
     
@@ -240,30 +250,35 @@ generate_benchmark_figure <- function(df_plot, metric_col, metric_label, y_lims,
     
     p_base <- ggplot(df_base, aes(x = Test, y = .data[[metric_col]], fill = Method)) +
         geom_bar(stat = "identity", position = position_dodge(width = 0.8), color = "black", width = 0.6) +
-        geom_hline(yintercept = 0.5, linetype = "dashed", color = "gray50") +
         scale_fill_manual(values = pal_colors, labels = method_labels) +
         coord_cartesian(ylim = y_lims) + 
         labs(title = paste0("B. Baseline Detection Accuracy (", metric_label, ")"), 
              x = "Missing Cell State", y = metric_label) + 
-        my_theme + theme(legend.position = "bottom") # Force legend strictly under this plot
+        my_theme + theme(legend.position = "bottom") 
+        
+    if(!is.na(hline_y)) { p_base <- p_base + geom_hline(yintercept = hline_y, linetype = "dashed", color = "gray50") }
 
     # --- ROW 2 & 3 GENERATOR ---
     create_line_plot <- function(df, test_type, title, x_label, is_factor=FALSE) {
         sub_df <- df |> filter(Test == test_type)
         if(is_factor) {
-            sub_df$X_Value <- factor(sub_df$X_Value, levels = c("300", "100", "50", "20", "10"))
+            numeric_vals <- sort(as.numeric(unique(sub_df$X_Value)), decreasing = TRUE)
+            sub_df$X_Value <- factor(sub_df$X_Value, levels = as.character(numeric_vals))
         } else {
             sub_df$X_Value <- as.numeric(sub_df$X_Value)
             if(test_type == "Noise") sub_df$X_Value <- sub_df$X_Value * 100
         }
-        ggplot(sub_df, aes(x = X_Value, y = .data[[metric_col]], color = Method, group = Method)) +
-            geom_hline(yintercept = 0.5, linetype = "dashed", color = "gray50") +
+        
+        p_line <- ggplot(sub_df, aes(x = X_Value, y = .data[[metric_col]], color = Method, group = Method)) +
             geom_line(linewidth = 1.0) + 
             geom_point(size = 2.5, shape = pt_shape, fill = "white", stroke = 1.5) +
             scale_color_manual(values = pal_colors, labels = method_labels) +
             coord_cartesian(ylim = y_lims) + 
             labs(title = title, x = x_label, y = metric_label) + 
             my_theme
+            
+        if(!is.na(hline_y)) { p_line <- p_line + geom_hline(yintercept = hline_y, linetype = "dashed", color = "gray50") }
+        return(p_line)
     }
 
     # Row 2 (Related)
@@ -281,42 +296,42 @@ generate_benchmark_figure <- function(df_plot, metric_col, metric_label, y_lims,
     # _______________________
     # ASSEMBLE NESTED PLOT
     # _______________________
-    
-    # 1. Top row: UMAP (with its own legend) | Bar plot (with its own legend)
     row1 <- (p_umap + theme(legend.position = "bottom")) | p_base
     row1 <- row1 + plot_layout(widths = c(1.3, 1))
     
-    # 2. Bottom rows: Wrap the 6 line plots together and collect their legends into one centered at the bottom
     row_lines <- (pC | pD | pE) / (pF | pG | pH) + 
                  plot_layout(guides = "collect") & 
                  theme(legend.position = "bottom")
 
-    # Combine top and bottom
     final_plot <- row1 / row_lines + plot_layout(heights = c(1.2, 2))
-    
     return(final_plot)
 }
 
 # --- Define metric-specific palettes & shapes ---
 
-# 1. AUROC (Standard Colors, Circles)
+# 1. AUROC (Standard Colors, Circles, Baseline 0.5)
 pal_auroc <- c("Isolation_Forest" = "#4C72B0", "Reconstruction_Error" = "#C44E52")
-p_auroc <- generate_benchmark_figure(plot_data, "AUROC", "AUROC", c(0.4, 1.0), pal_auroc, 21)
+p_auroc <- generate_benchmark_figure(plot_data, "AUROC", "AUROC", c(0.4, 1.0), pal_auroc, 21, hline_y = 0.5)
 
-# 2. Sensitivity (Darker Colors, Triangles)
+# 2. AUPRC (Distinct Colors, Diamonds, NO Baseline line)
+pal_auprc <- c("Isolation_Forest" = "#325C99", "Reconstruction_Error" = "#A83C40")
+p_auprc <- generate_benchmark_figure(plot_data, "AUPRC", "AUPRC", c(0.0, 1.0), pal_auprc, 23, hline_y = NA)
+
+# 3. Sensitivity (Darker Colors, Triangles, Baseline 0.5)
 pal_sens <- c("Isolation_Forest" = "#1D4E89", "Reconstruction_Error" = "#9E2A2B")
-p_sens <- generate_benchmark_figure(plot_data, "Sensitivity", "Sensitivity", c(0.0, 1.0), pal_sens, 24)
+p_sens <- generate_benchmark_figure(plot_data, "Sensitivity", "Sensitivity", c(0.0, 1.0), pal_sens, 24, hline_y = 0.5)
 
-# 3. Specificity (Lighter/Muted Colors, Squares)
+# 4. Specificity (Lighter/Muted Colors, Squares, Baseline 0.5)
 pal_spec <- c("Isolation_Forest" = "#7FA1C3", "Reconstruction_Error" = "#D47A7B")
-p_spec <- generate_benchmark_figure(plot_data, "Specificity", "Specificity", c(0.0, 1.0), pal_spec, 22)
+p_spec <- generate_benchmark_figure(plot_data, "Specificity", "Specificity", c(0.0, 1.0), pal_spec, 22, hline_y = 0.5)
 
-# Save figures
+# Save figures (Updated numbers)
 ggsave("figures/supp/brain/Fig_S1_anomaly_detection_AUROC.png", p_auroc, width = 16, height = 16, dpi = 600)
-ggsave("figures/supp/brain/Fig_S2_anomaly_detection_Sensitivity.png", p_sens, width = 16, height = 16, dpi = 600)
-ggsave("figures/supp/brain/Fig_S3_anomaly_detection_Specificity.png", p_spec, width = 16, height = 16, dpi = 600)
+ggsave("figures/supp/brain/Fig_S2_anomaly_detection_AUPRC.png", p_auprc, width = 16, height = 16, dpi = 600)
+ggsave("figures/supp/brain/Fig_S3_anomaly_detection_Sensitivity.png", p_sens, width = 16, height = 16, dpi = 600)
+ggsave("figures/supp/brain/Fig_S4_anomaly_detection_Specificity.png", p_spec, width = 16, height = 16, dpi = 600)
 
-print("Supplementary Figures S1-3 complete!")
+print("Supplementary Figures S1-4 complete!")
 print("Saved in: figures/supp/brain/")
 
 # __________________________
@@ -325,8 +340,8 @@ print("Saved in: figures/supp/brain/")
 
 message("\n=== METRICS SUMMARY FOR MANUSCRIPT TEXT ===")
 summary_table <- plot_data |>
-    select(TestGroup, Test, X_Value, Method, AUROC, Sensitivity, Specificity) |>
-    mutate(across(where(is.numeric), ~round(., 3))) # Round to 3 decimal places
+    select(TestGroup, Test, X_Value, Method, AUROC, AUPRC, Sensitivity, Specificity) |>
+    mutate(across(where(is.numeric), ~round(., 3))) 
 
 message("\n--- Baseline Results ---")
 print(summary_table |> filter(TestGroup == "Baseline") |> arrange(Test, Method))
