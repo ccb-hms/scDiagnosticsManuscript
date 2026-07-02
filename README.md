@@ -2,7 +2,7 @@
 
 Comprehensive tutorials, analysis code, and reproducible workflows demonstrating [`scDiagnostics`](https://bioconductor.org/packages/scDiagnostics) for systematic assessment of cell type annotation in single-cell transcriptomics data.
 
-**Manuscript:** Christidis, A., Ghazi, A., Chawla, S., Turaga, N., Gentleman, R., & Geistlinger, L. scDiagnostics: systematic assessment of cell type annotation in single-cell transcriptomics data. *Submitted*.
+**Manuscript:** Christidis, A., Ghazi, A., Chawla, S., Turaga, N., Gentleman, R., & Geistlinger, L. scDiagnostics: systematic assessment of cell type annotation in single-cell transcriptomics data. *Submitted*. [**Read the preprint on bioRxiv**](https://www.biorxiv.org/content/10.64898/2026.01.29.701618v1).
 
 **Analysis and Results:** [**Manuscript Website**](https://ccb-hms.github.io/scDiagnosticsManuscript/)
 
@@ -120,6 +120,7 @@ If you use this code, data, or analyses, please cite:
   author = {Christidis, A. and Ghazi, A. and Chawla, S. and Turaga, N. and Gentleman, R. and Geistlinger, L.},
   title = {scDiagnostics: systematic assessment of cell type annotation in single-cell transcriptomics data},
   year = {2026},
+  url = {https://www.biorxiv.org/content/10.64898/2026.01.29.701618v1},
   note = {Submitted}
 }
 ```
