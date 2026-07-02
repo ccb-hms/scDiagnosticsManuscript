@@ -26,6 +26,8 @@ website:
             text: "scDiagnostics Overview"
           - href: results-simulation.qmd
             text: "Simulation"
+          - href: results-brain.qmd
+            text: "Zeisel Brain"
           - href: results-covid.qmd
             text: "COVID-19"
           - href: results-merfish.qmd

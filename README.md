@@ -8,15 +8,25 @@ Comprehensive tutorials, analysis code, and reproducible workflows demonstrating
 
 ## Overview
 
-We demonstrate scDiagnostics using two real-world single-cell datasets:
+We demonstrate scDiagnostics using a simulated and three different real-world single-cell datasets:
 
-**1. COVID-19 PBMC scRNA-seq**
+**1. Simulated single-cell data (splatter)**
+
+- Synthetic data with known cell types and ground truth composition
+- Use case: Illustration of common challenges of reference-based annotation transfer in a controlled setting
+
+**2. Zeisel Mouse Brain Benchmarking**
+
+- Mouse cortex and hippocampus scRNA-seq dataset (Zeisel et al., 2015)
+- Use case: Systematic stress-testing of diagnostic sensitivity and specificity against label noise, class imbalance, and batch effects
+
+**3. COVID-19 PBMC scRNA-seq**
 
 - Single-cell RNA-seq data from severe COVID-19 patients and healthy controls
 - Source: [CZI CELLxGENE](https://cellxgene.cziscience.com/collections/ddfad306-714d-4cc0-9985-d9072820c530) (Stephenson et al., 2021)
 - Use case: Discovery and characterization of disease-associated immune cell states
 
-**2. MERFISH Mouse Colitis**
+**4. MERFISH Mouse Colitis**
 
 - Spatial transcriptomics from a mouse model of inflammatory bowel disease
 - Source: [MerfishData Bioconductor package](https://bioconductor.org/packages/MerfishData) (Cadinu et al., 2024)
@@ -73,11 +83,11 @@ Analysis environment setup, data retrieval, and reproducible analysis workflows:
 Quick start, core functionality, and common analysis workflows:
 
 - **[scDiagnostics Overview](overview-scdiagnostics.qmd)** — Introduction to diagnostic framework and key concepts
+- **[Simulation Analysis](results-simulation.qmd)** — Demonstration of common challenges in reference-based annotation transfer
+- **[Zeisel Brain Benchmarking](results-brain.qmd)** — Quantitative benchmarking of scDiagnostics under stress-tested single-cell scenarios
 - **[COVID-19 Analysis](results-covid.qmd)** — Annotation assessment and anomaly detection in scRNA-seq data
 - **[MERFISH Analysis](results-merfish.qmd)** — Annotation assessment and anomaly detection in spatial transcriptomics data
 - **[Exploring Annotation Tool Diagnostics](annotation-diagnostics.qmd)** — Complementary aspects of scDiagnostics and built-in quality metrics from major annotation tools
-
-
 
 ## Installation
 

@@ -10,7 +10,7 @@ It provides comprehensive tutorials, analysis code, and reproducible workflows d
 
 ## Overview
 
-We demonstrate the utility of scDiagnostics using a simulated and two different real-world single-cell datasets:
+We demonstrate the utility of scDiagnostics using a simulated and three different real-world single-cell datasets:
 
 **1. Simulated single-cell data with [splatter](https://www.bioconductor.org/packages/splatter)**
 
@@ -18,13 +18,19 @@ We demonstrate the utility of scDiagnostics using a simulated and two different 
 - Illustration of common challenges of reference-based annotation transfer
 - Demonstration of core diagnostic functionality in a controlled setting
 
-**2. COVID-19 PBMC scRNA-seq**
+**2. Zeisel Mouse Brain Benchmarking**
+
+- Well-characterized mouse cortex and hippocampus scRNA-seq dataset from Zeisel et al. (2015)
+- Systematic benchmarking of diagnostic sensitivity and specificity
+- Stress-testing diagnostic performance against controlled gradients of label noise, class imbalance, and batch effects
+
+**3. COVID-19 PBMC scRNA-seq**
 
 - COVID-19 PBMC scRNA-seq atlas from Stephenson et al. (2021)
 - Application to multi-sample multi-condition single-cell RNA sequencing dataset
 - Demonstration of how the package facilitates the discovery and characterization of a disease-associated cell state in COVID-19
 
-**3. MERFISH Mouse Colitis**
+**4. MERFISH Mouse Colitis**
 
 - Imaging-based spatially-resolved single-cell dataset of a DSS-induced mouse model of colitis from Cadinu et al. (2024)
 - Demonstration of straightforward application of the diagnostic functionality to spatial transcriptomics data
@@ -55,6 +61,7 @@ Quick start, core functionality, and common analysis workflows:
 
 - **[scDiagnostics Overview](overview-scdiagnostics.qmd)** — Introduction to diagnostic framework and key concepts
 - **[Simulation Analysis](results-simulation.qmd)** — Demonstration of common challenges in reference-based annotation transfer using synthetic data and controlled perturbations
+- **[Zeisel Brain Benchmarking](results-brain.qmd)** — Quantitative benchmarking of scDiagnostics under stress-tested single-cell scenarios
 - **[COVID-19 Analysis](results-covid.qmd)** — Annotation assessment in COVID-19 scRNA-seq data
 - **[MERFISH Analysis](results-merfish.qmd)** — Annotation assessment in MERFISH colitis spatial transcriptomics data
 - **[Exploring Annotation Tool Diagnostics](annotation-diagnostics.qmd)** — Demonstrate complementary aspects of scDiagnostics and built-in quality metrics from major annotation tools
@@ -71,6 +78,7 @@ Christidis, A., Ghazi, A., Chawla, S., Turaga, N., Gentleman, R., & Geistlinger,
 
 **Datasets:**
 
+- Zeisel, A., et al. (2015). Brain structure. Cell types in the mouse cortex and hippocampus revealed by single-cell RNA-seq. *Science*, 347(6226), 1138-1142.
 - Stephenson, E., et al. (2021). Single-cell multi-omics analysis of the immune response in COVID-19. *Nature Medicine*, 27, 904–16.
 - Cadinu, P., et al. (2024). Charting the cellular biogeography in colitis reveals fibroblast trajectories and coordinated spatial remodeling. *Cell*, 187(8), 2010-28.
 
