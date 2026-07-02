@@ -16,7 +16,7 @@ We then stress-tested the anomaly detection methods against gradients of technic
 - **Hidden Cell States:** To simulate missing biological populations, we selectively removed:
   1. A distinct lineage (**Astrocytes**)
   2. A closely related subtype (**Pyramidal SS** hidden, Pyramidal CA1 present)
-  3. A rare population (**Microglia**)
+  3. A rare population (**Microglia**) 
 
 ## 1. Benchmarking Framework & Results
 
