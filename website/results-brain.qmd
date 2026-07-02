@@ -33,11 +33,12 @@ To benchmark the detection performance of both the **Isolation Forest** and **Re
 **B) Baseline Detection Accuracy:** Both Isolation Forest and Reconstruction Error easily identify missing cell states under clean, ideal conditions, achieving near-perfect AUROC regardless of whether the missing state is closely related, rare, or entirely distinct.
 
 **C-H) Stress Testing (Gradients):**
+
 - **Label Noise:** We randomly shuffled 0% to 40% of the reference labels. Anomaly detection remains remarkably stable even up to 20% noise.
 - **Class Imbalance:** We downsampled the reference population from 300 cells down to 10. `scDiagnostics` maintains high detection power even when the reference representation is extremely sparse.
 - **Batch Effects:** We introduced simulated log-count shifts (0 to +2.0). As batch effects become severe, Reconstruction Error begins to degrade faster than Isolation Forest, highlighting Isolation Forest as a highly robust choice for non-ideal integrations.
 
-*Note: Companion figures detailing AUPRC, Sensitivity, and Specificity can be found in `figures/supp/brain/` (`Fig_S2`, `Fig_S3`, and `Fig_S4`).*
+*Note: Companion figures detailing AUPRC, Sensitivity, and Specificity can be generated locally by running the `R/brain/Supplementary_Figure_1-4.R` script.*
 
 ::: {.callout-note collapse="true"}
 ## Function Details: calculateReconstructionError()
