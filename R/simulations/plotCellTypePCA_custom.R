@@ -44,7 +44,6 @@ plotCellTypePCA_custom <- function(
         reference_data = reference_data,
         query_cell_type_col = query_cell_type_col,
         ref_cell_type_col = ref_cell_type_col,
-        cell_types = cell_types,
         pc_subset_ref = pc_subset,
         assay_name = assay_name)
     

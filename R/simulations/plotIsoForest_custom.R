@@ -250,7 +250,7 @@ plotIsoForest_custom <- function(x,
                 guide = "none"
             ) +
             ggplot2::geom_point(
-                data = data,
+                data = data[data$anomaly == paste0("Non-Anomalous ", data_type_label, " Cell"), ],
                 ggplot2::aes(
                     x = !!rlang::sym(x_name),
                     y = !!rlang::sym(y_name),
@@ -259,6 +259,17 @@ plotIsoForest_custom <- function(x,
                 shape = 16,
                 size = 1.5,
                 alpha = 0.45
+            ) +
+            ggplot2::geom_point(
+                data = data[data$anomaly == paste0("Anomalous ", data_type_label, " Cell"), ],
+                ggplot2::aes(
+                    x = !!rlang::sym(x_name),
+                    y = !!rlang::sym(y_name),
+                    color = anomaly
+                ),
+                shape = 16,
+                size = 2.0,      
+                alpha = 0.85     
             ) +
             ggplot2::scale_color_manual(
                 values = anomaly_colors

@@ -96,7 +96,9 @@ plotCellTypePCA_custom(
     diagonal_facet = "ridge", 
     upper_facet = "blank", 
     cell_type_colors = cell_type_colors)
-ggsave("figures/simulation/cell_type_pca_original.png", dpi = 600)
+ggsave("figures/simulation/cell_type_pca_original.png", 
+    dpi = 600, 
+    width = 6, height = 4)
 
 # _____________________________
 # Missing Cell Type - PCA Plot
@@ -136,7 +138,9 @@ plotCellTypePCA_custom(
     diagonal_facet = "ridge", 
     upper_facet = "blank", 
     cell_type_colors = cell_type_colors)
-ggsave("figures/simulation/cell_type_pca.png", dpi = 600)
+ggsave("figures/simulation/cell_type_pca.png", 
+    dpi = 600, 
+    width = 6, height = 4)
 
 # _____________________________________________
 # Identical Cell Types - Isolation Forest Plot
@@ -171,7 +175,9 @@ plotIsoForest_custom(
     upper_facet = "blank",
     tile_colors = gradient_colors, 
     tile_stops = stops)
-ggsave("figures/simulation/cell_type_A_isoForest_original.png")
+ggsave("figures/simulation/cell_type_A_isoForest_original.png", 
+    dpi = 600, 
+    width = 6, height = 4)
 
 # Plot the output for cell type B
 gradient_colors <- colorRampPalette(c(
@@ -193,7 +199,9 @@ plotIsoForest_custom(
     upper_facet = "blank",
     tile_colors = gradient_colors, 
     tile_stops = stops)
-ggsave("figures/simulation/cell_type_B_isoForest_original.png")
+ggsave("figures/simulation/cell_type_B_isoForest_original.png", 
+    dpi = 600, 
+    width = 6, height = 4)
 
 
 # Add density plot for Cell Type A anomaly scores
@@ -231,6 +239,7 @@ density_A <- ggplot(density_df, aes(x = x, y = y)) +
 
 ggsave("figures/simulation/cell_type_A_anomaly_density_original.png", 
        density_A, 
+       dpi = 600, 
        width = 6, height = 4)
 
 # Add density plot for Cell Type B anomaly scores
@@ -268,6 +277,7 @@ density_B <- ggplot(density_df, aes(x = x, y = y)) +
 
 ggsave("figures/simulation/cell_type_B_anomaly_density_original.png", 
        density_B, 
+       dpi = 600, 
        width = 6, height = 4)
 
 # __________________________________________
@@ -312,7 +322,9 @@ plotIsoForest_custom(
     upper_facet = "blank",
     tile_colors = gradient_colors, 
     tile_stops = stops)
-ggsave("figures/simulation/cell_type_A_isoForest.png")
+ggsave("figures/simulation/cell_type_A_isoForest.png", 
+    dpi = 600, 
+    width = 6, height = 4)
 
 # Plot the output for cell type B
 gradient_colors <- colorRampPalette(c(
@@ -334,7 +346,9 @@ plotIsoForest_custom(
     upper_facet = "blank",
     tile_colors = gradient_colors, 
     tile_stops = stops)
-ggsave("figures/simulation/cell_type_B_isoForest.png")
+ggsave("figures/simulation/cell_type_B_isoForest.png", 
+       dpi = 600, 
+       width = 6, height = 4)
 
 
 # Add density plot for Cell Type A anomaly scores (missing cell type scenario)
@@ -372,6 +386,7 @@ density_A_missing <- ggplot(density_df, aes(x = x, y = y)) +
 
 ggsave("figures/simulation/cell_type_A_anomaly_density_missing.png", 
        density_A_missing, 
+       dpi = 600,
        width = 6,  height = 4)
 
 # Add density plot for Cell Type B anomaly scores (missing cell type scenario)
@@ -407,5 +422,6 @@ density_B_missing <- ggplot(density_df, aes(x = x, y = y)) +
 
 
 ggsave("figures/simulation/cell_type_B_anomaly_density_missing.png", 
-       density_B_missing, 
+       density_B_missing,
+       dpi = 600, 
        width = 6, height = 4)
