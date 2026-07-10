@@ -1,5 +1,5 @@
 # --------------------------------------
-# COVID-19 PBMC - Preliminary Analyses
+# COVID-19 PBMC - Anomaly Detection
 # --------------------------------------
 
 # Load libraries
