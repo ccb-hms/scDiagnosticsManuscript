@@ -1,373 +1,199 @@
-# -----------------------------------------------
+# ---------------------------------------------
 # COVID-19 PBMC - Supplementary Figure 1 Code
-# -----------------------------------------------
+# ---------------------------------------------
 
+library(zellkonverter)
 library(SingleCellExperiment)
+library(HDF5Array)
+library(Matrix)
+library(scDiagnostics)
+library(bench)
 library(ggplot2)
-library(cowplot)
 library(dplyr)
+library(patchwork)
 
-# -----------------------------------------------
+# ---------------------------------------------
 
-# __________
-# Load data
-# __________
+# _____________________________
+# 1. SETUP & DELAYED LOADING
+# _____________________________
 
-covid_data <- readRDS("data/covid/covid_data_sce.rds")
+input_path <- "data/covid/covid_data.h5ad"
+message("Loading raw h5ad file: ", input_path)
 
-# _________________________
-# Cell Type Color Palette
-# _________________________
+# Load using HDF5-backed mode to save RAM!
+sce_full <- readH5AD(input_path, use_hdf5 = TRUE, reader = "R")
 
-cell_type_colors <- c(
-    # T Cell & ILC Lineage
-    "CD4 T"       = "#8A2BE2",  
-    "CD8 T"       = "#FF8C00",  
-    "Treg"        = "#DA70D6",  
-    "NKT"         = "#9932CC",  
-    "MAIT"        = "#FF4500",  
-    "gdT"         = "#FFA500",  
-    "ILC"         = "#FF69B4",  
+# Minimal Cleaning (Filter out "respiratory system disorder")
+keep_disease <- sce_full$disease %in% c("normal", "COVID-19")
+sce_filtered <- sce_full[, keep_disease]
+
+# Clear memory from the full object
+rm(sce_full)
+gc()
+
+# Get total available pool (~624,000 cells)
+available_indices <- seq_len(ncol(sce_filtered))
+message(sprintf("Total available cells for benchmarking: %d", length(available_indices)))
+
+# Sizes to benchmark
+cell_sizes <- c(10000, 50000, 100000, 250000, 500000)
+benchmark_results <- data.frame()
+
+# ______________________
+# 2. BENCHMARKING LOOP
+# ______________________
+
+set.seed(0)
+
+for (n_cells in cell_sizes) {
+    message(sprintf("\n=== Benchmarking at N = %d total cells ===", n_cells))
     
-    # B Cell & Plasma Lineage
-    "B cell"      = "#20B2AA",  
-    "Plasmablast" = "#32CD32",  
-    "Plasma cell" = "#006400",  
-
-    # Myeloid & Monocyte Lineage
-    "CD14 mono"   = "#008080",  
-    "CD16 mono"   = "#1E90FF",  
-    "Mono_prolif" = "#ADD8E6",  
-    "DC1"         = "#A0522D",  
-    "DC2"         = "#D2691E",  
-    "DC3"         = "#F4A460",  
-    "ASDC"        = "#8B4513",  
-    "pDC"         = "#CD853F",  
-    "DC_prolif"   = "#FFE4B5",  
+    # 1. Randomly sample the desired number of cells
+    sampled_idx <- sample(available_indices, n_cells)
     
-    # NK Cell Lineage
-    "NK_16hi"     = "#B22222",  
-    "NK_56hi"     = "#8B4513",  
-    "NK_prolif"   = "#FFC0CB",  
+    # 2. Arbitrarily assign 30% to Ref, 70% to Query to mimic real-world mapping
+    n_ref <- floor(n_cells * 0.3)
+    ref_idx <- sampled_idx[1:n_ref]
+    query_idx <- sampled_idx[(n_ref + 1):length(sampled_idx)]
     
-    # Other Types
-    "HSPC"        = "#F0E68C",  
-    "Platelets"   = "#BDB76B",  
-    "RBC"         = "#E9967A"   
-)
+    # 3. Realize into Memory as Sparse Matrices (Crucial for CPU timing)
+    message("  > Realizing sparse matrices to RAM (No Metadata)...")
+    counts_ref <- as(realize(assay(sce_filtered[, ref_idx], "X")), "CsparseMatrix")
+    counts_query <- as(realize(assay(sce_filtered[, query_idx], "X")), "CsparseMatrix")
+    
+    # 4. Create CLEAN, stripped-down SCE objects (No old PCA/UMAP baggage)
+    ref_sce <- SingleCellExperiment(
+        assays = list(logcounts = counts_ref),
+        colData = DataFrame(author_cell_type = sce_filtered$author_cell_type[ref_idx])
+    )
+    query_sce <- SingleCellExperiment(
+        assays = list(logcounts = counts_query),
+        colData = DataFrame(author_cell_type = sce_filtered$author_cell_type[query_idx])
+    )
+    
+    # Identify a large cell type to test
+    target_cell_type <- names(sort(table(ref_sce$author_cell_type), decreasing = TRUE))[1]
+    
+    # --- TASK 1: processPCA ---
+    message("  > Task 1: processPCA...")
+    bm_process <- bench::mark(
+        processPCA = { ref_pca <- scDiagnostics::processPCA(ref_sce, n_hvgs = 1000) },
+        iterations = 1, check = FALSE, memory = TRUE
+    )
+    ref_pca <- scDiagnostics::processPCA(ref_sce, n_hvgs = 1000)
+    
+    # --- TASK 2: projectPCA ---
+    message("  > Task 2: projectPCA...")
+    bm_project <- bench::mark(
+        projectPCA = {
+            scDiagnostics::projectPCA(query_data = query_sce, reference_data = ref_pca,
+                                      query_cell_type_col = "author_cell_type", ref_cell_type_col = "author_cell_type",
+                                      cell_types = target_cell_type, pc_subset = 1:5, max_cells_query = NULL, max_cells_ref = NULL)
+        },
+        iterations = 1, check = FALSE, memory = TRUE
+    )
+    
+    # --- TASK 3: detectAnomaly ---
+    message("  > Task 3: detectAnomaly...")
+    bm_if <- bench::mark(
+        detectAnomaly = {
+            scDiagnostics::detectAnomaly(query_data = query_sce, reference_data = ref_pca, 
+                                         query_cell_type_col = "author_cell_type", ref_cell_type_col = "author_cell_type", 
+                                         cell_types = target_cell_type, pc_subset = NULL, n_hvgs = 1000, n_tree = 500,
+                                         threshold_method = "MAD", mad_multiplier = 2)
+        },
+        iterations = 1, check = FALSE, memory = TRUE
+    )
+    
+    # --- TASK 4: calculateReconstructionError ---
+    message("  > Task 4: calculateReconstructionError...")
+    bm_re <- bench::mark(
+        calculateReconstructionError = {
+            scDiagnostics::calculateReconstructionError(reference_data = ref_sce, query_data = query_sce,
+                                                        ref_cell_type_col = "author_cell_type", query_cell_type_col = "author_cell_type",
+                                                        cell_types = target_cell_type, pc_subset = 1:5, n_hvgs = 100, mad_multiplier = 2)
+        },
+        iterations = 1, check = FALSE, memory = TRUE
+    )
+    
+    # --- TASK 5: calculateGeneShifts ---
+    message("  > Task 5: calculateGeneShifts...")
+    query_pca <- scDiagnostics::processPCA(query_sce, n_hvgs = 1000) # Precompute for anomaly check inside function
+    bm_gs <- bench::mark(
+        calculateGeneShifts = {
+            scDiagnostics::calculateGeneShifts(query_data = query_pca, reference_data = ref_pca, 
+                                               query_cell_type_col = "author_cell_type", ref_cell_type_col = "author_cell_type",
+                                               cell_types = target_cell_type, pc_subset = 1:5, n_top_loadings = 30,
+                                               p_value_threshold = 0.05, adjust_method = "fdr", 
+                                               detect_anomalies = TRUE, anomaly_comparison = TRUE, mad_multiplier = 2)
+        },
+        iterations = 1, check = FALSE, memory = TRUE
+    )
+    
+    # Append results
+    benchmark_results <- rbind(benchmark_results, data.frame(
+        Total_Cells = n_cells,
+        Method = c("processPCA", "projectPCA", "detectAnomaly", "calculateReconstructionError", "calculateGeneShifts"),
+        Time_Seconds = c(as.numeric(bm_process$median), as.numeric(bm_project$median), 
+                         as.numeric(bm_if$median), as.numeric(bm_re$median), as.numeric(bm_gs$median)),
+        Memory_GB = c(as.numeric(bm_process$mem_alloc)/1024^3, as.numeric(bm_project$mem_alloc)/1024^3, 
+                      as.numeric(bm_if$mem_alloc)/1024^3, as.numeric(bm_re$mem_alloc)/1024^3, as.numeric(bm_gs$mem_alloc)/1024^3)
+    ))
+    
+    # Free up RAM before the next massive loop
+    rm(ref_sce, query_sce, counts_ref, counts_query, ref_pca, query_pca)
+    gc()
+}
 
-# ____________
-# Setup Theme
-# ____________
+print(benchmark_results)
 
-theme_set(theme_minimal() + theme(
-  axis.title = element_text(size = 11, face = "bold"),
-  axis.text = element_text(size = 10),
-  legend.text = element_text(size = 9),
-  legend.title = element_text(size = 9, face = "bold"),
-  panel.grid.major = element_blank(),
-  panel.grid.minor = element_blank(),
-  strip.text = element_text(size = 10, face = "bold")
-))
+# _____________________________
+# 3. VISUALIZATION (Figure S1)
+# _____________________________
 
-# Extract UMAP coordinates for all cells
-umap_coords <- reducedDim(covid_data, "UMAP_scVI")
+my_colors <- c("processPCA" = "#7F8C8D", "projectPCA" = "#F39C12", 
+               "detectAnomaly" = "#4C72B0", "calculateReconstructionError" = "#C44E52", "calculateGeneShifts" = "#9B59B6")
 
-# _________________________________________
-# Figure S1A: Azimuth - Cell Type (Merged)
-# _________________________________________
+p_time <- ggplot(benchmark_results, aes(x = Total_Cells, y = Time_Seconds, color = Method)) +
+    geom_line(linewidth = 1.2) + geom_point(size = 3) +
+    scale_color_manual(values = my_colors) +
+    scale_x_continuous(labels = scales::comma, breaks = cell_sizes) +
+    theme_bw(base_size = 14) + 
+    labs(title = "Execution Time Scaling", x = "Total Cells (Reference + Query)", y = "Time (Seconds)") +
+    theme(legend.position = "none", panel.grid.minor = element_blank())
 
-umap_data_azimuth_anno <- data.frame(
-    UMAP1 = umap_coords[, 1],
-    UMAP2 = umap_coords[, 2],
-    CellType = covid_data$azimuth_celltype_l1_merged
-)
+p_mem <- ggplot(benchmark_results, aes(x = Total_Cells, y = Memory_GB, color = Method)) +
+    geom_line(linewidth = 1.2) + geom_point(size = 3) +
+    scale_color_manual(values = my_colors) +
+    scale_x_continuous(labels = scales::comma, breaks = cell_sizes) +
+    theme_bw(base_size = 14) + 
+    labs(title = "Memory Allocation Scaling", x = "Total Cells (Reference + Query)", y = "Peak RAM (GB)") +
+    theme(panel.grid.minor = element_blank())
 
-fig_s1a <- ggplot(umap_data_azimuth_anno, aes(x = UMAP1, y = UMAP2, color = CellType)) +
-    geom_point(size = 0.1, alpha = 0.6) +
-    scale_color_manual(values = cell_type_colors, na.value = "grey50") +
-    guides(color = guide_legend(ncol = 1)) +
-    xlab("UMAP 1") +
-    ylab("UMAP 2") +
-    ggtitle("Azimuth - Cell Type") +
-    theme_minimal() +
+# Combine using patchwork (stacked vertically)
+final_plot <- (p_time / p_mem) + 
+    plot_layout(guides = "collect") & 
     theme(
-        plot.title = element_text(hjust = 0.5, face = "bold", size = 12, color = "#1F2937", family = "sans"),
-        axis.title = element_text(size = 9, face = "bold", color = "#374151", family = "sans"),
-        axis.text = element_text(size = 8, color = "#4B5563", family = "sans"),
-        legend.position = "right",
+        plot.title = element_text(face = "bold", size = 24, hjust = 0.5, margin = margin(b = 15)),
+        axis.title = element_text(face = "bold", size = 22),
+        axis.text = element_text(size = 18),
+        legend.position = "bottom", 
         legend.title = element_blank(),
-        legend.text = element_text(size = 8),
-        legend.key.size = unit(0.3, "cm"),
-        panel.grid.major = element_line(color = "#E5E7EB", linewidth = 0.2),
-        panel.grid.minor = element_blank(),
-        panel.border = element_rect(color = "#D1D5DB", linewidth = 0.5, fill = NA),
-        plot.margin = margin(2, 0.5, 2, 0.5, "pt"),
-        panel.background = element_rect(fill = "#FAFBFC", color = NA),
-        aspect.ratio = 1
-    )
+        legend.text = element_text(size = 20),
+        legend.key.size = unit(1.5, "cm"),
+        legend.margin = margin(t = 10) 
+    ) &
+    guides(color = guide_legend(nrow = 2, byrow = TRUE)) 
 
-# _______________________________________
-# Figure S1B: Azimuth - Prediction Score
-# _______________________________________
+print(final_plot)
 
-umap_data_azimuth_score <- data.frame(
-    UMAP1 = umap_coords[, 1],
-    UMAP2 = umap_coords[, 2],
-    PredictionScore = covid_data$azimuth_mapping_score
-)
-
-fig_s1b <- ggplot(umap_data_azimuth_score, aes(x = UMAP1, y = UMAP2, color = PredictionScore)) +
-    geom_point(size = 0.1, alpha = 0.6) +
-    scale_color_gradient(low = "#5B7C99", high = "#C1666B", name = "Prediction Score") +
-    xlab("UMAP 1") +
-    ylab("UMAP 2") +
-    ggtitle("Azimuth - Prediction Score") +
-    theme_minimal() +
-    theme(
-        plot.title = element_text(hjust = 0.5, face = "bold", size = 12, color = "#1F2937", family = "sans"),
-        axis.title = element_text(size = 9, face = "bold", color = "#374151", family = "sans"),
-        axis.text = element_text(size = 8, color = "#4B5563", family = "sans"),
-        legend.position = "right",
-        legend.title = element_text(size = 9, face = "bold"),
-        legend.text = element_text(size = 8),
-        legend.key.size = unit(0.35, "cm"),
-        panel.grid.major = element_line(color = "#E5E7EB", linewidth = 0.2),
-        panel.grid.minor = element_blank(),
-        panel.border = element_rect(color = "#D1D5DB", linewidth = 0.5, fill = NA),
-        plot.margin = margin(2, 0.5, 2, 0.5, "pt"),
-        panel.background = element_rect(fill = "#FAFBFC", color = NA),
-        aspect.ratio = 1
-    )
-
-# _________________________________________
-# Figure S1C: SingleR - Cell Type (Merged)
-# _________________________________________
-
-umap_data_singler_anno <- data.frame(
-    UMAP1 = umap_coords[, 1],
-    UMAP2 = umap_coords[, 2],
-    CellType = covid_data$singler_annotations_merged
-)
-
-fig_s1c <- ggplot(umap_data_singler_anno, aes(x = UMAP1, y = UMAP2, color = CellType)) +
-    geom_point(size = 0.1, alpha = 0.6) +
-    scale_color_manual(values = cell_type_colors, na.value = "grey50") +
-    guides(color = guide_legend(ncol = 1)) +
-    xlab("UMAP 1") +
-    ylab("UMAP 2") +
-    ggtitle("SingleR - Cell Type") +
-    theme_minimal() +
-    theme(
-        plot.title = element_text(hjust = 0.5, face = "bold", size = 12, color = "#1F2937", family = "sans"),
-        axis.title = element_text(size = 9, face = "bold", color = "#374151", family = "sans"),
-        axis.text = element_text(size = 8, color = "#4B5563", family = "sans"),
-        legend.position = "right",
-        legend.title = element_blank(),
-        legend.text = element_text(size = 8),
-        legend.key.size = unit(0.3, "cm"),
-        panel.grid.major = element_line(color = "#E5E7EB", linewidth = 0.2),
-        panel.grid.minor = element_blank(),
-        panel.border = element_rect(color = "#D1D5DB", linewidth = 0.5, fill = NA),
-        plot.margin = margin(2, 0.5, 2, 0.5, "pt"),
-        panel.background = element_rect(fill = "#FAFBFC", color = NA),
-        aspect.ratio = 1
-    )
-
-# ________________________________________
-# Figure S1D: SingleR - Delta Score
-# ________________________________________
-
-singler_scores_matrix <- covid_data$singler_scores
-singler_assigned <- covid_data$singler_annotations
-
-singler_conf <- sapply(1:ncol(covid_data), function(i) {
-    cell_type <- singler_assigned[i]
-    singler_scores_matrix[i, cell_type]
-})
-
-umap_data_singler_score <- data.frame(
-    UMAP1 = umap_coords[, 1],
-    UMAP2 = umap_coords[, 2],
-    DeltaScore = singler_conf
-)
-
-fig_s1d <- ggplot(umap_data_singler_score, aes(x = UMAP1, y = UMAP2, color = DeltaScore)) +
-    geom_point(size = 0.1, alpha = 0.6) +
-    scale_color_gradient(low = "#5B7C99", high = "#C1666B", name = "Delta Score") +
-    xlab("UMAP 1") +
-    ylab("UMAP 2") +
-    ggtitle("SingleR - Delta Score") +
-    theme_minimal() +
-    theme(
-        plot.title = element_text(hjust = 0.5, face = "bold", size = 12, color = "#1F2937", family = "sans"),
-        axis.title = element_text(size = 9, face = "bold", color = "#374151", family = "sans"),
-        axis.text = element_text(size = 8, color = "#4B5563", family = "sans"),
-        legend.position = "right",
-        legend.title = element_text(size = 9, face = "bold"),
-        legend.text = element_text(size = 8),
-        legend.key.size = unit(0.35, "cm"),
-        panel.grid.major = element_line(color = "#E5E7EB", linewidth = 0.2),
-        panel.grid.minor = element_blank(),
-        panel.border = element_rect(color = "#D1D5DB", linewidth = 0.5, fill = NA),
-        plot.margin = margin(2, 0.5, 2, 0.5, "pt"),
-        panel.background = element_rect(fill = "#FAFBFC", color = NA),
-        aspect.ratio = 1
-    )
-
-# ____________________________________________
-# Figure S1E: CellTypist - Cell Type (Merged)
-# ____________________________________________
-
-umap_data_celltypist_anno <- data.frame(
-    UMAP1 = umap_coords[, 1],
-    UMAP2 = umap_coords[, 2],
-    CellType = covid_data$celltypist_predicted_labels_merged
-)
-
-fig_s1e <- ggplot(umap_data_celltypist_anno, aes(x = UMAP1, y = UMAP2, color = CellType)) +
-    geom_point(size = 0.1, alpha = 0.6) +
-    scale_color_manual(values = cell_type_colors, na.value = "grey50") +
-    guides(color = guide_legend(ncol = 1)) +
-    xlab("UMAP 1") +
-    ylab("UMAP 2") +
-    ggtitle("CellTypist - Cell Type") +
-    theme_minimal() +
-    theme(
-        plot.title = element_text(hjust = 0.5, face = "bold", size = 12, color = "#1F2937", family = "sans"),
-        axis.title = element_text(size = 9, face = "bold", color = "#374151", family = "sans"),
-        axis.text = element_text(size = 8, color = "#4B5563", family = "sans"),
-        legend.position = "right",
-        legend.title = element_blank(),
-        legend.text = element_text(size = 8),
-        legend.key.size = unit(0.3, "cm"),
-        panel.grid.major = element_line(color = "#E5E7EB", linewidth = 0.2),
-        panel.grid.minor = element_blank(),
-        panel.border = element_rect(color = "#D1D5DB", linewidth = 0.5, fill = NA),
-        plot.margin = margin(2, 0.5, 2, 0.5, "pt"),
-        panel.background = element_rect(fill = "#FAFBFC", color = NA),
-        aspect.ratio = 1
-    )
-
-# _________________________________________
-# Figure S1F: CellTypist - Confidence Score
-# _________________________________________
-
-umap_data_celltypist_score <- data.frame(
-    UMAP1 = umap_coords[, 1],
-    UMAP2 = umap_coords[, 2],
-    ConfidenceScore = covid_data$celltypist_conf_score
-)
-
-fig_s1f <- ggplot(umap_data_celltypist_score, aes(x = UMAP1, y = UMAP2, color = ConfidenceScore)) +
-    geom_point(size = 0.1, alpha = 0.6) +
-    scale_color_gradient(low = "#5B7C99", high = "#C1666B", name = "Confidence Score") +
-    xlab("UMAP 1") +
-    ylab("UMAP 2") +
-    ggtitle("CellTypist - Confidence Score") +
-    theme_minimal() +
-    theme(
-        plot.title = element_text(hjust = 0.5, face = "bold", size = 12, color = "#1F2937", family = "sans"),
-        axis.title = element_text(size = 9, face = "bold", color = "#374151", family = "sans"),
-        axis.text = element_text(size = 8, color = "#4B5563", family = "sans"),
-        legend.position = "right",
-        legend.title = element_text(size = 9, face = "bold"),
-        legend.text = element_text(size = 8),
-        legend.key.size = unit(0.35, "cm"),
-        panel.grid.major = element_line(color = "#E5E7EB", linewidth = 0.2),
-        panel.grid.minor = element_blank(),
-        panel.border = element_rect(color = "#D1D5DB", linewidth = 0.5, fill = NA),
-        plot.margin = margin(2, 0.5, 2, 0.5, "pt"),
-        panel.background = element_rect(fill = "#FAFBFC", color = NA),
-        aspect.ratio = 1
-    )
-
-# _________________________________________
-# Figure S1G: scArches - Cell Type (Merged)
-# _________________________________________
-
-umap_data_scarches_anno <- data.frame(
-    UMAP1 = umap_coords[, 1],
-    UMAP2 = umap_coords[, 2],
-    CellType = covid_data$scvi_prediction_merged
-)
-
-fig_s1g <- ggplot(umap_data_scarches_anno, aes(x = UMAP1, y = UMAP2, color = CellType)) +
-    geom_point(size = 0.1, alpha = 0.6) +
-    scale_color_manual(values = cell_type_colors, na.value = "grey50") +
-    guides(color = guide_legend(ncol = 1)) +
-    xlab("UMAP 1") +
-    ylab("UMAP 2") +
-    ggtitle("scArches - Cell Type") +
-    theme_minimal() +
-    theme(
-        plot.title = element_text(hjust = 0.5, face = "bold", size = 12, color = "#1F2937", family = "sans"),
-        axis.title = element_text(size = 9, face = "bold", color = "#374151", family = "sans"),
-        axis.text = element_text(size = 8, color = "#4B5563", family = "sans"),
-        legend.position = "right",
-        legend.title = element_blank(),
-        legend.text = element_text(size = 8),
-        legend.key.size = unit(0.3, "cm"),
-        panel.grid.major = element_line(color = "#E5E7EB", linewidth = 0.2),
-        panel.grid.minor = element_blank(),
-        panel.border = element_rect(color = "#D1D5DB", linewidth = 0.5, fill = NA),
-        plot.margin = margin(2, 0.5, 2, 0.5, "pt"),
-        panel.background = element_rect(fill = "#FAFBFC", color = NA),
-        aspect.ratio = 1
-    )
-
-# _________________________________________
-# Figure S1H: scArches - Uncertainty Score
-# _________________________________________
-
-umap_data_scarches_score <- data.frame(
-    UMAP1 = umap_coords[, 1],
-    UMAP2 = umap_coords[, 2],
-    UncertaintyScore = covid_data$scvi_confidence
-)
-
-fig_s1h <- ggplot(umap_data_scarches_score, aes(x = UMAP1, y = UMAP2, color = UncertaintyScore)) +
-    geom_point(size = 0.1, alpha = 0.6) +
-    scale_color_gradient(low = "#5B7C99", high = "#C1666B", name = "Uncertainty Score") +
-    xlab("UMAP 1") +
-    ylab("UMAP 2") +
-    ggtitle("scArches - Uncertainty Score") +
-    theme_minimal() +
-    theme(
-        plot.title = element_text(hjust = 0.5, face = "bold", size = 12, color = "#1F2937", family = "sans"),
-        axis.title = element_text(size = 9, face = "bold", color = "#374151", family = "sans"),
-        axis.text = element_text(size = 8, color = "#4B5563", family = "sans"),
-        legend.position = "right",
-        legend.title = element_text(size = 9, face = "bold"),
-        legend.text = element_text(size = 8),
-        legend.key.size = unit(0.35, "cm"),
-        panel.grid.major = element_line(color = "#E5E7EB", linewidth = 0.2),
-        panel.grid.minor = element_blank(),
-        panel.border = element_rect(color = "#D1D5DB", linewidth = 0.5, fill = NA),
-        plot.margin = margin(2, 0.5, 2, 0.5, "pt"),
-        panel.background = element_rect(fill = "#FAFBFC", color = NA),
-        aspect.ratio = 1
-    )
-
-# _________________
-# Combine 4x2 grid
-# _________________
-
-fig_s1_combined <- plot_grid(fig_s1a, fig_s1b, 
-                             fig_s1c, fig_s1d,
-                             fig_s1e, fig_s1f,
-                             fig_s1g, fig_s1h,
-                             nrow = 4, ncol = 2, labels = "AUTO", 
-                             label_size = 11, label_fontface = "bold",
-                             label_x = 0.02, label_y = 0.98,
-                             rel_widths = c(0.9, 0.9))
-
-ggsave("figures/supp/covid/Fig_S1_umaps.png", fig_s1_combined, width = 15, height = 16, dpi = 600)
-print("Figure S1 saved")
+ggsave("figures/supp/covid/Fig_S1_computing_benchmark.png", final_plot, width = 14, height = 18, dpi = 600)
 
 # ________
 # Summary
 # ________
 
-print("Supplementary Figure S1 (All Cells) complete!")
-print("Saved in: figures/supp/")
+print("Supplementary Figure S1 complete!")
+print("Saved in: figures/supp/covid/")
+

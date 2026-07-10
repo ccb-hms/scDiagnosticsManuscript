@@ -4,6 +4,8 @@
 
 library(SingleCellExperiment)
 library(ggplot2)
+library(cowplot)
+library(dplyr)
 
 # -----------------------------------------------
 
@@ -12,84 +14,281 @@ library(ggplot2)
 # __________
 
 covid_data <- readRDS("data/covid/covid_data_sce.rds")
-normal_data <- readRDS("data/covid/normal_data_sce.rds")
 
-# _______________________
-# Calculate IFN Signature
-# _______________________
+# _________________________
+# Cell Type Color Palette
+# _________________________
 
-yoshida_ifn_signature <- c(
-  "BST2", "CMPK2", "EIF2AK2", "EPSTI1", "HERC5", "IFI35", "IFI44L", 
-  "IFI6", "IFIT3", "ISG15", "LY6E", "MX1", "MX2", "OAS1", "OAS2", 
-  "PARP9", "PLSCR1", "SAMD9", "SAMD9L", "SP110", "STAT1", "TRIM22", 
-  "UBE2L6", "XAF1", "IRF7"
+cell_type_colors <- c(
+    # T Cell & ILC Lineage
+    "CD4 T"       = "#8A2BE2",  
+    "CD8 T"       = "#FF8C00",  
+    "Treg"        = "#DA70D6",  
+    "NKT"         = "#9932CC",  
+    "MAIT"        = "#FF4500",  
+    "gdT"         = "#FFA500",  
+    "ILC"         = "#FF69B4",  
+    
+    # B Cell & Plasma Lineage
+    "B cell"      = "#20B2AA",  
+    "Plasmablast" = "#32CD32",  
+    "Plasma cell" = "#006400",  
+
+    # Myeloid & Monocyte Lineage
+    "CD14 mono"   = "#008080",  
+    "CD16 mono"   = "#1E90FF",  
+    "Mono_prolif" = "#ADD8E6",  
+    "DC1"         = "#A0522D",  
+    "DC2"         = "#D2691E",  
+    "DC3"         = "#F4A460",  
+    "ASDC"        = "#8B4513",  
+    "pDC"         = "#CD853F",  
+    "DC_prolif"   = "#FFE4B5",  
+    
+    # NK Cell Lineage
+    "NK_16hi"     = "#B22222",  
+    "NK_56hi"     = "#8B4513",  
+    "NK_prolif"   = "#FFC0CB",  
+    
+    # Other Types
+    "HSPC"        = "#F0E68C",  
+    "Platelets"   = "#BDB76B",  
+    "RBC"         = "#E9967A"   
 )
-
-# Find available genes
-common_genes <- intersect(rownames(covid_data), rownames(normal_data))
-signature_genes_avail <- intersect(yoshida_ifn_signature, common_genes)
-
-# Calculate IFN score as mean expression of signature genes
-ifn_expr <- assay(covid_data, "logcounts")[signature_genes_avail, ]
-ifn_score <- colMeans(ifn_expr, na.rm = TRUE)
-
-# Extract UMAP coordinates
-umap_coords <- reducedDim(covid_data, "UMAP_scVI")
 
 # ____________
 # Setup Theme
 # ____________
 
-theme_set(theme_minimal() + theme(
-  axis.title = element_text(size = 11, face = "bold"),
-  axis.text = element_text(size = 10),
-  legend.text = element_text(size = 9),
-  legend.title = element_text(size = 9, face = "bold"),
+theme_set(theme_minimal(base_size = 20) + theme(
+  axis.title = element_text(size = 20, face = "bold"),
+  axis.text = element_text(size = 16),
+  legend.text = element_text(size = 18),
+  legend.title = element_text(size = 20, face = "bold"),
   panel.grid.major = element_blank(),
   panel.grid.minor = element_blank(),
-  strip.text = element_text(size = 10, face = "bold")
+  strip.text = element_text(size = 18, face = "bold")
 ))
 
-# ______________________________
-# Figure S2: IFN Signature UMAP
-# ______________________________
+# Extract UMAP coordinates for all cells
+umap_coords <- reducedDim(covid_data, "UMAP_scVI")
 
-umap_data_ifn <- data.frame(
-    UMAP1 = umap_coords[, 1],
-    UMAP2 = umap_coords[, 2],
-    IFN_Score = ifn_score
+# _____________________________________________
+# Custom Themes for Left & Right Columns
+# _____________________________________________
+
+# LEFT: No legend, big top margin, reduced right margin to pull right column closer
+theme_left <- theme(
+    plot.title = element_text(hjust = 0.5, face = "bold", size = 22, color = "#1F2937", family = "sans"),
+    axis.title = element_text(size = 20, face = "bold", color = "#374151", family = "sans"),
+    axis.text = element_text(size = 16, color = "#4B5563", family = "sans"),
+    legend.position = "none", 
+    panel.grid.major = element_line(color = "#E5E7EB", linewidth = 0.2),
+    panel.grid.minor = element_blank(),
+    panel.border = element_blank(), # Removed the frame box
+    axis.line = element_line(color = "#374151", linewidth = 0.5), # Added back just the X/Y axes lines
+    plot.margin = margin(t = 35, r = 5, b = 10, l = 10, "pt"), 
+    
+    # --- CRITICAL FIX: Force pure white backgrounds ---
+    panel.background = element_rect(fill = "white", color = NA),
+    plot.background = element_rect(fill = "white", color = NA),
+    aspect.ratio = 1
 )
 
-fig_s2 <- ggplot(umap_data_ifn, aes(x = UMAP1, y = UMAP2, color = IFN_Score)) +
-    geom_point(size = 0.8, alpha = 0.6) +
-    scale_color_viridis_c(option = "B", name = "IFN Score") +
-    xlab("UMAP 1") +
-    ylab("UMAP 2") +
-    ggtitle("IFN Signature Score (Query Cells)") +
-    theme_minimal() +
+# RIGHT: Keeps score legend, big top margin, reduced left margin to sit flush with left column
+theme_right <- theme(
+    plot.title = element_text(hjust = 0.5, face = "bold", size = 22, color = "#1F2937", family = "sans"),
+    axis.title = element_text(size = 20, face = "bold", color = "#374151", family = "sans"),
+    axis.text = element_text(size = 16, color = "#4B5563", family = "sans"),
+    legend.position = "right",
+    legend.title = element_text(size = 20, face = "bold"), 
+    legend.text = element_text(size = 18),
+    legend.key.height = unit(1.2, "cm"),
+    legend.key.width = unit(0.6, "cm"),
+    legend.background = element_blank(),
+    panel.grid.major = element_line(color = "#E5E7EB", linewidth = 0.2),
+    panel.grid.minor = element_blank(),
+    panel.border = element_blank(), # Removed the frame box
+    axis.line = element_line(color = "#374151", linewidth = 0.5), # Added back just the X/Y axes lines
+    plot.margin = margin(t = 35, r = 10, b = 10, l = 0, "pt"), 
+    
+    # --- CRITICAL FIX: Force pure white backgrounds ---
+    panel.background = element_rect(fill = "white", color = NA),
+    plot.background = element_rect(fill = "white", color = NA),
+    aspect.ratio = 1
+)
+
+
+# _________________________________________
+# Figure S2A: Azimuth - Cell Type (Merged)
+# _________________________________________
+
+umap_data_azimuth_anno <- data.frame(
+    UMAP1 = umap_coords[, 1],
+    UMAP2 = umap_coords[, 2],
+    CellType = covid_data$azimuth_celltype_l1_merged
+)
+
+fig_s2a <- ggplot(umap_data_azimuth_anno, aes(x = UMAP1, y = UMAP2, color = CellType)) +
+    geom_point(size = 0.1, alpha = 0.6) +
+    scale_color_manual(values = cell_type_colors, na.value = "grey50") +
+    xlab("UMAP 1") + ylab("UMAP 2") + ggtitle("Azimuth - Cell Type") + theme_left
+
+# _______________________________________
+# Figure S2B: Azimuth - Prediction Score
+# _______________________________________
+
+umap_data_azimuth_score <- data.frame(
+    UMAP1 = umap_coords[, 1],
+    UMAP2 = umap_coords[, 2],
+    PredictionScore = covid_data$azimuth_mapping_score
+)
+
+fig_s2b <- ggplot(umap_data_azimuth_score, aes(x = UMAP1, y = UMAP2, color = PredictionScore)) +
+    geom_point(size = 0.1, alpha = 0.6) +
+    scale_color_gradient(low = "#5B7C99", high = "#C1666B", name = "Prediction Score") +
+    xlab("UMAP 1") + ylab("UMAP 2") + ggtitle("Azimuth - Prediction Score") + theme_right
+
+# _________________________________________
+# Figure S2C: SingleR - Cell Type (Merged)
+# _________________________________________
+
+umap_data_singler_anno <- data.frame(
+    UMAP1 = umap_coords[, 1],
+    UMAP2 = umap_coords[, 2],
+    CellType = covid_data$singler_annotations_merged
+)
+
+fig_s2c <- ggplot(umap_data_singler_anno, aes(x = UMAP1, y = UMAP2, color = CellType)) +
+    geom_point(size = 0.1, alpha = 0.6) +
+    scale_color_manual(values = cell_type_colors, na.value = "grey50") +
+    xlab("UMAP 1") + ylab("UMAP 2") + ggtitle("SingleR - Cell Type") + theme_left
+
+# ________________________________________
+# Figure S2D: SingleR - Delta Score
+# ________________________________________
+
+singler_scores_matrix <- covid_data$singler_scores
+singler_assigned <- covid_data$singler_annotations
+
+singler_conf <- sapply(1:ncol(covid_data), function(i) {
+    cell_type <- singler_assigned[i]
+    singler_scores_matrix[i, cell_type]
+})
+
+umap_data_singler_score <- data.frame(
+    UMAP1 = umap_coords[, 1],
+    UMAP2 = umap_coords[, 2],
+    DeltaScore = singler_conf
+)
+
+fig_s2d <- ggplot(umap_data_singler_score, aes(x = UMAP1, y = UMAP2, color = DeltaScore)) +
+    geom_point(size = 0.1, alpha = 0.6) +
+    scale_color_gradient(low = "#5B7C99", high = "#C1666B", name = "Delta Score") +
+    xlab("UMAP 1") + ylab("UMAP 2") + ggtitle("SingleR - Delta Score") + theme_right
+
+# ____________________________________________
+# Figure S2E: CellTypist - Cell Type (Merged)
+# ____________________________________________
+
+umap_data_celltypist_anno <- data.frame(
+    UMAP1 = umap_coords[, 1],
+    UMAP2 = umap_coords[, 2],
+    CellType = covid_data$celltypist_predicted_labels_merged
+)
+
+fig_s2e <- ggplot(umap_data_celltypist_anno, aes(x = UMAP1, y = UMAP2, color = CellType)) +
+    geom_point(size = 0.1, alpha = 0.6) +
+    scale_color_manual(values = cell_type_colors, na.value = "grey50") +
+    xlab("UMAP 1") + ylab("UMAP 2") + ggtitle("CellTypist - Cell Type") + theme_left
+
+# _________________________________________
+# Figure S2F: CellTypist - Confidence Score
+# _________________________________________
+
+umap_data_celltypist_score <- data.frame(
+    UMAP1 = umap_coords[, 1],
+    UMAP2 = umap_coords[, 2],
+    ConfidenceScore = covid_data$celltypist_conf_score
+)
+
+fig_s2f <- ggplot(umap_data_celltypist_score, aes(x = UMAP1, y = UMAP2, color = ConfidenceScore)) +
+    geom_point(size = 0.1, alpha = 0.6) +
+    scale_color_gradient(low = "#5B7C99", high = "#C1666B", name = "Confidence Score") +
+    xlab("UMAP 1") + ylab("UMAP 2") + ggtitle("CellTypist - Confidence Score") + theme_right
+
+# _________________________________________
+# Figure S2G: scArches - Cell Type (Merged)
+# _________________________________________
+
+umap_data_scarches_anno <- data.frame(
+    UMAP1 = umap_coords[, 1],
+    UMAP2 = umap_coords[, 2],
+    CellType = covid_data$scvi_prediction_merged
+)
+
+fig_s2g <- ggplot(umap_data_scarches_anno, aes(x = UMAP1, y = UMAP2, color = CellType)) +
+    geom_point(size = 0.1, alpha = 0.6) +
+    scale_color_manual(values = cell_type_colors, na.value = "grey50") +
+    xlab("UMAP 1") + ylab("UMAP 2") + ggtitle("scArches - Cell Type") + theme_left
+
+# _________________________________________
+# Figure S2H: scArches - Uncertainty Score
+# _________________________________________
+
+umap_data_scarches_score <- data.frame(
+    UMAP1 = umap_coords[, 1],
+    UMAP2 = umap_coords[, 2],
+    UncertaintyScore = covid_data$scvi_confidence
+)
+
+fig_s2h <- ggplot(umap_data_scarches_score, aes(x = UMAP1, y = UMAP2, color = UncertaintyScore)) +
+    geom_point(size = 0.1, alpha = 0.6) +
+    scale_color_gradient(low = "#5B7C99", high = "#C1666B", name = "Uncertainty Score") +
+    xlab("UMAP 1") + ylab("UMAP 2") + ggtitle("scArches - Uncertainty Score") + theme_right
+
+# _________________
+# Combine 4x2 grid
+# _________________
+
+# 1. Extract the shared Cell Type legend
+dummy_plot <- ggplot(umap_data_azimuth_anno, aes(x = UMAP1, y = UMAP2, color = CellType)) +
+    geom_point(size = 5) + scale_color_manual(values = cell_type_colors) +
+    theme_void() + 
     theme(
-        plot.title = element_text(hjust = 0.5, face = "bold", size = 14, color = "#1F2937", family = "sans"),
-        axis.title = element_text(size = 11, face = "bold", color = "#374151", family = "sans"),
-        axis.text = element_text(size = 10, color = "#4B5563", family = "sans"),
-        legend.position = "right",
-        legend.title = element_text(size = 12, face = "bold", color = "#374151"),
-        legend.text = element_text(size = 11, color = "#4B5563"),
-        legend.key.size = unit(0.5, "cm"),
-        panel.grid.major = element_line(color = "#E5E7EB", linewidth = 0.2),
-        panel.grid.minor = element_blank(),
-        panel.border = element_rect(color = "#D1D5DB", linewidth = 0.5, fill = NA),
-        plot.margin = margin(10, 10, 10, 10, "pt"),
-        panel.background = element_rect(fill = "#FAFBFC", color = NA),
-        aspect.ratio = 1
-    )
+        legend.position = "bottom", 
+        legend.title = element_blank(), 
+        legend.text = element_text(size = 18),
+        # Ensure the legend dummy plot doesn't have transparency issues either
+        plot.background = element_rect(fill = "white", color = NA),
+        panel.background = element_rect(fill = "white", color = NA)
+    ) +
+    guides(color = guide_legend(nrow = 4, override.aes = list(size = 6)))
 
-ggsave("figures/supp/covid/Fig_S2_ifn_signature.png", fig_s2, width = 8, height = 8, dpi = 600)
+shared_legend <- cowplot::get_legend(dummy_plot)
 
-print("Supplementary Figure S2 saved")
+# 2. Build the main grid 
+grid_plots <- plot_grid(
+    fig_s2a, fig_s2b, 
+    fig_s2c, fig_s2d,
+    fig_s2e, fig_s2f,
+    fig_s2g, fig_s2h,
+    nrow = 4, ncol = 2, labels = "AUTO", 
+    label_size = 26, label_fontface = "bold",
+    label_x = 0, label_y = 1, # Snaps labels into the top margin we created
+    rel_widths = c(1, 1.15)
+)
+
+# 3. Append the shared legend at the bottom
+fig_s2_combined <- plot_grid(grid_plots, shared_legend, ncol = 1, rel_heights = c(1, 0.12))
+
+# *** CRITICAL FIX: bg = "white" prevents transparent PNG artifacts ***
+ggsave("figures/supp/covid/Fig_S2_umaps.png", fig_s2_combined, width = 15, height = 24, dpi = 600, bg = "white")
+print("Figure S2 saved")
 
 # ________
 # Summary
 # ________
 
-print("Supplementary Figure S2 (IFN Signature) complete!")
-print("Saved in: figures/supp/covid/")
+print("Supplementary Figure S2 (All Cells) complete!")
+print("Saved in: figures/supp/")
