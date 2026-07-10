@@ -36,74 +36,31 @@ create_annotation_heatmaps <- function(method_name, query_annot_col) {
     
     cat("\nIdentifying cell groups...\n")
     
-    # 1. Inflamed Fibro annotated as SMC
-    inflamed_to_smc <- dss9_data[, 
-        dss9_data$tier2_merged == "Inflamed Fibroblast" & 
-        dss9_data[[query_annot_col]] == "Smooth Muscle"
-    ]
-    
-    # 2. Inflamed Fibro annotated as Fibro
-    inflamed_to_fibro <- dss9_data[, 
-        dss9_data$tier2_merged == "Inflamed Fibroblast" & 
-        dss9_data[[query_annot_col]] == "Fibroblast"
-    ]
-    
-    # 3. Reference SMC
-    ref_smc <- healthy_data[, 
-        healthy_data$tier2_merged == "Smooth Muscle"
-    ]
-    
-    # 4. Reference Fibro
-    ref_fibro <- healthy_data[, 
-        healthy_data$tier2_merged == "Fibroblast"
-    ]
-    
-    cat(sprintf("Inflamed Fibro to SMC: %d cells\n", ncol(inflamed_to_smc)))
-    cat(sprintf("Inflamed Fibro to Fibro: %d cells\n", ncol(inflamed_to_fibro)))
-    cat(sprintf("Reference SMC: %d cells\n", ncol(ref_smc)))
-    cat(sprintf("Reference Fibro: %d cells\n", ncol(ref_fibro)))
+    inflamed_to_smc <- dss9_data[, dss9_data$tier2_merged == "Inflamed Fibroblast" & dss9_data[[query_annot_col]] == "Smooth Muscle"]
+    inflamed_to_fibro <- dss9_data[, dss9_data$tier2_merged == "Inflamed Fibroblast" & dss9_data[[query_annot_col]] == "Fibroblast"]
+    ref_smc <- healthy_data[, healthy_data$tier2_merged == "Smooth Muscle"]
+    ref_fibro <- healthy_data[, healthy_data$tier2_merged == "Fibroblast"]
     
     # _____________________________________________
     # Find SMC vs Fibroblast markers in Reference
     # _____________________________________________
     
-    cat("\n--- Finding SMC vs Fibroblast markers in healthy reference ---\n")
-    
     ref_comparison <- cbind(ref_smc, ref_fibro)
-    ref_comparison$celltype <- c(
-        rep("SMC", ncol(ref_smc)),
-        rep("Fibroblast", ncol(ref_fibro))
-    )
+    ref_comparison$celltype <- c(rep("SMC", ncol(ref_smc)), rep("Fibroblast", ncol(ref_fibro)))
     
-    cat("Computing marker genes...\n")
-    ref_markers <- findMarkers(
-        x = ref_comparison,
-        groups = ref_comparison$celltype,
-        pval.type = "all",
-        direction = "up"
-    )
+    ref_markers <- findMarkers(x = ref_comparison, groups = ref_comparison$celltype, pval.type = "all", direction = "up")
     
-    # Get SMC markers
     smc_markers <- ref_markers[["SMC"]]
-    smc_markers <- smc_markers[smc_markers$FDR < 0.01, ]
-    all_smc_genes <- rownames(smc_markers)
+    all_smc_genes <- rownames(smc_markers[smc_markers$FDR < 0.01, ])
     
-    # Get Fibroblast markers
     fib_markers <- ref_markers[["Fibroblast"]]
-    fib_markers <- fib_markers[fib_markers$FDR < 0.01, ]
-    all_fib_genes <- rownames(fib_markers)
-    
-    cat(sprintf("✓ SMC markers found: %d\n", length(all_smc_genes)))
-    cat(sprintf("✓ Fibroblast markers found: %d\n", length(all_fib_genes)))
+    all_fib_genes <- rownames(fib_markers[fib_markers$FDR < 0.01, ])
     
     # _________________________
     # Make colData compatible
     # _________________________
     
-    cat("\nMaking colData compatible across datasets...\n")
-    
     common_cols <- intersect(colnames(colData(inflamed_to_smc)), colnames(colData(ref_smc)))
-    
     colData(inflamed_to_smc) <- colData(inflamed_to_smc)[, common_cols]
     colData(ref_smc) <- colData(ref_smc)[, common_cols]
     colData(inflamed_to_fibro) <- colData(inflamed_to_fibro)[, common_cols]
@@ -113,62 +70,49 @@ create_annotation_heatmaps <- function(method_name, query_annot_col) {
     # Create pseudobulk profiles
     # ______________________________________
     
-    cat("\n--- Preparing pseudobulk data ---\n")
-    
-    # Rename cells for uniqueness
-    colnames(inflamed_to_smc) <- paste0("Inflamed_SMC_", seq_len(ncol(inflamed_to_smc)))
-    colnames(inflamed_to_fibro) <- paste0("Inflamed_Fibro_", seq_len(ncol(inflamed_to_fibro)))
-    colnames(ref_smc) <- paste0("RefSMC_", seq_len(ncol(ref_smc)))
-    colnames(ref_fibro) <- paste0("RefFibro_", seq_len(ncol(ref_fibro)))
-    
-    # Combine all groups
-    combined_all <- cbind(inflamed_to_smc, inflamed_to_fibro, ref_smc, ref_fibro)
-    
-    combined_all$group <- c(
-        rep("Inflamed Fibro to SMC", ncol(inflamed_to_smc)),
-        rep("Inflamed Fibro to Fibro", ncol(inflamed_to_fibro)),
-        rep("Reference SMC", ncol(ref_smc)),
-        rep("Reference Fibro", ncol(ref_fibro))
+    # Cleaner, more concise column names
+    group_names <- c(
+        "Misannotated\n(as SMC)",
+        "Reference\n(True SMC)",
+        "Annotated\n(as Fibroblast)",
+        "Reference\n(True Fibroblast)"
     )
     
-    # Create pseudobulk aggregation for all reference marker genes
-    cat("Creating pseudobulk profiles...\n")
+    combined_all <- cbind(inflamed_to_smc, ref_smc, inflamed_to_fibro, ref_fibro)
+    combined_all$group <- factor(
+        c(
+            rep(group_names[1], ncol(inflamed_to_smc)),
+            rep(group_names[2], ncol(ref_smc)),
+            rep(group_names[3], ncol(inflamed_to_fibro)),
+            rep(group_names[4], ncol(ref_fibro))
+        ), 
+        levels = group_names
+    )
     
-    groups <- unique(combined_all$group)
     all_genes <- unique(c(all_smc_genes, all_fib_genes))
-    
-    pb_matrix_all <- matrix(0, nrow = length(all_genes), ncol = length(groups))
+    pb_matrix_all <- matrix(0, nrow = length(all_genes), ncol = length(group_names))
     rownames(pb_matrix_all) <- all_genes
-    colnames(pb_matrix_all) <- groups
+    colnames(pb_matrix_all) <- group_names
     
-    for (i in seq_along(groups)) {
-        group_cells <- combined_all[, combined_all$group == groups[i]]
+    for (i in seq_along(group_names)) {
+        group_cells <- combined_all[, combined_all$group == group_names[i]]
         pb_matrix_all[, i] <- rowMeans(assay(group_cells[all_genes, ], "logcounts"))
     }
-    
-    cat(sprintf("Pseudobulk matrix dimensions: %d genes x %d groups\n", 
-                nrow(pb_matrix_all), ncol(pb_matrix_all)))
     
     # _______________________________
     # Find top discriminating genes
     # _______________________________
     
-    cat("\n--- Finding top genes separating Inflamed Fibro to SMC from Inflamed Fibro to Fibro ---\n")
-    
-    expr_diff <- pb_matrix_all[, "Inflamed Fibro to SMC"] - pb_matrix_all[, "Inflamed Fibro to Fibro"]
+    expr_diff <- pb_matrix_all[, group_names[1]] - pb_matrix_all[, group_names[3]]
     top_diff_genes <- names(sort(abs(expr_diff), decreasing = TRUE)[1:50])
     
-    # Separate by marker type and get top 10 from each
     top_smc_from_diff <- top_diff_genes[top_diff_genes %in% all_smc_genes]
     top_fib_from_diff <- top_diff_genes[top_diff_genes %in% all_fib_genes]
     
     selected_genes_smc <- head(top_smc_from_diff[!is.na(top_smc_from_diff)], 10)
     selected_genes_fib <- head(top_fib_from_diff[!is.na(top_fib_from_diff)], 10)
     
-    cat(sprintf("Top 10 SMC markers: %s\n", paste(selected_genes_smc, collapse = ", ")))
-    cat(sprintf("Top 10 Fibro markers: %s\n", paste(selected_genes_fib, collapse = ", ")))
-    
-    # Split into two matrices by gene type
+    # Raw logcounts matrices
     pb_smc <- pb_matrix_all[selected_genes_smc, ]
     pb_fibro <- pb_matrix_all[selected_genes_fib, ]
     
@@ -178,95 +122,78 @@ create_annotation_heatmaps <- function(method_name, query_annot_col) {
     
     cat("\n--- Creating ComplexHeatmap ---\n")
     
-    # Create column annotation (same for both heatmaps)
-    col_colors <- c(
-        "Inflamed Fibro to SMC" = "#A23B72",
-        "Inflamed Fibro to Fibro" = "#2E86AB",
-        "Reference SMC" = "#C73E1D",
-        "Reference Fibro" = "#F18F01"
-    )
+    # Establish a clean global color scale
+    color_max <- max(c(pb_smc, pb_fibro), na.rm = TRUE)
+    # Round up to nearest 0.5 for a clean legend
+    color_max <- ceiling(color_max * 2) / 2 
     
-    col_anno <- HeatmapAnnotation(
-        `Cell Group` = factor(colnames(pb_matrix_all), levels = colnames(pb_matrix_all)),
-        col = list(`Cell Group` = col_colors),
-        annotation_height = unit(0.6, "cm"),
-        annotation_legend_param = list(
-            title_gp = gpar(fontsize = 10, fontface = "bold"),
-            labels_gp = gpar(fontsize = 9)
-        )
-    )
+    global_col_fun <- colorRamp2(c(0, color_max), c("white", "#b2182b"))
     
-    # Determine color scale limits (white to red, one-directional)
-    color_min <- min(pb_matrix_all, na.rm = TRUE)
-    color_max <- max(pb_matrix_all, na.rm = TRUE)
+    # Text color logic (White text on dark red, Black text on light red/white)
+    cell_text_fun <- function(matrix_data) {
+        function(j, i, x, y, w, h, fill) {
+            val <- matrix_data[i, j]
+            text_color <- ifelse(val > (color_max * 0.6), "white", "black")
+            grid::grid.text(sprintf("%.2f", val), x, y, 
+                           gp = grid::gpar(fontsize = 16, col = text_color, fontface = "bold"))
+        }
+    }
     
-    # Create SMC marker heatmap
+    # SMC Heatmap (Top)
     ht_smc <- Heatmap(
-        pb_smc,
-        name = "Mean\nlogcounts",
-        column_title = method_name,
+        matrix = pb_smc, 
+        name = "Mean\nLogcounts",
+        column_title = paste0(method_name, " Annotations on Inflamed Fibroblasts"),
+        column_title_gp = gpar(fontsize = 26, fontface = "bold"),
         row_title = "SMC Markers",
+        row_title_gp = gpar(fontsize = 22, fontface = "bold"),
         cluster_columns = FALSE,
         cluster_rows = FALSE,
-        show_column_names = FALSE,
+        show_column_names = FALSE, 
         show_row_names = TRUE,
-        column_names_side = "bottom",
         row_names_side = "left",
-        top_annotation = col_anno,
-        cell_fun = function(j, i, x, y, w, h, fill) {
-            grid::grid.text(sprintf("%.2f", pb_smc[i, j]), x, y, 
-                           gp = grid::gpar(fontsize = 8, col = "black", fontface = "bold"))
-        },
-        col = colorRamp2(
-            c(color_min, color_max),
-            c("white", "#b2182b")
-        ),
-        height = unit(4, "cm"),
-        width = unit(5, "cm"),
+        row_names_gp = gpar(fontsize = 18, fontface = "italic"),
+        cell_fun = cell_text_fun(pb_smc),
+        col = global_col_fun,
+        height = unit(10, "cm"),
+        width = unit(14, "cm"),
         heatmap_legend_param = list(
-            title = "Mean\nlogcounts",
-            title_gp = gpar(fontsize = 10, fontface = "bold"),
-            labels_gp = gpar(fontsize = 9),
-            direction = "v",
-            legend_height = unit(2, "cm")
+            title = "Mean\nLogcounts",
+            title_position = "topleft", # Fixes overlap by expanding text rightward
+            title_gp = gpar(fontsize = 18, fontface = "bold"),
+            labels_gp = gpar(fontsize = 16),
+            legend_height = unit(6, "cm"),
+            grid_width = unit(1.0, "cm") # Thicker color bar
         ),
         border = TRUE,
-        rect_gp = gpar(col = "white", lwd = 0.5)
+        rect_gp = gpar(col = "black", lwd = 1)
     )
     
-    # Create Fibroblast marker heatmap
+    # Fibroblast Heatmap (Bottom)
     ht_fibro <- Heatmap(
-        pb_fibro,
-        name = "Mean\nlogcounts",
+        matrix = pb_fibro,
+        name = "Mean\nLogcounts",
         row_title = "Fibroblast Markers",
+        row_title_gp = gpar(fontsize = 22, fontface = "bold"),
         cluster_columns = FALSE,
         cluster_rows = FALSE,
-        show_column_names = FALSE,
-        show_row_names = TRUE,
+        show_column_names = TRUE, 
         column_names_side = "bottom",
+        column_names_rot = 45,
+        column_names_gp = gpar(fontsize = 20, fontface = "bold"),
+        show_row_names = TRUE,
         row_names_side = "left",
-        cell_fun = function(j, i, x, y, w, h, fill) {
-            grid::grid.text(sprintf("%.2f", pb_fibro[i, j]), x, y, 
-                           gp = grid::gpar(fontsize = 8, col = "black", fontface = "bold"))
-        },
-        col = colorRamp2(
-            c(color_min, color_max),
-            c("white", "#b2182b")
-        ),
-        height = unit(4, "cm"),
-        width = unit(5, "cm"),
-        heatmap_legend_param = list(
-            title = "Mean\nlogcounts",
-            title_gp = gpar(fontsize = 10, fontface = "bold"),
-            labels_gp = gpar(fontsize = 9),
-            direction = "v",
-            legend_height = unit(2, "cm")
-        ),
+        row_names_gp = gpar(fontsize = 18, fontface = "italic"),
+        cell_fun = cell_text_fun(pb_fibro),
+        col = global_col_fun,
+        height = unit(10, "cm"),
+        width = unit(14, "cm"),
+        show_heatmap_legend = FALSE, # Prevent duplicate legends from clashing
         border = TRUE,
-        rect_gp = gpar(col = "white", lwd = 0.5)
+        rect_gp = gpar(col = "black", lwd = 1)
     )
     
-    # Combine heatmaps vertically
+    # Combine vertically
     ht_combined <- ht_smc %v% ht_fibro
     
     return(ht_combined)
@@ -292,9 +219,13 @@ cat("\n--- Saving individual heatmaps ---\n")
 # Save Azimuth as main Figure S6
 cat("Saving Azimuth heatmap as Fig_S6...\n")
 dir.create("figures/supp/merfish", showWarnings = FALSE, recursive = TRUE)
+
 png("figures/supp/merfish/Fig_S6_Annotation_Patterns_Heatmap_Azimuth.png", 
-    width = 5.5, height = 4, res = 300, units = "in")
-draw(ht_azimuth, padding = unit(c(1, 1, 1, 1), "mm"))
+    width = 13, height = 12, res = 300, units = "in")
+
+# Added extra padding to the RIGHT (c(bottom, left, top, right)) to give the legend plenty of space
+draw(ht_azimuth, padding = unit(c(1, 1, 1, 1.5), "in"), ht_gap = unit(0.5, "cm")) 
+
 dev.off()
 
 cat("✓ Azimuth heatmap saved as main Fig_S6\n")

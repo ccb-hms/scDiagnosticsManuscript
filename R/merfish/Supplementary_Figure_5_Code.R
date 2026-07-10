@@ -129,12 +129,28 @@ process_annotation_method <- function(method_name,
         pseudo_bulk = TRUE,
         show_all_query = TRUE
     ) +
-        ggtitle(paste0(method_name, " - Fibroblasts (ECM Genes)")) +
+        ggtitle(paste0(method_name, " - Fibroblasts")) +
         theme(
-            plot.title = element_text(hjust = 0.5, face = "bold", size = 12, color = "#1F2937"),
-            legend.title = element_text(size = 10, face = "bold"),
-            legend.text = element_text(size = 9),
-            legend.key.size = unit(0.4, "cm")
+            plot.title = element_text(hjust = 0.5, face = "bold", size = 26, color = "#1F2937"),
+            axis.text.y = element_text(size = 20, face = "italic", color = "black"), 
+            axis.text.x = element_text(size = 18, color = "black"),
+            axis.title.x = element_text(size = 22, face = "bold", margin = margin(t = 15)),
+            axis.title.y = element_blank(), 
+            legend.title = element_text(size = 22, face = "bold"),
+            legend.text = element_text(size = 20),
+            legend.key.size = unit(1.2, "cm"),
+            legend.background = element_blank(),
+            
+            # --- CRITICAL FIX FOR THE FRAME/BOX ---
+            panel.border = element_blank(),                                
+            axis.line = element_line(color = "#374151", linewidth = 0.5),  
+            panel.grid.major = element_line(color = "#E5E7EB", linewidth = 0.5),
+            panel.grid.minor = element_blank(),
+            
+            # Force pure white backgrounds to prevent transparency-based frames
+            panel.background = element_rect(fill = "white", color = NA),
+            plot.background = element_rect(fill = "white", color = NA),
+            plot.margin = margin(15, 15, 15, 15, "pt")
         )
     
     # ===== REORDER GENES ALPHABETICALLY =====
@@ -157,11 +173,35 @@ result_scarches <- process_annotation_method("scArches", "scvi_prediction_merged
 # Combine into 2x2 Grid
 # ______________________
 
-fig_s5_combined <- plot_grid(
-    result_azimuth, result_singler,
-    result_celltypist, result_scarches,
+cat("\nCombining plots...\n")
+
+# Extract the master legend from Azimuth before removing it
+shared_legend <- get_legend(
+    result_azimuth + theme(
+        legend.position = "right", 
+        legend.box.margin = margin(0, 0, 0, 20)
+    )
+)
+
+# Strip legends from all 4 plots
+p1 <- result_azimuth + theme(legend.position = "none")
+p2 <- result_singler + theme(legend.position = "none")
+p3 <- result_celltypist + theme(legend.position = "none")
+p4 <- result_scarches + theme(legend.position = "none")
+
+# Create the 2x2 grid
+main_grid <- plot_grid(
+    p1, p2, p3, p4,
     nrow = 2, ncol = 2, labels = "AUTO",
-    label_size = 12, label_fontface = "bold"
+    label_size = 32, label_fontface = "bold",
+    label_x = 0.02, label_y = 0.98,
+    align = "hv", axis = "lrbt"
+)
+
+# Attach the shared legend to the right side
+fig_s5_combined <- plot_grid(
+    main_grid, shared_legend, 
+    ncol = 2, rel_widths = c(1, 0.2) # 20% of width for legend
 )
 
 # _________________
@@ -172,11 +212,13 @@ cat("Creating output directory...\n")
 dir.create("figures/supp/merfish", showWarnings = FALSE, recursive = TRUE)
 
 cat("Saving combined figure...\n")
+# CRITICAL FIX: bg = "white" prevents transparent PNG artifacts
 ggsave("figures/supp/merfish/Fig_S5_ecm_barplot.png", 
        fig_s5_combined, 
-       width = 14, 
-       height = 10, 
-       dpi = 600)
+       width = 24, 
+       height = 18, 
+       dpi = 600,
+       bg = "white")
 cat("✓ Figure saved\n")
 
 # _____________________________________________________________

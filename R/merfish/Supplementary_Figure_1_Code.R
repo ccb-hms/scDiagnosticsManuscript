@@ -105,18 +105,22 @@ if(length(available_ecm_genes) == 0) {
 
 merfish_theme <- theme_minimal() +
     theme(
-        plot.title = element_text(hjust = 0.5, face = "bold", size = 12, color = "#1F2937", family = "sans"),
-        axis.title = element_text(size = 9, face = "bold", color = "#374151", family = "sans"),
-        axis.text = element_text(size = 8, color = "#4B5563", family = "sans"),
+        plot.title = element_text(hjust = 0.5, face = "bold", size = 26, color = "#1F2937", family = "sans"),
+        axis.title = element_text(size = 22, face = "bold", color = "#374151", family = "sans"),
+        axis.text = element_text(size = 18, color = "#4B5563", family = "sans"),
         legend.position = "right",
-        legend.title = element_text(size = 10, face = "bold"),
-        legend.text = element_text(size = 9),
-        legend.key.size = unit(0.4, "cm"),
+        legend.title = element_text(size = 22, face = "bold"),
+        legend.text = element_text(size = 20),
+        legend.key.size = unit(1.0, "cm"),
+        legend.background = element_blank(),
+        legend.key = element_blank(),
         panel.grid.major = element_line(color = "#E5E7EB", linewidth = 0.2),
         panel.grid.minor = element_blank(),
-        panel.border = element_rect(color = "#D1D5DB", linewidth = 0.5, fill = NA),
-        plot.margin = margin(2, 2, 2, 2, "pt"),  # REDUCED from 5pt
-        panel.background = element_rect(fill = "#FAFBFC", color = NA),
+        panel.border = element_blank(),                                # No box
+        axis.line = element_line(color = "#374151", linewidth = 0.5),  # Just L-shaped axes
+        plot.margin = margin(20, 20, 20, 20, "pt"),
+        panel.background = element_rect(fill = "white", color = NA),   # Force pure white inner
+        plot.background = element_rect(fill = "white", color = NA),    # Force pure white outer margins!
         aspect.ratio = 1
     )
 
@@ -158,7 +162,7 @@ p_disease <- ggplot(plot_df, aes(x = UMAP1, y = UMAP2, color = disease_status)) 
     ylab("UMAP 2") +
     ggtitle("Disease Status") +
     merfish_theme +
-    guides(color = guide_legend(override.aes = list(size = 2)))
+    guides(color = guide_legend(override.aes = list(size = 5))) 
 
 # Plot 2: Cell Type
 cat("Creating UMAP plot by cell type...\n")
@@ -172,7 +176,7 @@ p_celltype <- ggplot(plot_df_filtered, aes(x = UMAP1, y = UMAP2, color = cell_ty
     ylab("UMAP 2") +
     ggtitle("Cell Type") +
     merfish_theme +
-    guides(color = guide_legend(override.aes = list(size = 2), ncol = 1))
+    guides(color = guide_legend(override.aes = list(size = 5), ncol = 1)) 
 
 # Plot 3: ECM Score
 cat("Creating UMAP plot by ECM Score...\n")
@@ -182,22 +186,26 @@ p_ecm <- ggplot(plot_df, aes(x = UMAP1, y = UMAP2, color = ECM_Score)) +
     xlab("UMAP 1") +
     ylab("UMAP 2") +
     ggtitle("ECM Homeostasis Score") +
-    merfish_theme
+    merfish_theme +
+    theme(
+        legend.key.height = unit(1.5, "cm"), 
+        legend.key.width = unit(0.5, "cm")
+    )
 
 cat("✓ UMAP plots created.\n")
 
 # _______________________
-# Combine into 1x3 Grid
+# Combine into 3x1 Grid
 # _______________________
 
-cat("\nCombining plots into 1x3 figure...\n")
+cat("\nCombining plots into 3x1 figure...\n")
 
 fig_merfish_combined <- plot_grid(
     p_disease, p_celltype, p_ecm,
-    nrow = 1, ncol = 3, labels = "AUTO",
-    label_size = 12, label_fontface = "bold",
+    nrow = 3, ncol = 1, labels = "AUTO", 
+    label_size = 32, label_fontface = "bold", 
     label_x = 0.02, label_y = 0.98,
-    rel_widths = c(1, 1.2, 1)
+    align = "v", axis = "lr" 
 )
 
 cat("✓ Combined figure created.\n")
@@ -210,5 +218,7 @@ cat("\nDisplaying and saving plots...\n")
 print(fig_merfish_combined)
 
 dir.create("figures/supp/merfish", showWarnings = FALSE, recursive = TRUE)
-ggsave("figures/supp/merfish/Fig_S1_umaps_exploratory.png", fig_merfish_combined, width = 16, height = 5.5, dpi = 600)
-cat("✓ Plots saved to figures/merfish/\n")
+
+# The crucial fix here: bg = "white" prevents transparent PNG artifacts
+ggsave("figures/supp/merfish/Fig_S1_umaps_exploratory.png", fig_merfish_combined, width = 12, height = 30, dpi = 600, bg = "white")
+cat("✓ Plots saved to figures/supp/merfish/\n")

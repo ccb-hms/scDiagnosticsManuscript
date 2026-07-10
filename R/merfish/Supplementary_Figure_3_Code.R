@@ -5,7 +5,6 @@
 library(SingleCellExperiment)
 library(ggplot2)
 library(dplyr)
-library(pheatmap)
 library(viridis)
 library(scDiagnostics)
 
@@ -33,55 +32,6 @@ all_cell_types <- unique(normal_data$tier2_merged)
 cat(sprintf("✓ Cell types in reference: %s\n", paste(all_cell_types, collapse = ", ")))
 
 inflamed_fb_cellnames <- colnames(dss9_data)[inflamed_fb_mask]
-
-# _______________________________
-# Function to Analyze One Method
-# _______________________________
-
-analyze_method <- function(method_name, anomaly_result, pred_col_name) {
-    
-    cat(sprintf("\n=== %s ===\n", method_name))
-    
-    # Get predictions for inflamed fibroblasts
-    names(dss9_data[[pred_col_name]]) <- colnames(dss9_data)
-    pred_inflamed <- dss9_data[[pred_col_name]][inflamed_fb_mask]
-    pred_unique <- unique(pred_inflamed)
-    
-    cat(sprintf("Predictions: %s\n", paste(pred_unique, collapse = ", ")))
-    cat(sprintf("\n%% anomalous by predicted type (among inflamed fibroblasts):\n"))
-    
-    method_row <- c()
-    
-    for (pred_type in pred_unique) {
-        # Which inflamed fibroblasts were predicted as this type?
-        mask_inflamed <- pred_inflamed == pred_type
-        inflamed_cells_of_type <- inflamed_fb_cellnames[mask_inflamed]
-        
-        # Get anomaly status from matching cell type detection
-        if (!pred_type %in% names(anomaly_result)) {
-            cat(sprintf("  WARNING: %s not in anomaly results\n", pred_type))
-            next
-        }
-        
-        anomaly_for_type <- anomaly_result[[pred_type]][["query_anomaly"]]
-        
-        # Remove Query_ prefix
-        names(anomaly_for_type) <- gsub("Query_", "", names(anomaly_for_type))
-        
-        # Extract anomaly status
-        inflamed_cells_clean <- gsub("Query_", "", inflamed_cells_of_type)
-        inflamed_anomaly <- anomaly_for_type[inflamed_cells_clean]
-        
-        n_cells <- sum(mask_inflamed)
-        n_anom <- sum(inflamed_anomaly, na.rm = TRUE)
-        pct_anom <- (n_anom / n_cells) * 100
-        
-        method_row[pred_type] <- pct_anom
-        cat(sprintf("  %s: %d/%d (%.1f%%)\n", pred_type, n_anom, n_cells, pct_anom))
-    }
-    
-    return(method_row)
-}
 
 # ______________________________________
 # Run Anomaly Detection for All Methods
@@ -153,160 +103,121 @@ anomaly_scarches <- detectAnomaly(
 
 cat("\n✓ All anomaly detections complete\n")
 
-# _____________________
-# Analyze Each Method
-# _____________________
+# _________________________________
+# Create Plotting DataFrame
+# _________________________________
 
 cat("\n" %+% paste(rep("=", 60), collapse = "") %+% "\n")
-cat("ANALYSIS RESULTS\n")
-cat(paste(rep("=", 60), collapse = "") %+% "\n")
-
-azimuth_row <- analyze_method("Azimuth", anomaly_azimuth, "azimuth_celltype_l1_merged")
-singler_row <- analyze_method("SingleR", anomaly_singler, "singler_annotations_merged")
-celltypist_row <- analyze_method("CellTypist", anomaly_celltypist, "celltypist_predicted_labels_merged")
-scarches_row <- analyze_method("scArches", anomaly_scarches, "scvi_prediction_merged")
-
-# _____________________________
-# Create Combined Heatmap Data
-# _____________________________
-
-cat("\n" %+% paste(rep("=", 60), collapse = "") %+% "\n")
-cat("CREATING COMBINED HEATMAP\n")
+cat("PROCESSING RESULTS FOR HEATMAP\n")
 cat(paste(rep("=", 60), collapse = "") %+% "\n\n")
 
-# Get all unique predicted types across all methods
-all_pred_types <- unique(c(names(azimuth_row), names(singler_row), 
-                            names(celltypist_row), names(scarches_row)))
-all_pred_types <- sort(all_pred_types)
+# Identify all unique predicted types seen across the 4 methods
+all_pred_types <- sort(unique(c(
+    dss9_data$azimuth_celltype_l1_merged[inflamed_fb_mask],
+    dss9_data$singler_annotations_merged[inflamed_fb_mask],
+    dss9_data$celltypist_predicted_labels_merged[inflamed_fb_mask],
+    dss9_data$scvi_prediction_merged[inflamed_fb_mask]
+)))
 
-# ===== Matrix 1: Total counts (for coloring by sample size) =====
-heatmap_counts <- matrix(NA, nrow = 4, ncol = length(all_pred_types))
-rownames(heatmap_counts) <- c("Azimuth", "SingleR", "CellTypist", "scArches")
-colnames(heatmap_counts) <- all_pred_types
+df_list <- list()
 
-# ===== Matrix 2: Display text (x / y format) =====
-heatmap_display <- matrix(NA, nrow = 4, ncol = length(all_pred_types))
-rownames(heatmap_display) <- c("Azimuth", "SingleR", "CellTypist", "scArches")
-colnames(heatmap_display) <- all_pred_types
+methods <- c("Azimuth", "SingleR", "CellTypist", "scArches")
+pred_cols <- c("azimuth_celltype_l1_merged", "singler_annotations_merged", 
+               "celltypist_predicted_labels_merged", "scvi_prediction_merged")
+anomaly_results <- list(anomaly_azimuth, anomaly_singler, anomaly_celltypist, anomaly_scarches)
 
-# ===== Azimuth =====
-cat("Processing Azimuth...\n")
-names(dss9_data$azimuth_celltype_l1_merged) <- colnames(dss9_data)
-pred_inflamed_azimuth <- dss9_data$azimuth_celltype_l1_merged[inflamed_fb_mask]
-for (pred_type in all_pred_types) {
-    mask_inflamed <- pred_inflamed_azimuth == pred_type
-    if (sum(mask_inflamed) > 0) {
-        inflamed_cells_of_type <- inflamed_fb_cellnames[mask_inflamed]
-        anomaly_for_type <- anomaly_azimuth[[pred_type]][["query_anomaly"]]
-        names(anomaly_for_type) <- gsub("Query_", "", names(anomaly_for_type))
-        inflamed_cells_clean <- gsub("Query_", "", inflamed_cells_of_type)
-        inflamed_anomaly <- anomaly_for_type[inflamed_cells_clean]
-        n_anom <- sum(inflamed_anomaly, na.rm = TRUE)
-        n_total <- sum(mask_inflamed)
-        heatmap_display["Azimuth", pred_type] <- sprintf("%d/%d", n_anom, n_total)
-        heatmap_counts["Azimuth", pred_type] <- n_total
+for (i in seq_along(methods)) {
+    method_name <- methods[i]
+    pred_col <- pred_cols[i]
+    anomaly_res <- anomaly_results[[i]]
+    
+    names(dss9_data[[pred_col]]) <- colnames(dss9_data)
+    pred_inflamed <- dss9_data[[pred_col]][inflamed_fb_mask]
+    
+    for (pred_type in all_pred_types) {
+        mask_inflamed <- pred_inflamed == pred_type
+        n_total <- sum(mask_inflamed, na.rm = TRUE)
+        n_anom <- 0
+        
+        if (n_total > 0 && pred_type %in% names(anomaly_res)) {
+            inflamed_cells_of_type <- inflamed_fb_cellnames[mask_inflamed]
+            anomaly_for_type <- anomaly_res[[pred_type]][["query_anomaly"]]
+            names(anomaly_for_type) <- gsub("Query_", "", names(anomaly_for_type))
+            inflamed_cells_clean <- gsub("Query_", "", inflamed_cells_of_type)
+            inflamed_anomaly <- anomaly_for_type[inflamed_cells_clean]
+            n_anom <- sum(inflamed_anomaly, na.rm = TRUE)
+        }
+        
+        df_list[[length(df_list) + 1]] <- data.frame(
+            Method = method_name,
+            CellType = pred_type,
+            Total = n_total,
+            Anomalous = n_anom,
+            stringsAsFactors = FALSE
+        )
     }
 }
 
-# ===== SingleR =====
-cat("Processing SingleR...\n")
-names(dss9_data$singler_annotations_merged) <- colnames(dss9_data)
-pred_inflamed_singler <- dss9_data$singler_annotations_merged[inflamed_fb_mask]
-for (pred_type in all_pred_types) {
-    mask_inflamed <- pred_inflamed_singler == pred_type
-    if (sum(mask_inflamed) > 0) {
-        inflamed_cells_of_type <- inflamed_fb_cellnames[mask_inflamed]
-        anomaly_for_type <- anomaly_singler[[pred_type]][["query_anomaly"]]
-        names(anomaly_for_type) <- gsub("Query_", "", names(anomaly_for_type))
-        inflamed_cells_clean <- gsub("Query_", "", inflamed_cells_of_type)
-        inflamed_anomaly <- anomaly_for_type[inflamed_cells_clean]
-        n_anom <- sum(inflamed_anomaly, na.rm = TRUE)
-        n_total <- sum(mask_inflamed)
-        heatmap_display["SingleR", pred_type] <- sprintf("%d/%d", n_anom, n_total)
-        heatmap_counts["SingleR", pred_type] <- n_total
-    }
-}
+plot_df <- do.call(rbind, df_list)
 
-# ===== CellTypist =====
-cat("Processing CellTypist...\n")
-names(dss9_data$celltypist_predicted_labels_merged) <- colnames(dss9_data)
-pred_inflamed_celltypist <- dss9_data$celltypist_predicted_labels_merged[inflamed_fb_mask]
-for (pred_type in all_pred_types) {
-    mask_inflamed <- pred_inflamed_celltypist == pred_type
-    if (sum(mask_inflamed) > 0) {
-        inflamed_cells_of_type <- inflamed_fb_cellnames[mask_inflamed]
-        anomaly_for_type <- anomaly_celltypist[[pred_type]][["query_anomaly"]]
-        names(anomaly_for_type) <- gsub("Query_", "", names(anomaly_for_type))
-        inflamed_cells_clean <- gsub("Query_", "", inflamed_cells_of_type)
-        inflamed_anomaly <- anomaly_for_type[inflamed_cells_clean]
-        n_anom <- sum(inflamed_anomaly, na.rm = TRUE)
-        n_total <- sum(mask_inflamed)
-        heatmap_display["CellTypist", pred_type] <- sprintf("%d/%d", n_anom, n_total)
-        heatmap_counts["CellTypist", pred_type] <- n_total
-    }
-}
+# Calculate Percentage Anomalous
+plot_df$Pct <- ifelse(plot_df$Total > 0, (plot_df$Anomalous / plot_df$Total) * 100, NA)
 
-# ===== scArches =====
-cat("Processing scArches...\n")
-names(dss9_data$scvi_prediction_merged) <- colnames(dss9_data)
-pred_inflamed_scarches <- dss9_data$scvi_prediction_merged[inflamed_fb_mask]
-for (pred_type in all_pred_types) {
-    mask_inflamed <- pred_inflamed_scarches == pred_type
-    if (sum(mask_inflamed) > 0) {
-        inflamed_cells_of_type <- inflamed_fb_cellnames[mask_inflamed]
-        anomaly_for_type <- anomaly_scarches[[pred_type]][["query_anomaly"]]
-        names(anomaly_for_type) <- gsub("Query_", "", names(anomaly_for_type))
-        inflamed_cells_clean <- gsub("Query_", "", inflamed_cells_of_type)
-        inflamed_anomaly <- anomaly_for_type[inflamed_cells_clean]
-        n_anom <- sum(inflamed_anomaly, na.rm = TRUE)
-        n_total <- sum(mask_inflamed)
-        heatmap_display["scArches", pred_type] <- sprintf("%d/%d", n_anom, n_total)
-        heatmap_counts["scArches", pred_type] <- n_total
-    }
-}
+# Create fraction text label (stacked vertically)
+plot_df$Label <- ifelse(plot_df$Total > 0, sprintf("%d\n—\n%d", plot_df$Anomalous, plot_df$Total), "")
 
-cat("\nCombined heatmap data (colored by sample size, text shows anomalous/total):\n")
-print(heatmap_display)
+# Dynamic text color (Black text on bright yellow backgrounds, White text on dark purple backgrounds)
+plot_df$TextColor <- ifelse(is.na(plot_df$Pct), "transparent", 
+                            ifelse(plot_df$Pct > 65, "black", "white"))
 
-# ===== Fill NA values with 0/0 =====
-cat("Filling NA cells with 0/0...\n")
+# Lock factors so order is top-to-bottom on Y axis
+plot_df$Method <- factor(plot_df$Method, levels = rev(c("Azimuth", "SingleR", "CellTypist", "scArches")))
 
-# Replace NA in display matrix with "0/0"
-heatmap_display[is.na(heatmap_display)] <- "0/0"
-
-# Replace NA in count matrix with 0 (will get colored as lowest value)
-heatmap_counts[is.na(heatmap_counts)] <- 0
-
-cat("\nCombined heatmap data (colored by sample size, text shows anomalous/total):\n")
-print(heatmap_display)
+cat("✓ Plotting dataframe ready.\n")
 
 # ________________
-# Create Heatmap
+# Create Plot
 # ________________
 
 cat("\nCreating combined heatmap...\n")
 
+p_heatmap <- ggplot(plot_df, aes(x = CellType, y = Method)) +
+    # The Heatmap tiles
+    geom_tile(aes(fill = Pct), color = "white", linewidth = 1.5) +
+    # The text overlay
+    geom_text(aes(label = Label, color = TextColor), size = 6.5, fontface = "bold", lineheight = 0.8) +
+    # Color scales
+    scale_fill_viridis_c(
+        option = "viridis", 
+        na.value = "#F3F4F6", # Light grey for 0/0 cells so they visually disappear
+        name = "Detection Rate\n(% Anomalous)", 
+        limits = c(0, 100),
+        labels = function(x) paste0(x, "%")
+    ) +
+    scale_color_identity() + # Uses the dynamic colors defined in the dataframe
+    coord_fixed() + # Forces squares
+    labs(
+        title = "scDiagnostics Anomaly Detection on Inflamed Fibroblasts",
+        subtitle = "Color = % of assigned cells flagged as anomalous  |  Text = Anomalous Flagged / Total Assigned",
+        x = "Assigned Cell Type by Annotation Tool",
+        y = ""
+    ) +
+    theme_minimal(base_size = 18) +
+    theme(
+        plot.title = element_text(face = "bold", size = 26, hjust = 0.5, color = "#1F2937", margin = margin(b = 10)),
+        plot.subtitle = element_text(size = 20, hjust = 0.5, color = "#4B5563", margin = margin(b = 20)),
+        axis.text.x = element_text(angle = 45, hjust = 1, size = 18, color = "black", face = "bold"),
+        axis.text.y = element_text(size = 22, face = "bold", color = "black"),
+        axis.title.x = element_text(size = 22, face = "bold", margin = margin(t = 20)),
+        legend.title = element_text(size = 18, face = "bold"),
+        legend.text = element_text(size = 16),
+        legend.key.height = unit(1.5, "cm"),
+        panel.grid = element_blank(),
+        plot.margin = margin(20, 20, 20, 20, "pt")
+    )
+
 dir.create("figures/supp/merfish", showWarnings = FALSE, recursive = TRUE)
 
-png("figures/supp/merfish/Fig_S3_annotation_heatmap.png", 
-    width = 2100, height = 700, res = 150)
-
-pheatmap(heatmap_counts,
-         main = "Inflamed Fibroblasts: Assigned Cell Type & Anomaly Detection\n(Color Intensity = # Inflamed Fibroblasts, Text = Anomalous / Total)",
-         display_numbers = heatmap_display,
-         breaks = seq(0, max(heatmap_counts, na.rm = TRUE), length.out = 100),
-         color = viridis(100),
-         cluster_rows = FALSE,
-         cluster_cols = FALSE,
-         fontsize = 12,
-         fontsize_row = 13,
-         fontsize_col = 11,
-         fontsize_number = 10,
-         angle_col = 45,
-         cellwidth = 60,
-         cellheight = 50,
-         margins = c(12, 8))
-
-dev.off()
+ggsave("figures/supp/merfish/Fig_S3_annotation_heatmap.png", p_heatmap, width = 20, height = 10, dpi = 600, bg = "white")
 
 cat("\n✓ Combined heatmap saved to figures/supp/merfish/Fig_S3_annotation_heatmap.png\n")

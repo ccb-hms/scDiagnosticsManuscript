@@ -64,9 +64,9 @@ cat(sprintf("ECM signature genes available: %s\n", paste(signature_genes_avail, 
 scatter_fn <- function(data, mapping, ...) {
     ggplot(data = data, mapping = mapping) +
         geom_point(data = ~subset(., dataset == "Reference"), 
-                   aes(color = ecm_score), shape = 1, alpha = 0.5, size = 0.75) +
+                   aes(color = ecm_score), shape = 1, alpha = 0.5, size = 1.5) + # Increased point size
         geom_point(data = ~subset(., dataset == "Query"), 
-                   aes(color = ecm_score), shape = 16, alpha = 0.8, size = 0.75) +
+                   aes(color = ecm_score), shape = 16, alpha = 0.8, size = 1.5) + # Increased point size
         viridis::scale_color_viridis(
             option = "plasma", 
             direction = 1, 
@@ -74,7 +74,11 @@ scatter_fn <- function(data, mapping, ...) {
             oob = scales::squish
         ) + 
         theme_minimal() +
-        theme(panel.border = element_rect(color = "black", fill = NA, linewidth = 0.5))
+        theme(
+            panel.border = element_rect(color = "black", fill = NA, linewidth = 0.5),
+            axis.text.x = element_text(size = 14, color = "#4B5563"), # Increased axis numbers
+            axis.text.y = element_text(size = 14, color = "#4B5563")  # Increased axis numbers
+        )
 }
 
 ridge_fn <- function(data, mapping, ...) {
@@ -88,7 +92,7 @@ ridge_fn <- function(data, mapping, ...) {
             axis.title = element_blank(),
             axis.text.y = element_blank(),
             axis.ticks.y = element_blank(),
-            axis.text.x = element_text(size = 8)
+            axis.text.x = element_text(size = 14, color = "#4B5563") # Match scatter_fn size
         )
 }
 
@@ -154,10 +158,14 @@ process_annotation_method <- function(method_name,
             limits = c(min(pca_output$ecm_score, na.rm=TRUE), GLOBAL_ECM_LIMIT),
             oob = scales::squish
         ) +
-        theme(legend.position = "right", legend.box = "vertical", 
-              legend.key = element_rect(fill = NA, color = NA),
-              legend.title = element_text(size = 10, face = "bold"),
-              legend.text = element_text(size = 9))
+        theme(
+            legend.position = "right", 
+            legend.box = "vertical", 
+            legend.key = element_rect(fill = "white", color = NA),
+            legend.title = element_text(size = 22, face = "bold"), # Much larger legend title
+            legend.text = element_text(size = 20),                 # Much larger legend text
+            legend.key.size = unit(1.0, "cm")
+        )
     
     plot_legend <- GGally::grab_legend(legend_plot)
     
@@ -183,8 +191,9 @@ process_annotation_method <- function(method_name,
     ) + 
     theme(
         strip.background = element_rect(fill = "white", color = "black", linewidth = 0.5),
-        strip.text = element_text(color = "black", face = "bold", size = 10),
-        plot.title = element_text(hjust = 0.5, face = "bold", size = 12, color = "#1F2937")
+        strip.text = element_text(color = "black", face = "bold", size = 18), # Larger strip text
+        plot.title = element_text(hjust = 0.5, face = "bold", size = 26, color = "#1F2937"), # Larger title
+        plot.margin = margin(t = 40, r = 5, b = 10, l = 10, "pt") # Breathing room for row letters
     )
     
     # ===== RIGHT: Anomaly Detection =====
@@ -218,9 +227,15 @@ process_annotation_method <- function(method_name,
     ) + 
         ggtitle(paste0(method_name, " - Anomaly Detection")) +
         theme(
-            plot.title = element_text(hjust = 0.5, face = "bold", size = 12, color = "#1F2937"),
+            plot.title = element_text(hjust = 0.5, face = "bold", size = 26, color = "#1F2937"), # Larger title
             strip.background = element_rect(fill = "white", color = "black", linewidth = 0.5),
-            strip.text = element_text(color = "black", face = "bold", size = 10)
+            strip.text = element_text(color = "black", face = "bold", size = 18), # Larger strip text
+            legend.title = element_text(size = 22, face = "bold"),                # Larger legend title
+            legend.text = element_text(size = 20),                                # Larger legend text
+            legend.key = element_rect(fill = "white", color = NA),                # Clean legend boxes
+            legend.background = element_rect(fill = "white", color = NA),
+            axis.text = element_text(size = 14),                                  # Larger axis text
+            plot.margin = margin(t = 40, r = 5, b = 10, l = 10, "pt")             # Breathing room
         )
     
     return(list(pca_plot = pca_ecm_plot, anomaly_plot = anomaly_plot))
@@ -245,7 +260,8 @@ fig_s4_combined <- plot_grid(
     ggmatrix_gtable(result_celltypist$pca_plot), ggmatrix_gtable(result_celltypist$anomaly_plot),
     ggmatrix_gtable(result_scarches$pca_plot), ggmatrix_gtable(result_scarches$anomaly_plot),
     nrow = 4, ncol = 2, labels = "AUTO",
-    label_size = 12, label_fontface = "bold",
+    label_size = 32, label_fontface = "bold", # Vastly larger A/B/C/D labels
+    label_x = 0.01, label_y = 0.99,
     rel_widths = c(1, 1)
 )
 
@@ -257,10 +273,11 @@ cat("Creating output directory...\n")
 dir.create("figures/supp/merfish", showWarnings = FALSE, recursive = TRUE)
 
 cat("Saving combined figure...\n")
+# Expanded canvas size to accommodate the massively increased text sizes
 ggsave("figures/supp/merfish/Fig_S4_pca_ecm_anomaly.png", 
        fig_s4_combined, 
-       width = 18, 
-       height = 20, 
+       width = 22, 
+       height = 34, 
        dpi = 600)
 
 cat("✓ Figure saved\n")
