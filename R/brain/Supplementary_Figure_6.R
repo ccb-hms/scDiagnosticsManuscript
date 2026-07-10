@@ -93,22 +93,27 @@ results_re$HVGs <- factor(results_re$HVGs, levels = as.character(hvg_list_re))
 min_x <- min(0.4, min(results_re$Specificity, na.rm = TRUE) - 0.05)
 min_y <- min(0.4, min(results_re$Sensitivity, na.rm = TRUE) - 0.05)
 
-pub_theme <- theme_bw(base_size = 13) +
+pub_theme <- theme_bw(base_size = 22) + 
     theme(
         panel.grid.minor = element_blank(),
-        axis.title = element_text(face = "bold"),
+        axis.title = element_text(face = "bold", size = 22), 
+        axis.text = element_text(size = 18),                 
         legend.position = "right",
-        legend.title = element_text(face = "bold", size = 11),
-        legend.background = element_rect(fill = "white", color = "black", linewidth = 0.3)
+        legend.title = element_text(face = "bold", size = 20), 
+        legend.text = element_text(size = 18),                 
+        legend.key.size = unit(1.2, "cm"),                     
+        legend.background = element_rect(fill = "white", color = "black", linewidth = 0.5)
     )
 
 p_re_sens <- ggplot(results_re, aes(x = Specificity, y = Sensitivity, color = HVGs, shape = MAD_Threshold)) +
     annotate("rect", xmin = 0.8, xmax = Inf, ymin = 0.8, ymax = Inf, alpha = 0.12, fill = "forestgreen") +
-    geom_hline(yintercept = 0.8, linetype = "dashed", color = "gray50") +
-    geom_vline(xintercept = 0.8, linetype = "dashed", color = "gray50") +
-    geom_point(size = 4, alpha = 0.85) +
-    ggrepel::geom_text_repel(aes(label = ConfigLabel), size = 3.5, fontface = "bold", 
-                             show.legend = FALSE, box.padding = 0.4, max.overlaps = Inf) +
+    geom_hline(yintercept = 0.8, linetype = "dashed", color = "gray50", linewidth = 1) +
+    geom_vline(xintercept = 0.8, linetype = "dashed", color = "gray50", linewidth = 1) +
+    geom_point(size = 7, alpha = 0.85) + 
+    ggrepel::geom_text_repel(aes(label = ConfigLabel), 
+                             size = 6.5, 
+                             fontface = "bold", 
+                             show.legend = FALSE, box.padding = 0.6, max.overlaps = Inf) +
     scale_color_brewer(palette = "Dark2") +
     coord_cartesian(xlim = c(min_x, 1.02), ylim = c(min_y, 1.02)) + 
     labs(x = "Specificity (True Negative Rate)", y = "Sensitivity (True Positive Rate)", 
@@ -117,7 +122,7 @@ p_re_sens <- ggplot(results_re, aes(x = Specificity, y = Sensitivity, color = HV
 
 print(p_re_sens)
 
-ggsave("figures/supp/brain/Fig_S6_reconstruction_error_tuning.png", p_re_sens, width = 15, height = 10, dpi = 600)
+ggsave("figures/supp/brain/Fig_S6_reconstruction_error_tuning.png", p_re_sens, width = 16, height = 11, dpi = 600)
 
 # ________
 # Summary
