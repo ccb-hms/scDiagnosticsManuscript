@@ -42,42 +42,52 @@ umap_df <- data.frame(
     CellType = sce_umap$true_cell_type
 )
 
-# Highlight all test populations (Reference + 3 Hidden Classes)
+# Highlight all test populations with clearer labels
 umap_df$Highlight <- "Other Cell Types"
-umap_df$Highlight[umap_df$CellType == "pyramidal CA1"] <- "Pyramidal CA1 (Reference)"
-umap_df$Highlight[umap_df$CellType == "pyramidal SS"] <- "Pyramidal SS (Hidden Related)"
-umap_df$Highlight[umap_df$CellType == "microglia"] <- "Microglia (Hidden Rare)"
-umap_df$Highlight[umap_df$CellType == "astrocytes_ependymal"] <- "Astrocytes (Hidden Distinct)"
+umap_df$Highlight[umap_df$CellType == "pyramidal CA1"] <- "Pyramidal CA1 (Base Neuronal Subtype)"
+umap_df$Highlight[umap_df$CellType == "pyramidal SS"] <- "Pyramidal SS (Hidden Related Subtype)"
+umap_df$Highlight[umap_df$CellType == "microglia"] <- "Microglia (Hidden Rare Population)"
+umap_df$Highlight[umap_df$CellType == "astrocytes_ependymal"] <- "Astrocytes (Hidden Distinct Lineage)"
 
-plot_order <- c("Other Cell Types", "Pyramidal CA1 (Reference)", 
-                "Pyramidal SS (Hidden Related)", "Microglia (Hidden Rare)", 
-                "Astrocytes (Hidden Distinct)")
+plot_order <- c("Other Cell Types", "Pyramidal CA1 (Base Neuronal Subtype)", 
+                "Pyramidal SS (Hidden Related Subtype)", "Microglia (Hidden Rare Population)", 
+                "Astrocytes (Hidden Distinct Lineage)")
 umap_df$Highlight <- factor(umap_df$Highlight, levels = plot_order)
 umap_df <- umap_df[order(umap_df$Highlight), ]
 
 umap_colors <- c(
     "Other Cell Types" = "#E8E8E8",            
-    "Pyramidal CA1 (Reference)" = "#4C72B0",        # Blue
-    "Pyramidal SS (Hidden Related)" = "#1B9E77",    # Green
-    "Microglia (Hidden Rare)" = "#E6AB02",          # Gold
-    "Astrocytes (Hidden Distinct)" = "#D95F02"      # Burnt Orange
+    "Pyramidal CA1 (Base Neuronal Subtype)" = "#4C72B0",        # Blue
+    "Pyramidal SS (Hidden Related Subtype)" = "#1B9E77",        # Green
+    "Microglia (Hidden Rare Population)" = "#E6AB02",           # Gold
+    "Astrocytes (Hidden Distinct Lineage)" = "#D95F02"          # Burnt Orange
 )
 
 p_umap <- ggplot(umap_df, aes(x = UMAP1, y = UMAP2, color = Highlight)) +
-    geom_point(size = 0.8, stroke = 0, alpha = 0.85) + 
+    geom_point(size = 1.0, stroke = 0, alpha = 0.85) + 
     scale_color_manual(values = umap_colors) +
-    theme_void(base_size = 13) +
-    labs(title = "A. Ground Truth Manifold", subtitle = "Highlighting evaluated test populations") +
+    theme_bw(base_size = 20) + 
+    labs(title = "A. Ground Truth Manifold", 
+         x = "UMAP1", y = "UMAP2") + 
     theme(
-        plot.title = element_text(face = "bold", size = 13, hjust = 0.5, margin = margin(b = 2)),
-        plot.subtitle = element_text(size = 10, hjust = 0.5, margin = margin(b = 10)),
+        panel.grid = element_blank(),     
+        axis.text = element_blank(),      
+        axis.ticks = element_blank(),   
+        
+        # FIX: Explicitly pull axis titles closer to the plot panel using negative margins
+        axis.title.x = element_text(face = "bold", size = 18, margin = margin(t = -20)), 
+        axis.title.y = element_text(face = "bold", size = 18, margin = margin(r = -20)),
+        
+        plot.title = element_text(face = "bold", size = 22, hjust = 0.5, margin = margin(b = 5)),
+        plot.subtitle = element_text(size = 18, hjust = 0.5, margin = margin(b = 15)),
         panel.border = element_rect(color = "black", fill = NA, linewidth = 1),
         legend.position = "bottom",
         legend.title = element_blank(),
-        legend.text = element_text(size = 9),
-        legend.margin = margin(t = 0, b = 0)
+        legend.text = element_text(size = 16), 
+        legend.margin = margin(t = -15, b = 0),
+        legend.box.margin = margin(t = -20, b = 0, l = 0, r = 0) 
     ) +
-    guides(color = guide_legend(override.aes = list(size = 4, alpha = 1), nrow = 2))
+    guides(color = guide_legend(override.aes = list(size = 6, alpha = 1), nrow = 3))
 
 # _________________________
 # 2. EVALUATION FUNCTIONS
@@ -133,7 +143,6 @@ run_test <- function(ref_sce, query_sce, target_hidden_cluster) {
     ss_if <- calc_sens_spec(if_preds, truth_logical)
     ss_re <- calc_sens_spec(re_preds, truth_logical)
     
-    # ADDED AUPRC TO THE RETURNED DATAFRAME
     return(data.frame(
         Method = c("Isolation_Forest", "Reconstruction_Error"), 
         AUROC = c(m_if["AUROC"], m_re["AUROC"]),
@@ -230,16 +239,18 @@ plot_data <- bind_rows(all_results)
 # 4. PLOTTING PANELS B - H
 # __________________________
 
-my_theme <- theme_bw(base_size = 12) + theme(
+my_theme <- theme_bw(base_size = 20) + theme(
     panel.grid.minor = element_blank(), 
-    plot.title = element_text(face = "bold", size = 11, hjust = 0.5),
-    axis.title = element_text(face = "bold", size = 10), 
-    axis.text.x = element_text(size = 9),
+    plot.title = element_text(face = "bold", size = 20, hjust = 0.5, margin = margin(b=10)),
+    axis.title = element_text(face = "bold", size = 18), 
+    axis.text.x = element_text(size = 16),
+    axis.text.y = element_text(size = 16),
     legend.title = element_blank(), 
+    legend.text = element_text(size = 18),
     legend.margin = margin(t = 0, b = 0)
 )
 
-# Plot Generator Function (Updated to conditionally handle hline_y for AUPRC)
+# Plot Generator Function 
 generate_benchmark_figure <- function(df_plot, metric_col, metric_label, y_lims, pal_colors, pt_shape, hline_y = 0.5) {
     
     method_labels <- c("Isolation_Forest" = "Isolation Forest", "Reconstruction_Error" = "Reconstruction Error")
@@ -249,14 +260,14 @@ generate_benchmark_figure <- function(df_plot, metric_col, metric_label, y_lims,
     df_base$Test <- factor(df_base$Test, levels = c("Distinct\n(Astrocytes)", "Related\n(Pyr SS)", "Rare\n(Microglia)"))
     
     p_base <- ggplot(df_base, aes(x = Test, y = .data[[metric_col]], fill = Method)) +
-        geom_bar(stat = "identity", position = position_dodge(width = 0.8), color = "black", width = 0.6) +
+        geom_bar(stat = "identity", position = position_dodge(width = 0.8), color = "black", width = 0.7) +
         scale_fill_manual(values = pal_colors, labels = method_labels) +
         coord_cartesian(ylim = y_lims) + 
         labs(title = paste0("B. Baseline Detection Accuracy (", metric_label, ")"), 
              x = "Missing Cell State", y = metric_label) + 
         my_theme + theme(legend.position = "bottom") 
         
-    if(!is.na(hline_y)) { p_base <- p_base + geom_hline(yintercept = hline_y, linetype = "dashed", color = "gray50") }
+    if(!is.na(hline_y)) { p_base <- p_base + geom_hline(yintercept = hline_y, linetype = "dashed", color = "gray50", linewidth = 1) }
 
     # --- ROW 2 & 3 GENERATOR ---
     create_line_plot <- function(df, test_type, title, x_label, is_factor=FALSE) {
@@ -270,14 +281,14 @@ generate_benchmark_figure <- function(df_plot, metric_col, metric_label, y_lims,
         }
         
         p_line <- ggplot(sub_df, aes(x = X_Value, y = .data[[metric_col]], color = Method, group = Method)) +
-            geom_line(linewidth = 1.0) + 
-            geom_point(size = 2.5, shape = pt_shape, fill = "white", stroke = 1.5) +
+            geom_line(linewidth = 1.5) + 
+            geom_point(size = 4.0, shape = pt_shape, fill = "white", stroke = 1.5) + 
             scale_color_manual(values = pal_colors, labels = method_labels) +
             coord_cartesian(ylim = y_lims) + 
             labs(title = title, x = x_label, y = metric_label) + 
             my_theme
             
-        if(!is.na(hline_y)) { p_line <- p_line + geom_hline(yintercept = hline_y, linetype = "dashed", color = "gray50") }
+        if(!is.na(hline_y)) { p_line <- p_line + geom_hline(yintercept = hline_y, linetype = "dashed", color = "gray50", linewidth = 1) }
         return(p_line)
     }
 
@@ -308,28 +319,29 @@ generate_benchmark_figure <- function(df_plot, metric_col, metric_label, y_lims,
 }
 
 # --- Define metric-specific palettes & shapes ---
+# SWAPPED COLORS: Isolation_Forest is now RED, Reconstruction_Error is now BLUE
 
 # 1. AUROC (Standard Colors, Circles, Baseline 0.5)
-pal_auroc <- c("Isolation_Forest" = "#4C72B0", "Reconstruction_Error" = "#C44E52")
+pal_auroc <- c("Isolation_Forest" = "#C44E52", "Reconstruction_Error" = "#4C72B0")
 p_auroc <- generate_benchmark_figure(plot_data, "AUROC", "AUROC", c(0.4, 1.0), pal_auroc, 21, hline_y = 0.5)
 
 # 2. AUPRC (Distinct Colors, Diamonds, NO Baseline line)
-pal_auprc <- c("Isolation_Forest" = "#325C99", "Reconstruction_Error" = "#A83C40")
+pal_auprc <- c("Isolation_Forest" = "#A83C40", "Reconstruction_Error" = "#325C99")
 p_auprc <- generate_benchmark_figure(plot_data, "AUPRC", "AUPRC", c(0.0, 1.0), pal_auprc, 23, hline_y = NA)
 
 # 3. Sensitivity (Darker Colors, Triangles, Baseline 0.5)
-pal_sens <- c("Isolation_Forest" = "#1D4E89", "Reconstruction_Error" = "#9E2A2B")
+pal_sens <- c("Isolation_Forest" = "#9E2A2B", "Reconstruction_Error" = "#1D4E89")
 p_sens <- generate_benchmark_figure(plot_data, "Sensitivity", "Sensitivity", c(0.0, 1.0), pal_sens, 24, hline_y = 0.5)
 
 # 4. Specificity (Lighter/Muted Colors, Squares, Baseline 0.5)
-pal_spec <- c("Isolation_Forest" = "#7FA1C3", "Reconstruction_Error" = "#D47A7B")
+pal_spec <- c("Isolation_Forest" = "#D47A7B", "Reconstruction_Error" = "#7FA1C3")
 p_spec <- generate_benchmark_figure(plot_data, "Specificity", "Specificity", c(0.0, 1.0), pal_spec, 22, hline_y = 0.5)
 
-# Save figures (Updated numbers)
-ggsave("figures/supp/brain/Fig_S1_anomaly_detection_AUROC.png", p_auroc, width = 16, height = 16, dpi = 600)
-ggsave("figures/supp/brain/Fig_S2_anomaly_detection_AUPRC.png", p_auprc, width = 16, height = 16, dpi = 600)
-ggsave("figures/supp/brain/Fig_S3_anomaly_detection_Sensitivity.png", p_sens, width = 16, height = 16, dpi = 600)
-ggsave("figures/supp/brain/Fig_S4_anomaly_detection_Specificity.png", p_spec, width = 16, height = 16, dpi = 600)
+# Save figures 
+ggsave("figures/supp/brain/Fig_S1_anomaly_detection_AUROC.png", p_auroc, width = 18, height = 18, dpi = 600)
+ggsave("figures/supp/brain/Fig_S2_anomaly_detection_AUPRC.png", p_auprc, width = 18, height = 18, dpi = 600)
+ggsave("figures/supp/brain/Fig_S3_anomaly_detection_Sensitivity.png", p_sens, width = 18, height = 18, dpi = 600)
+ggsave("figures/supp/brain/Fig_S4_anomaly_detection_Specificity.png", p_spec, width = 18, height = 18, dpi = 600)
 
 print("Supplementary Figures S1-4 complete!")
 print("Saved in: figures/supp/brain/")
