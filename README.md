@@ -2,9 +2,29 @@
 
 Comprehensive tutorials, analysis code, and reproducible workflows demonstrating [`scDiagnostics`](https://bioconductor.org/packages/scDiagnostics) for systematic assessment of cell type annotation in single-cell transcriptomics data.
 
-**Manuscript:** Christidis, A., Ghazi, A., Chawla, S., Turaga, N., Gentleman, R., & Geistlinger, L. scDiagnostics: systematic assessment of cell type annotation in single-cell transcriptomics data. *Submitted*. [**Read the preprint on bioRxiv**](https://www.biorxiv.org/content/10.64898/2026.01.29.701618v1).
+**Manuscript:** Christidis, A., Ghazi, A., Chawla, S., Turaga, N., Gentleman, R., & Geistlinger, L. (2026). scDiagnostics: systematic assessment of cell type annotation in single-cell transcriptomics data. *Briefings in Bioinformatics*, 27(5), bbag496. doi: [10.1093/bib/bbag496](https://doi.org/10.1093/bib/bbag496) ([preprint on bioRxiv](https://www.biorxiv.org/content/10.64898/2026.01.29.701618v1)).
 
 **Analysis and Results:** [**Manuscript Website**](https://ccb-hms.github.io/scDiagnosticsManuscript/)
+
+## Citation
+
+If you use the code, data, or analyses in this repository, please cite:
+
+Christidis A, Ghazi A, Chawla S, Turaga N, Gentleman R, Geistlinger L (2026). scDiagnostics: systematic assessment of cell type annotation in single-cell transcriptomics data. *Briefings in Bioinformatics*, 27(5), bbag496. doi: [10.1093/bib/bbag496](https://doi.org/10.1093/bib/bbag496).
+
+```bibtex
+@article{christidis2026scDiagnostics,
+  author  = {Christidis, A. and Ghazi, A. and Chawla, S. and Turaga, N. and Gentleman, R. and Geistlinger, L.},
+  title   = {scDiagnostics: systematic assessment of cell type annotation in single-cell transcriptomics data},
+  journal = {Briefings in Bioinformatics},
+  year    = {2026},
+  volume  = {27},
+  number  = {5},
+  doi     = {10.1093/bib/bbag496}
+}
+```
+
+If you use the `scDiagnostics` R package itself, please also cite it as described in the [package repository](https://github.com/ccb-hms/scDiagnostics#citation).
 
 ## Overview
 
@@ -110,20 +130,6 @@ conda activate scvi-env
 ```
 
 See [Setup & Installation](setup.qmd) for detailed instructions.
-
-## Citation
-
-If you use this code, data, or analyses, please cite:
-
-```bibtex
-@article{christidis2024scDiagnostics,
-  author = {Christidis, A. and Ghazi, A. and Chawla, S. and Turaga, N. and Gentleman, R. and Geistlinger, L.},
-  title = {scDiagnostics: systematic assessment of cell type annotation in single-cell transcriptomics data},
-  year = {2026},
-  url = {https://www.biorxiv.org/content/10.64898/2026.01.29.701618v1},
-  note = {Submitted}
-}
-```
 
 ## Repository
 
